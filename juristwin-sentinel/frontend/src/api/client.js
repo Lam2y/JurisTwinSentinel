@@ -1,0 +1,1 @@
+export const API='/api';export async function api(path,options={}){const token=localStorage.getItem('jt_token');const r=await fetch(API+path,{...options,headers:{'Content-Type':'application/json',...(token?{Authorization:`Bearer ${token}`}:{})}});if(!r.ok)throw new Error(await r.text());return r.json()}
