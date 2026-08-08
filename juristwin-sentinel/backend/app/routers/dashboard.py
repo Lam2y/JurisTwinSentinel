@@ -13,7 +13,7 @@ def dashboard(db: Session = Depends(get_db), user: User = Depends(current_user))
     conflicts = db.scalar(select(func.count()).select_from(Conflict).where(Conflict.status == "unresolved")) or 0
     customers_at_risk = db.scalar(select(func.count()).select_from(CustomerCase).where(CustomerCase.risk_status.in_(["High", "Critical"]))) or 0
     protected = db.scalar(select(func.count()).select_from(CustomerCase).where(CustomerCase.protected.is_(True))) or 0
-    alerts = db.scalar(select(func.count()).select_from(SecurityAlert).where(SecurityAlert.status == "open")) or 0
+    alerts = db.scalar(select(func.count()).select_from(SecurityAlert).where(SecurityAlert.status.in_(["open","reviewed","escalated","access_revoked"]))) or 0
     priority = db.execute(select(Conflict).where(Conflict.status == "unresolved").order_by(Conflict.id.asc())).scalars().all()
     recent = db.execute(select(LedgerEntry).order_by(LedgerEntry.id.desc()).limit(5)).scalars().all()
     # Evidence alignment reflects the flagship pre-resolution state; after resolution it becomes healthy.

@@ -13,8 +13,10 @@ FLAGSHIP_CONFLICT = "CF-INCOME-001"
 
 def reset_database(db: Session):
     # Keep users so the JWT that invoked reset remains valid on PostgreSQL where sequences do not reset.
-    for model in [ConflictEvidence, LedgerEntry, SecurityAlert, DecisionContract, Approval, Simulation, CaseEvent, CustomerCase, Conflict, Evidence, Integration]:
+    for model in [ConflictEvidence, LedgerEntry, SecurityAlert, DecisionVersion, DecisionContract, Approval, Simulation, CaseEvent, CustomerCase, Conflict, Evidence, Integration, SecurityShield, RolePolicy]:
         db.execute(delete(model))
+    for u in db.execute(select(User)).scalars().all():
+        u.active = True
     db.commit()
     seed_database(db)
 
@@ -29,6 +31,7 @@ def seed_database(db: Session):
         ("intern@regulatedbank.com", "Aisha Lim", "intern", []),
         ("compliance@regulatedbank.com", "Farah Wong", "compliance_manager", [DEMO_CASE]),
         ("product@regulatedbank.com", "Product Owner", "product_owner", [DEMO_CASE]),
+        ("qa014@regulatedbank.com", "QA-014", "qa_analyst", [DEMO_CASE]),
         ]
         for email, name, role, assigned in users:
             db.add(User(email=email, name=name, role=role, password_hash=hash_password(settings.DEMO_PASSWORD), assigned_case_refs=dumps(assigned)))
@@ -38,19 +41,41 @@ def seed_database(db: Session):
     if db.execute(select(CustomerCase).limit(1)).scalar_one_or_none():
         return
 
-    integrations = [
-        ("outlook", "Outlook Extractor", "mail", 12410),
-        ("teams", "MS Teams Listener", "chat", 45201),
-        ("sharepoint", "SharePoint Indexer", "documents", 1420),
-        ("onedrive", "OneDrive Loader", "documents", 893),
-        ("clickup", "ClickUp Workspace", "tasks", 512),
-        ("customer_core", "Customer Core API", "customer", 128),
-        ("qa", "QA Repository", "qa", 8),
-        ("postgres", "PostgreSQL DB", "database", 1426),
-        ("vector", "Vector Evidence Vault", "semantic", 142400),
+    role_policies = [
+        ("manager", "Manager", "Full decryption authority & override permissions", True, 3, True, True, True, True),
+        ("officer", "Officer", "Assigned customer twin record actions", True, 2, False, False, False, False),
+        ("intern", "Intern", "Restricted case viewer, total PII redaction", True, 1, False, False, False, False),
+        ("compliance_manager", "Compliance Auditor", "Read-only ledger access plus governance controls", True, 3, True, False, True, True),
+        ("product_owner", "Product Owner", "Digital Twin weight modifications and sandbox simulations", True, 3, True, True, True, True),
+        ("qa_analyst", "QA Analyst", "Waiver verification triggers & draft document reviews", True, 2, False, False, False, True),
     ]
-    for key, name, kind, count in integrations:
-        db.add(Integration(key=key, name=name, kind=kind, status="connected", object_count=count, last_sync_at=utcnow(), details_json=dumps({"demo": True})))
+    for role, display, desc, enabled, sensitivity, override, twin, export, review in role_policies:
+        db.add(RolePolicy(role=role, display_name=display, description=desc, enabled=enabled, max_sensitivity=sensitivity, can_override=override, can_modify_twin=twin, can_export_ledger=export, can_review_bodyguard=review))
+
+    shields = [
+        ("data_masking", "Data Sensitivity Masking", "Shield PII across lower authority tiers", True, {"mode":"role-aware"}),
+        ("dlp", "Active DLP Protection", "Prevent unapproved downloads of restricted evidence", True, {"restricted_downloads":"blocked"}),
+        ("ledger_retention", "7-Year Ledger Retention", "Lock audited records into non-mutable DB state", True, {"years":7}),
+        ("ooh_guard", "OOH Modification Guard", "Flag approved decision modifications during OOH hours", True, {"start":"19:00","end":"07:00"}),
+    ]
+    for key, name, desc, enabled, value in shields:
+        db.add(SecurityShield(key=key, name=name, description=desc, enabled=enabled, value_json=dumps(value)))
+
+    now = utcnow()
+    integrations = [
+        ("outlook", "Outlook Extractor", "mail", "connected", 12410, now-timedelta(minutes=3), {"metric":"mail objects", "errors":0}),
+        ("teams", "MS Teams Listener", "chat", "connected", 45201, now-timedelta(minutes=1), {"metric":"chat lines", "errors":0}),
+        ("gmail", "Gmail Connector", "mail", "inactive", 0, None, {"metric":"objects", "errors":0, "note":"Configuration pending"}),
+        ("sharepoint", "SharePoint Indexer", "documents", "connected", 1420, now-timedelta(minutes=12), {"metric":"files indexed", "errors":1, "note":"1 sync warning"}),
+        ("onedrive", "OneDrive Loader", "documents", "connected", 893, now-timedelta(hours=1), {"metric":"files indexed", "errors":0}),
+        ("clickup", "ClickUp Workspace", "tasks", "connected", 512, now-timedelta(minutes=6), {"metric":"tickets synced", "errors":2, "note":"2 error blocks"}),
+        ("customer_core", "Customer Core API", "customer", "connected", 128, now, {"metric":"customer records", "errors":0, "note":"Consensus validated", "realtime":True}),
+        ("qa", "QA Repository", "qa", "connected", 38, now-timedelta(minutes=15), {"metric":"policies tracked", "errors":0}),
+        ("postgres", "PostgreSQL DB", "database", "connected", 1426, now, {"metric":"records mirrored", "errors":0, "note":"Mirror transactional", "realtime":True}),
+        ("vector", "ChromaDB vector", "semantic", "connected", 142400, now, {"metric":"embeddings", "errors":0, "realtime":True}),
+    ]
+    for key, name, kind, status, count, last_sync, details in integrations:
+        db.add(Integration(key=key, name=name, kind=kind, status=status, object_count=count, last_sync_at=last_sync, details_json=dumps(details)))
 
     # 128 active cases; the first 27 share the flagship conflict.
     for i in range(128):
@@ -79,6 +104,7 @@ def seed_database(db: Session):
         db.add(CaseEvent(case_id=flagship.id, source=source, title=title, description=desc, event_time=t, severity=severity))
 
     evidence_rows = [
+        ("EV-BANK-084", "Customer Document Vault", "Bank Statement", "Aina Rahman submitted three consecutive monthly bank statements with recurring salary-equivalent credits. Document verified against the active income-evidence waiver.", "income_document_rule", "verified_bank_statement", "Tier 2 Verification", 4, "v4.2", "active", "restricted", DEMO_CASE, True, False),
         ("EV-OUTLOOK-001", "Outlook Approval", "PO_Waiver_Mail_Jul20", "Product Owner authorises alternative income evidence for gig workers. Bank statements may be accepted in place of payslips.", "income_document_rule", "bank_statement_accepted", "Product Owner", 5, "v4.0", "active", "confidential", DEMO_CASE, True, False),
         ("EV-TEAMS-001", "Teams Message", "Teams_Chat_Log_OpsOps", "Continue requesting payslips anyway to be safe until the FSD is updated.", "income_document_rule", "payslips_required", "Operations Officer", 2, "current message", "active", "internal", DEMO_CASE, False, False),
         ("EV-FSD-003", "FSD", "FSD_Requirements_v3_Doc", "Income verification requires three months of payslips.", "income_document_rule", "payslips_required", "Functional Lead", 4, "v3.0", "outdated", "confidential", DEMO_CASE, False, True),
@@ -86,10 +112,20 @@ def seed_database(db: Session):
         ("EV-CORE-084", "Customer Core System", "Customer Case JT-2026-084", "Application stalled because income document is marked missing even though bank statement is verified.", "income_document_rule", "operational_stall", "Customer Core", 3, "live", "active", "restricted", DEMO_CASE, False, False),
         ("EV-COMPLAINT-084", "Gmail Connector", "Customer Complaint", "You keep asking for papers I don't have. Please resolve.", "income_document_rule", "customer_frustrated", "Customer", 1, "live", "active", "restricted", DEMO_CASE, False, False),
         ("EV-QA-084", "QA Repository", "Internal QA Memo", "Eight QA tests still assert payslips-only behaviour.", "income_document_rule", "qa_outdated", "QA Analyst", 3, "v3-suite", "active", "confidential", DEMO_CASE, False, False),
+        ("EV-CONSENSUS-001", "Decision Ledger", "Consensus Ledger Protocol", "Consensus rules path mapped dynamically from Credit Policy v4.2 with complete approval lineage.", "consensus_protocol", "governed_path", "Compliance Manager", 6, "v4.2", "active", "confidential", None, True, False),
+        ("EV-RISK-011", "SharePoint Indexer", "Loan Restructuring SOP", "Restructuring approval threshold requires risk score review before a term extension can be approved.", "loan_restructure_rule", "risk_review_required", "Risk Committee", 5, "v5.1", "active", "restricted", "JT-2026-091", True, False),
+        ("EV-NOTIFY-021", "Outlook Extractor", "Customer Notification SLA Approval", "Compliance approved a three business-day notification deadline for adverse decisions.", "notification_deadline", "business_days_3", "Compliance Manager", 5, "v2.1", "active", "confidential", "JT-2026-102", True, False),
+        ("EV-LEGACY-019", "SharePoint Indexer", "Legacy Notification Procedure", "Customer notifications must be sent within three calendar days.", "notification_deadline", "calendar_days_3", "Operations", 2, "v1.7", "superseded", "internal", "JT-2026-102", False, True),
+        ("EV-QA-RESTRUCTURE", "QA Repository", "Restructuring Regression Pack", "Regression pack tracks 14 approval edge cases against the latest restructuring policy.", "loan_restructure_rule", "qa_current", "QA Analyst", 3, "v5.1", "active", "internal", "JT-2026-091", False, False),
+        ("EV-TEAMS-NOTIFY", "MS Teams Listener", "Notification Ops Chat", "Operations team is still using calendar-day language in manual customer follow-up instructions.", "notification_deadline", "legacy_instruction", "Operations Officer", 2, "current", "active", "internal", "JT-2026-102", False, False),
+        ("EV-CORE-091", "Customer Core API", "Restructuring Case Mirror", "Customer case is waiting for a threshold decision from the risk engine.", "loan_restructure_rule", "operational_wait", "Customer Core", 3, "live", "active", "restricted", "JT-2026-091", False, False),
     ]
     evidences = {}
     for row in evidence_rows:
-        e = Evidence(evidence_ref=row[0], source=row[1], title=row[2], body=row[3], rule_key=row[4], claim=row[5], authority=row[6], authority_level=row[7], version=row[8], status=row[9], sensitivity=row[10], case_ref=row[11], approved=row[12], superseded=row[13], metadata_json=dumps({"project": "Sentinel", "customer": "Aina Rahman" if row[11] else None}))
+        project = "Sentinel" if row[4] == "income_document_rule" else ("Credit Operations" if row[4] == "loan_restructure_rule" else ("Compliance Operations" if row[4] == "notification_deadline" else "Governance Core"))
+        customer = "Aina Rahman" if row[11] == DEMO_CASE else ("System Audit" if not row[11] else row[11])
+        tier = 3 if row[7] >= 5 else (2 if row[7] >= 3 else 1)
+        e = Evidence(evidence_ref=row[0], source=row[1], title=row[2], body=row[3], rule_key=row[4], claim=row[5], authority=row[6], authority_level=row[7], version=row[8], status=row[9], sensitivity=row[10], case_ref=row[11], approved=row[12], superseded=row[13], metadata_json=dumps({"project": project, "customer": customer, "decision_tier": tier}))
         db.add(e); db.flush(); evidences[e.evidence_ref] = e
 
     conflicts = [

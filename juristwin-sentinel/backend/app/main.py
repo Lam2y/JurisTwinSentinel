@@ -21,7 +21,7 @@ async def lifespan(app: FastAPI):
         db.close()
     yield
 
-app = FastAPI(title="JurisTwin Sentinel API", version="1.0.0", description="Grand Finals end-to-end decision intelligence system", lifespan=lifespan)
+app = FastAPI(title="JurisTwin Sentinel API", version="1.6.0", description="Grand Finals live decision intelligence and governance system", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=settings.CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 for router in [auth.router, system.router, dashboard.router, cases.router, conflicts.router, simulations.router, approvals.router, memory.router, ledger.router, bodyguard.router, integrations.router, search.router, demo.router]:

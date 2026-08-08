@@ -94,3 +94,7 @@ Motion includes KPI count-ups, page/card entrance transitions, primary-action fe
 ## v1.5 Finals Interaction Build
 
 The finals UI now includes draggable evidence graph nodes with live SVG connectors, interactive KPI/evidence/version/security cards, Digital Twin option selection, clickable Memory filters and role previews, live health/ledger inspectors, and interactive administration controls. See `docs/INTERACTION_GUIDE.md`.
+
+## v1.6 Live Finals Controls
+
+The `/finals` interface is now backed by persistent demo-state controls rather than notification-only buttons. See `docs/V1.6_CHANGELOG.md` and `docs/V1.6_INTERACTION_GUIDE.md` for the live Digital Twin, Memory filters, ledger versions, Bodyguard actions, integration management, RBAC and security-shield behavior.

@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from ..db.database import get_db
-from ..db.models import Approval, Conflict, Simulation, DecisionContract, Evidence, CustomerCase, CaseEvent, User
+from ..db.models import Approval, Conflict, Simulation, DecisionContract, DecisionVersion, Evidence, CustomerCase, CaseEvent, User
 from ..core.security import current_user, require_roles
 from ..schemas import SubmitApprovalRequest, ApprovalDecisionRequest
 from ..services.common import loads, dumps, iso, utcnow
@@ -66,6 +66,9 @@ def approve(ref: str, body: ApprovalDecisionRequest, db: Session = Depends(get_d
             status="active", version="v4.1", source_approval_ref=a.approval_ref,
         )
         db.add(contract); db.flush()
+        db.add(DecisionVersion(decision_ref=decision_ref, version="v3.0", rule_text="Income verification requires three months of payslips.", change_type="legacy_requirement", actor="Functional Lead", status="historical", metadata_json=dumps({"source":"FSD v3.0"})))
+        db.add(DecisionVersion(decision_ref=decision_ref, version="v4.0", rule_text="Bank statements may be accepted in place of payslips for approved gig-worker waivers.", change_type="waiver_authorized", actor="Product Owner", status="historical", metadata_json=dumps({"source":"Outlook Approval"})))
+        db.add(DecisionVersion(decision_ref=decision_ref, version="v4.1", rule_text=contract.approved_rule, change_type="complete_process_alignment", actor=user.email, status="active", metadata_json=dumps({"approval_ref":a.approval_ref})))
         db.add(Evidence(evidence_ref=f"EV-DECISION-{decision_ref}", source="Decision Ledger", title=f"Decision {decision_ref}", body=contract.approved_rule,
                         rule_key=c.rule_key, claim="bank_statement_accepted", authority="Consensus Ledger Protocol", authority_level=6,
                         version="v4.1", status="active", sensitivity="confidential", case_ref="JT-2026-084", approved=True, superseded=False,

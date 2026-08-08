@@ -8,6 +8,8 @@ class LoginRequest(BaseModel):
 class MemorySearchRequest(BaseModel):
     query: str = ""
     limit: int = Field(default=10, ge=1, le=50)
+    filters: dict[str, Any] = {}
+    preview_role: str | None = None
 
 class MemoryIngestRequest(BaseModel):
     source: str
@@ -36,3 +38,21 @@ class ApprovalDecisionRequest(BaseModel):
 class SearchRequest(BaseModel):
     query: str
     limit: int = Field(default=10, ge=1, le=50)
+
+class RolePolicyUpdate(BaseModel):
+    enabled: bool | None = None
+    max_sensitivity: int | None = Field(default=None, ge=0, le=3)
+    can_override: bool | None = None
+    can_modify_twin: bool | None = None
+    can_export_ledger: bool | None = None
+    can_review_bodyguard: bool | None = None
+
+class ShieldUpdate(BaseModel):
+    enabled: bool | None = None
+    value: dict[str, Any] | None = None
+
+class IntegrationConfigRequest(BaseModel):
+    config: dict[str, Any] = {}
+
+class BodyguardActionRequest(BaseModel):
+    comments: str | None = None

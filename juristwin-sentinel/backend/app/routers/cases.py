@@ -33,6 +33,6 @@ def get_case(case_ref: str, db: Session = Depends(get_db), user: User = Depends(
     return {
         "case": {"case_ref": case.case_ref, "customer_name": case.customer_name if user.role != "intern" else "[REDACTED]", "customer_type": case.customer_type, "application_type": case.application_type, "status": case.status, "risk_status": case.risk_status, "sentiment": case.sentiment, "pending_days": case.pending_days, "current_blocker": case.current_blocker, "protected": case.protected, "metadata": loads(case.metadata_json, {}) if user.role != "intern" else {}},
         "timeline": [{"source": e.source, "title": e.title, "description": e.description, "event_time": iso(e.event_time), "severity": e.severity} for e in events],
-        "evidence": [serialize_evidence(e, user) for e in evidence],
+        "evidence": [serialize_evidence(db, e, user) for e in evidence],
         "conflict": conflict_payload(db, conflict) if conflict else None,
     }

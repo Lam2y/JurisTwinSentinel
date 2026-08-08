@@ -171,3 +171,42 @@ class Integration(Base):
     last_sync_at = Column(DateTime(timezone=True), nullable=True)
     shield_status = Column(String(80), default="ACTIVE SHIELDING ON")
     details_json = Column(Text, default="{}")
+
+class RolePolicy(Base):
+    __tablename__ = "role_policies"
+    id = Column(Integer, primary_key=True)
+    role = Column(String(40), unique=True, index=True, nullable=False)
+    display_name = Column(String(80), nullable=False)
+    description = Column(Text, nullable=False)
+    enabled = Column(Boolean, default=True, nullable=False)
+    max_sensitivity = Column(Integer, default=1, nullable=False)
+    can_override = Column(Boolean, default=False, nullable=False)
+    can_modify_twin = Column(Boolean, default=False, nullable=False)
+    can_export_ledger = Column(Boolean, default=False, nullable=False)
+    can_review_bodyguard = Column(Boolean, default=False, nullable=False)
+    updated_by = Column(String(160), nullable=True)
+    updated_at = Column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
+
+class SecurityShield(Base):
+    __tablename__ = "security_shields"
+    id = Column(Integer, primary_key=True)
+    key = Column(String(80), unique=True, index=True, nullable=False)
+    name = Column(String(120), nullable=False)
+    description = Column(Text, nullable=False)
+    enabled = Column(Boolean, default=True, nullable=False)
+    value_json = Column(Text, default="{}", nullable=False)
+    updated_by = Column(String(160), nullable=True)
+    updated_at = Column(DateTime(timezone=True), default=now_utc, onupdate=now_utc)
+
+class DecisionVersion(Base):
+    __tablename__ = "decision_versions"
+    id = Column(Integer, primary_key=True)
+    decision_ref = Column(String(40), index=True, nullable=False)
+    version = Column(String(40), nullable=False)
+    rule_text = Column(Text, nullable=False)
+    change_type = Column(String(80), nullable=False)
+    actor = Column(String(160), nullable=False)
+    status = Column(String(40), default="historical", index=True)
+    metadata_json = Column(Text, default="{}", nullable=False)
+    created_at = Column(DateTime(timezone=True), default=now_utc)
+    __table_args__ = (UniqueConstraint("decision_ref", "version", name="uq_decision_version"),)
