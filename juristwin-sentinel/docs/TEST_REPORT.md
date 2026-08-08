@@ -18,3 +18,10 @@ Validated flows:
 - Complete SHA-256 ledger chain verifies after approval and after restoration.
 - Bodyguard cannot be demonstrated before the governed decision exists.
 - Intern restricted evidence is redacted at API/service level.
+
+
+## v1.3 UI workflow validation
+- Existing automated E2E suite: **3 passed**.
+- New action smoke: `request-changes`, governed approve, Bodyguard `escalate`, `revoke-access`, `authorize-overwrite`, `restore`, and final ledger verification: **PASS**.
+- JavaScript syntax (`node --check`): **PASS**.
+- Python router compile check: **PASS**.

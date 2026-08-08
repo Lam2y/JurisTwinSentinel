@@ -1,1 +1,1 @@
-{"name":"juristwin-sentinel-react","private":true,"version":"1.0.0","type":"module","scripts":{"dev":"vite","build":"vite build"},"dependencies":{"@vitejs/plugin-react":"latest","vite":"latest","react":"latest","react-dom":"latest","lucide-react":"latest"},"devDependencies":{}}
+{"name":"juristwin-sentinel-frontend","private":true,"version":"1.2.0","type":"module","scripts":{"dev":"vite","build":"vite build"},"dependencies":{"vite":"latest"},"devDependencies":{}}

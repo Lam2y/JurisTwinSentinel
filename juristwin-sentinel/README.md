@@ -66,3 +66,31 @@ The workflow and persistence are real. The simulator is intentionally **white-bo
 ## Verification
 
 See `docs/TEST_REPORT.md` for the automated end-to-end and RBAC verification report, and `docs/GRAND_FINALS_CHECKLIST.md` for stage preparation and technical Q&A positioning.
+
+
+## v1.3 — Complete Prototype-Matched Grand Finals Front-end
+
+The `/finals` interface now renders the original ten 1440×1024 JurisTwin prototype screens directly from `reference/Prototype-reference.txt` converted into browser-ready HTML. The supplied screenshot layouts are represented as real DOM screens rather than image backgrounds. Navigation and key buttons are wired to the existing FastAPI APIs.
+
+Screens: Login, Command Center, Case Workspace, Conflict Intelligence, Decision Digital Twin, **Approve Recommended Resolution**, Decision Ledger, **AI Bodyguard Security Center**, Secure Enterprise Memory, and Integrations & Administration.
+
+v1.3 explicitly includes the two finalist workflow screens supplied as visual references. The Bodyguard incident metadata layout was corrected so Triggering User, Role / Authority, Document, Time of Incident, Conflict Decision, and Impact render as a clean 3×2 evidence grid instead of overlapping. Approval confirmation and Bodyguard restore confirmation are now driven by backend state.
+
+For stage use, run `run_finals.bat` and open `http://127.0.0.1:8000/finals`. The optional Vite frontend uses the same exact static UI and proxies `/api` and `/static` to FastAPI.
+
+## v1.4 Grand Finals visibility controls
+
+The live prototype now includes a projector-friendly readability and motion layer.
+
+- **C** — toggle high-contrast projector mode.
+- **F** — toggle focus mode (uses more width on 16:9 displays; slight vertical scroll may be needed).
+- **M** — pause/resume interface motion.
+- **Ctrl + Shift + R** — reset the deterministic finals dataset.
+
+These controls are also available from the small floating buttons on the right edge of `/finals`.
+
+Motion includes KPI count-ups, page/card entrance transitions, primary-action feedback, evidence-network animation, Digital Twin metric bars, approval-step reveals, and Bodyguard incident-sequence animation. `prefers-reduced-motion` is respected.
+
+## v1.5 Finals Interaction Build
+
+The finals UI now includes draggable evidence graph nodes with live SVG connectors, interactive KPI/evidence/version/security cards, Digital Twin option selection, clickable Memory filters and role previews, live health/ledger inspectors, and interactive administration controls. See `docs/INTERACTION_GUIDE.md`.

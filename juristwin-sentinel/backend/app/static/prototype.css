@@ -1,0 +1,108 @@
+
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#07111F;font-family:Inter,"Segoe UI",Arial,sans-serif}#jtViewport{position:fixed;inset:0;overflow:hidden;background:#07111F}#jtStage{position:absolute;left:0;top:0;width:1440px;height:1024px;transform-origin:0 0;background:#07111F;overflow:hidden}#jtStage img{object-fit:cover}.jt-clickable{cursor:pointer!important;transition:filter .12s ease}.jt-clickable:hover{filter:brightness(1.08)}.jt-clickable:active{filter:brightness(.95)}#jtToast{position:fixed;z-index:9999;right:24px;bottom:24px;max-width:460px;padding:12px 16px;border-radius:8px;background:#12243A;color:#F8FAFC;border:1px solid #20C7E8;box-shadow:0 12px 36px rgba(0,0,0,.35);font:500 13px Inter,"Segoe UI",sans-serif;display:none}.jt-modal{position:fixed;z-index:10000;inset:0;background:rgba(2,8,16,.72);display:flex;align-items:center;justify-content:center}.jt-modal.hidden{display:none}.jt-modal-card{width:min(520px,calc(100vw - 40px));background:#0D1B2A;border:1px solid #20C7E8;border-radius:12px;padding:22px;color:#F8FAFC;box-shadow:0 24px 70px rgba(0,0,0,.55);font-family:Inter,"Segoe UI",sans-serif}.jt-modal-card h3{margin:0 0 8px;font-size:20px}.jt-modal-card p{color:#94A3B8;font-size:13px;line-height:1.5}.jt-modal-card label{display:block;color:#94A3B8;font-size:12px;margin:12px 0 6px}.jt-modal-card input,.jt-modal-card textarea{width:100%;background:#12243A;border:1px solid #172C45;color:#F8FAFC;border-radius:7px;padding:10px 12px;outline:none}.jt-modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:18px}.jt-modal-actions button{border:0;border-radius:7px;padding:10px 14px;font-weight:700;cursor:pointer}.jt-btn-primary{background:#20C7E8;color:#07111F}.jt-btn-ghost{background:#12243A;color:#F8FAFC;border:1px solid #172C45!important}.jt-loading{position:absolute;inset:0;display:grid;place-items:center;color:#20C7E8;font-size:14px}
+
+
+/* ================================================================
+   v1.4 GRAND FINALS READABILITY + MOTION LAYER
+   Keeps the original 1440x1024 prototype geometry intact while
+   increasing projector visibility and adding restrained interaction.
+   ================================================================ */
+:root{
+  --jt-cyan:#2ED4F0;
+  --jt-green:#2AD59A;
+  --jt-red:#FF626B;
+  --jt-amber:#F7B955;
+  --jt-text:#F8FAFC;
+  --jt-muted:#B9C7D8;
+  --jt-line:#2A4765;
+  --jt-panel:#0D1B2A;
+  --jt-card:#12243A;
+}
+body{color:var(--jt-text);text-rendering:optimizeLegibility;-webkit-font-smoothing:antialiased}
+#jtViewport{background:radial-gradient(circle at 70% 15%,rgba(32,199,232,.055),transparent 31%),#07111F}
+#jtStage{will-change:transform;filter:saturate(1.06) contrast(1.035)}
+#jtStage>div:first-child{animation:jtScreenIn .42s cubic-bezier(.2,.8,.2,1) both}
+
+/* readable text without making the design look inflated */
+#jtStage [style*="color:#B9C7D8"]{text-shadow:0 1px 1px rgba(0,0,0,.24)}
+#jtStage [style*="color:#F8FAFC"]{text-shadow:0 1px 1px rgba(0,0,0,.22)}
+#jtStage svg{filter:drop-shadow(0 0 3px rgba(46,212,240,.12))}
+
+/* cards and interactive surfaces */
+.jt-card-motion{transition:transform .22s cubic-bezier(.2,.8,.2,1),box-shadow .22s ease,outline-color .22s ease,filter .22s ease!important;will-change:transform}
+.jt-card-motion:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,0,0,.20),0 0 0 1px rgba(46,212,240,.08);filter:brightness(1.035)}
+.jt-clickable{position:relative;cursor:pointer!important;transition:transform .18s cubic-bezier(.2,.8,.2,1),filter .18s ease,box-shadow .18s ease!important;will-change:transform}
+.jt-clickable:hover{filter:brightness(1.12)!important;transform:translateY(-2px) scale(1.008);box-shadow:0 10px 24px rgba(0,0,0,.2),0 0 18px rgba(46,212,240,.10)}
+.jt-clickable:active{filter:brightness(.98)!important;transform:translateY(0) scale(.985)}
+.jt-clickable:focus-visible{outline:3px solid var(--jt-cyan)!important;outline-offset:3px!important}
+.jt-primary-action{overflow:hidden;box-shadow:0 5px 18px rgba(32,199,232,.14)}
+.jt-primary-action::after{content:"";position:absolute;inset:-40% -80%;background:linear-gradient(110deg,transparent 38%,rgba(255,255,255,.24) 50%,transparent 62%);transform:translateX(-70%);pointer-events:none;animation:jtShimmer 4.5s ease-in-out infinite}
+
+/* status / live-system feedback */
+.jt-live-status{animation:jtStatusGlow 2.2s ease-in-out infinite;box-shadow:0 0 0 rgba(35,196,131,0)}
+.jt-status-dot{animation:jtDotPulse 1.9s ease-in-out infinite;transform-origin:center}
+.jt-alert-motion{animation:jtAlertBreath 2.4s ease-in-out infinite}
+.jt-network-node{animation:jtNodeFloat 4s ease-in-out infinite;transition:transform .2s ease,filter .2s ease!important}
+.jt-network-node:nth-of-type(2n){animation-delay:-1.15s}.jt-network-node:nth-of-type(3n){animation-delay:-2.1s}
+.jt-network-node:hover{animation-play-state:paused;transform:translateY(-4px) scale(1.035)!important;filter:brightness(1.13) drop-shadow(0 8px 14px rgba(0,0,0,.25))}
+.jt-network-line{animation:jtLinePulse 2.6s ease-in-out infinite;filter:drop-shadow(0 0 4px currentColor)}
+
+/* staged entrance gives the UI life without becoming distracting */
+.jt-reveal{opacity:0;animation:jtReveal .38s cubic-bezier(.2,.8,.2,1) forwards}
+.jt-kpi-value{font-variant-numeric:tabular-nums;letter-spacing:-.35px;animation:jtKpiGlow .75s ease-out both}
+
+/* toast/modal become more readable from a distance */
+#jtToast{font-size:15px;line-height:1.45;padding:14px 18px;border-width:2px;background:#10243A;backdrop-filter:blur(10px);animation:jtToastIn .25s ease-out}
+.jt-modal-card{width:min(590px,calc(100vw - 40px));border-width:2px;background:#0D2134;box-shadow:0 28px 90px rgba(0,0,0,.62),0 0 38px rgba(32,199,232,.08)}
+.jt-modal-card h3{font-size:23px}.jt-modal-card p{font-size:15px;color:#B9C7D8}.jt-modal-card label{font-size:14px;color:#C4D1E0}.jt-modal-card input,.jt-modal-card textarea{font-size:15px;padding:12px 14px;border-color:#2A4765}.jt-modal-actions button{font-size:14px;padding:11px 16px}
+
+/* Presentation controls intentionally live outside the 1440x1024 canvas. */
+#jtPresentationControls{position:fixed;z-index:9000;right:18px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:8px;opacity:.24;transition:opacity .2s ease}
+#jtPresentationControls:hover{opacity:1}
+.jt-float-btn{width:42px;height:42px;border-radius:12px;border:1px solid #2A4765;background:rgba(13,27,42,.92);color:#DCE8F5;font:700 14px Inter,"Segoe UI",sans-serif;display:grid;place-items:center;cursor:pointer;box-shadow:0 8px 22px rgba(0,0,0,.24);backdrop-filter:blur(8px);transition:all .18s ease}
+.jt-float-btn:hover{border-color:var(--jt-cyan);color:var(--jt-cyan);transform:translateX(-2px)}
+.jt-float-btn.active{background:rgba(32,199,232,.13);border-color:var(--jt-cyan);color:var(--jt-cyan);opacity:1}
+
+/* Focus mode uses more of wide 16:9 screens. It remains optional because
+   the source prototype is 1440x1024 and can require a small vertical scroll. */
+body.jt-focus-mode #jtViewport{overflow:auto;scrollbar-width:thin;scrollbar-color:#2A4765 #07111F}
+body.jt-focus-mode #jtStage{filter:saturate(1.08) contrast(1.06)}
+body.jt-focus-mode #jtPresentationControls{opacity:.9}
+body.jt-high-contrast #jtStage{filter:saturate(1.12) contrast(1.11) brightness(1.035)}
+body.jt-high-contrast #jtStage [style*="color:#B9C7D8"]{color:#D2DCE8!important}
+body.jt-high-contrast #jtStage [style*="#2A4765"]{border-color:#375B7C!important;outline-color:#375B7C!important}
+
+@keyframes jtScreenIn{from{opacity:0;transform:translateY(8px);filter:blur(3px)}to{opacity:1;transform:none;filter:none}}
+@keyframes jtReveal{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes jtShimmer{0%,70%{transform:translateX(-72%)}90%,100%{transform:translateX(72%)}}
+@keyframes jtStatusGlow{0%,100%{box-shadow:0 0 0 rgba(35,196,131,0)}50%{box-shadow:0 0 20px rgba(35,196,131,.17)}}
+@keyframes jtDotPulse{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.3);filter:brightness(1.28)}}
+@keyframes jtAlertBreath{0%,100%{box-shadow:0 0 0 rgba(240,84,84,0)}50%{box-shadow:0 0 24px rgba(240,84,84,.13)}}
+@keyframes jtNodeFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes jtLinePulse{0%,100%{opacity:.68}50%{opacity:1}}
+@keyframes jtKpiGlow{0%{opacity:.35;transform:translateY(4px)}100%{opacity:1;transform:none}}
+@keyframes jtToastIn{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}}
+
+body.jt-motion-off #jtStage *,body.jt-motion-off #jtStage *::before,body.jt-motion-off #jtStage *::after{animation-play-state:paused!important;transition-duration:.001ms!important}
+.jt-progress-fill{transform-origin:left center;animation:jtBarGrow .9s cubic-bezier(.2,.8,.2,1) both}
+.jt-check-step{animation:jtCheckIn .38s cubic-bezier(.2,.8,.2,1) both}
+.jt-sequence-step{animation:jtSequencePop .42s cubic-bezier(.2,.8,.2,1) both}
+@keyframes jtBarGrow{from{transform:scaleX(.05);opacity:.3}to{transform:scaleX(1);opacity:1}}
+@keyframes jtCheckIn{from{opacity:.25;transform:translateX(-5px)}to{opacity:1;transform:none}}
+@keyframes jtSequencePop{0%{opacity:.25;transform:scale(.8)}70%{transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}
+
+
+/* ========================================================================== 
+   v1.5 FULL INTERACTIVITY + DRAGGABLE EVIDENCE GRAPH
+   ========================================================================== */
+.jt-rich-interactive,.jt-explorable-card{cursor:pointer!important;transition:transform .18s ease,box-shadow .18s ease,outline-color .18s ease,filter .18s ease!important}
+.jt-explorable-card:hover{outline-color:rgba(46,212,240,.55)!important;box-shadow:0 10px 24px rgba(0,0,0,.18),inset 0 0 0 1px rgba(46,212,240,.08);filter:brightness(1.055)}
+.jt-detail-body{font:500 15px/1.55 Inter,"Segoe UI",sans-serif;color:#D7E3EF}.jt-detail-body h4{margin:18px 0 6px;color:#F8FAFC;font-size:15px}.jt-detail-body p{font-size:15px!important;color:#C3D1DF!important}.jt-detail-note{padding:11px 13px;border-radius:8px;background:#12243A;border-left:3px solid #20C7E8}.jt-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.jt-detail-grid>div{background:#12243A;border:1px solid #2A4765;border-radius:8px;padding:11px 12px}.jt-detail-grid span{display:block;color:#94A3B8;font-size:12px;margin-bottom:4px}.jt-detail-grid strong{color:#F8FAFC;font-size:15px}.jt-modal-badge{display:inline-flex;padding:5px 8px;border-radius:5px;background:rgba(32,199,232,.11);border:1px solid rgba(32,199,232,.28);color:#2ED4F0;font-size:12px;font-weight:700;margin:2px 0 8px}.jt-doc-preview{margin-top:14px;padding:16px;border:1px dashed #375B7C;border-radius:9px;background:linear-gradient(145deg,#102239,#0B1828)}.jt-doc-preview>div{font-size:11px;color:#2ED4F0;letter-spacing:.08em}.jt-doc-preview strong{display:block;margin:7px 0;font-size:17px}.jt-mini-list{display:grid;gap:7px;margin:12px 0}.jt-mini-list>div{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:9px 11px;border-radius:7px;background:#12243A;border:1px solid #223D5A}.jt-mini-list span{color:#AFC0D2;font-size:13px}.jt-modal-actions-secondary{margin-top:10px!important;margin-bottom:-46px!important;justify-content:flex-start!important}.jt-compare-table{display:grid;gap:2px;margin-top:10px;border:1px solid #2A4765;border-radius:9px;overflow:hidden}.jt-compare-table>div{display:grid;grid-template-columns:1.45fr repeat(3,.75fr);gap:8px;padding:10px 12px;background:#102238}.jt-compare-table>div:nth-child(odd){background:#0D1B2A}.jt-compare-table b,.jt-compare-table strong{color:#23C483}.jt-version-compare{display:grid;gap:10px}.jt-version-compare>div{padding:13px;border:1px solid #2A4765;border-radius:8px;background:#12243A}.jt-version-compare>div.active{border-color:#23C483;background:rgba(35,196,131,.07)}.jt-version-compare span{display:block;color:#2ED4F0;font-size:12px}.jt-version-compare strong{display:block;margin:5px 0;color:#F8FAFC}.jt-ledger-verify{padding:15px;border-radius:9px;background:#12243A;border:1px solid #2A4765}.jt-ledger-verify.ok{border-color:#23C483;background:rgba(35,196,131,.07)}.jt-ledger-verify.bad{border-color:#F05454;background:rgba(240,84,84,.07)}
+.jt-filter-active{outline:1px solid #20C7E8!important;background:rgba(32,199,232,.13)!important;box-shadow:0 0 14px rgba(32,199,232,.12)!important}.jt-role-selected{outline:2px solid #20C7E8!important;box-shadow:0 0 20px rgba(32,199,232,.15)!important}.jt-shield-disabled{opacity:.62;filter:saturate(.55)}
+.jt-option-selected{outline-width:3px!important;box-shadow:0 0 0 2px rgba(46,212,240,.08),0 14px 34px rgba(0,0,0,.25)!important;transform:translateY(-4px)!important}.jt-option-selected::before{content:"SELECTED";position:absolute;right:12px;bottom:10px;padding:3px 7px;border-radius:4px;background:#20C7E8;color:#07111F;font:800 10px Inter,"Segoe UI",sans-serif;letter-spacing:.05em}
+/* Evidence graph: SVG edges replace the malformed rotated rectangle that appeared as a green empty box. */
+.jt-graph-canvas{overflow:hidden!important;user-select:none;touch-action:none;background-image:radial-gradient(circle at center,rgba(46,212,240,.025),transparent 55%)!important}.jt-graph-svg{position:absolute;inset:0;width:100%;height:100%;z-index:1;pointer-events:none;overflow:visible}.jt-live-edge{opacity:.88;filter:url(#edgeGlow);stroke-dasharray:7 5;animation:jtEdgeFlow 12s linear infinite}.jt-draggable-node{z-index:4!important;cursor:grab!important;touch-action:none!important;animation:none!important;box-shadow:0 8px 22px rgba(0,0,0,.22);transition:box-shadow .15s ease,filter .15s ease!important}.jt-draggable-node::after{content:"⋮⋮";position:absolute;right:7px;top:5px;color:#64748B;font-size:11px;letter-spacing:-3px;opacity:0;transition:opacity .15s}.jt-draggable-node:hover::after{opacity:.9}.jt-draggable-node:hover{filter:brightness(1.14)!important;box-shadow:0 12px 28px rgba(0,0,0,.32),0 0 0 2px rgba(46,212,240,.12)!important;transform:none!important}.jt-draggable-node.jt-dragging{cursor:grabbing!important;filter:brightness(1.18)!important;box-shadow:0 18px 40px rgba(0,0,0,.4),0 0 28px rgba(46,212,240,.17)!important;transform:scale(1.025)!important}.jt-graph-toolbar{position:absolute;right:14px;top:14px;z-index:8;display:flex;gap:7px;align-items:center;padding:7px 8px;border:1px solid #2A4765;border-radius:8px;background:rgba(7,17,31,.88);backdrop-filter:blur(8px);font:600 11px Inter,"Segoe UI",sans-serif;color:#AFC0D2}.jt-graph-toolbar span{padding:3px 5px}.jt-graph-toolbar button{border:1px solid rgba(32,199,232,.45);border-radius:5px;background:rgba(32,199,232,.08);color:#2ED4F0;padding:5px 8px;font:700 11px Inter,"Segoe UI",sans-serif;cursor:pointer}.jt-graph-toolbar button:hover{background:rgba(32,199,232,.18)}
+@keyframes jtEdgeFlow{to{stroke-dashoffset:-120}}
+body.jt-motion-off .jt-live-edge{animation:none!important}

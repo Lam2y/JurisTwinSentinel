@@ -81,6 +81,16 @@ def approve(ref: str, body: ApprovalDecisionRequest, db: Session = Depends(get_d
     db.commit(); db.refresh(a); db.refresh(contract)
     return {"approval": serialize(a), "decision_contract": serialize_contract(contract), "propagation": {"cases": len(cases), "qa_tests": 8, "documents": 2, "officers_notified": 4}}
 
+@router.post("/{ref}/request-changes")
+def request_changes(ref: str, body: ApprovalDecisionRequest, db: Session = Depends(get_db), user: User = Depends(require_roles("manager", "compliance_manager", "product_owner"))):
+    a = db.execute(select(Approval).where(Approval.approval_ref == ref)).scalar_one_or_none()
+    if not a: raise HTTPException(404, "Approval not found")
+    if a.status != "pending": raise HTTPException(409, f"Approval is {a.status}")
+    a.comments = body.comments or "Changes requested before final authorization"
+    append_entry(db, "APPROVAL_CHANGES_REQUESTED", user.email, {"approval_ref": a.approval_ref, "comments": a.comments})
+    db.commit(); db.refresh(a)
+    return serialize(a)
+
 @router.post("/{ref}/reject")
 def reject(ref: str, body: ApprovalDecisionRequest, db: Session = Depends(get_db), user: User = Depends(require_roles("manager", "compliance_manager", "product_owner"))):
     a = db.execute(select(Approval).where(Approval.approval_ref == ref)).scalar_one_or_none()
