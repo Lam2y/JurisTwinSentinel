@@ -1,0 +1,38 @@
+{
+  "status": "PASS_WITH_BROWSER_BASELINE",
+  "version": "5.3.0",
+  "release": "JurisTech Pitch-Aligned Championship v5.3",
+  "current_release_validation": {
+    "javascript_syntax": "PASS",
+    "static_ui_contracts": "PASS",
+    "api_e2e_regression": "31/31 PASS",
+    "industry_preflight": "15/15 PASS",
+    "clean_uvicorn_smoke": "PASS",
+    "pitch_flow": "CONNECT \u2192 EXPOSE \u2192 SIMULATE \u2192 RECOMMEND \u2192 APPROVE \u2192 PROTECT",
+    "operating_impact": {
+      "applications_affected": 27,
+      "rejected_cases_flagged": 1,
+      "qa_tests_updated": 8,
+      "documents_superseded": 3,
+      "officers_notified": 4
+    }
+  },
+  "browser_baseline_from_v5_2": {
+    "viewports": [
+      "1024x768",
+      "1440x900",
+      "1920x1080"
+    ],
+    "native_document_scroll": true,
+    "horizontal_overflow": false,
+    "graph_nodes_draggable": "8/8",
+    "graph_nodes_in_bounds": true,
+    "sheet_close_paths": [
+      "X",
+      "Escape",
+      "backdrop"
+    ],
+    "console_errors": 0
+  },
+  "browser_rerun_note": "A fresh automated Chromium run for v5.3 was attempted but is blocked by the managed environment URLBlocklist. No bypass was used. The unchanged graph/scroll/sheet mechanics inherit the browser-tested v5.2 baseline; v5.3 additions are covered by static UI and API/E2E tests."
+}
