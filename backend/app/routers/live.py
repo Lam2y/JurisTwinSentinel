@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from ..core.security import current_user, require_roles
 from ..db.database import get_db
-from ..db.models import LiveChallenge, User
+from ..db.models import LiveChallenge, User, Integration
 from ..schemas import LiveChallengeRequest, EvidenceDropRequest, SignedWebhookRequest
 from ..services.live_challenge import run_live_challenge, serialize_challenge
 from ..services.impact_graph import build_impact_graph
@@ -129,6 +129,13 @@ def signed_webhook(
     )
     actor=SimpleNamespace(email=f"connector:{body.source.lower().replace(' ','_')}")
     result=run_live_challenge(db,req,actor)
+    gateway=db.execute(select(Integration).where(Integration.key=="webhook")).scalar_one_or_none()
+    if gateway:
+        details=__import__("json").loads(gateway.details_json or "{}")
+        gateway.object_count=int(gateway.object_count or 0)+1
+        from ..services.common import utcnow, dumps
+        gateway.last_sync_at=utcnow(); details["last_event_id"]=body.event_id; details["errors"]=0
+        gateway.details_json=dumps(details); db.commit(); db.refresh(gateway)
     result["connector"]={
         "mode":"HMAC-SHA256 signed webhook", "event_id":body.event_id, "authenticated":True,
         "idempotent":True, "network_ingress":"real HTTP POST",

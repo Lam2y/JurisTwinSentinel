@@ -1,8 +1,10 @@
-# JurisTwin Sentinel v5.4 — Level-5 Rubric Evidence Map
+# JurisTwin Sentinel v5.7 — Level-5 Rubric Evidence Map
 
 This is a judge-preparation document, not a claim that human scoring is guaranteed. It identifies the strongest live proof for each Level-5 descriptor.
 
 ## Core Functionality & Feature Execution — 30%
+
+**Track-2-first proof:** the first screen asks a plain-language question, checks five governed sources, shows `CONFLICT_PRESENT`, cites the source mix and can switch to an Intern-redacted view before any architecture tour.
 
 **Level-5 proof to show:**
 
@@ -42,7 +44,9 @@ This is a judge-preparation document, not a claim that human scoring is guarante
 - progressive disclosure rather than card overload;
 - consistent side-sheet close paths;
 - aria-live status, landmark structure, accessible names, reduced-motion support;
-- plain-language verified-answer interaction with citations.
+- **Ask JurisTwin is first-class and above the fold**;
+- plain-language verified-answer interaction with multi-source synthesis + citations;
+- one-click Manager → Intern role proof on the same question.
 
 ## Technical Innovation & Creativity — 15%
 
@@ -58,8 +62,8 @@ This is a judge-preparation document, not a claim that human scoring is guarante
 
 **Release evidence:**
 
-- 39/39 automated tests;
-- 20/20 championship preflight controls;
+- 55/55 automated tests;
+- 32/32 championship preflight controls;
 - 16/16 Attack Sentinel controls;
 - structured 401/403/404/422 handling;
 - global error containment;

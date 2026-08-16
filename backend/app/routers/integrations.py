@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from ..db.database import get_db
-from ..db.models import Integration, User
+from ..db.models import Integration, User, CustomerCase, Evidence, Conflict, LedgerEntry
 from ..core.security import current_user, require_roles
 from ..schemas import IntegrationConfigRequest
 from ..services.common import loads, dumps, iso, utcnow
@@ -38,19 +38,40 @@ def get_integration(key:str,db:Session=Depends(get_db),user:User=Depends(current
 @router.post("/{key}/sync")
 def sync(key:str,db:Session=Depends(get_db),user:User=Depends(require_roles("manager","compliance_manager","product_owner"))):
     i=_get(db,key)
-    if i.status!="connected": raise HTTPException(409,f"{i.name} is inactive. Connect it before syncing.")
-    bump={"outlook":13,"teams":28,"gmail":9,"sharepoint":4,"onedrive":3,"clickup":6,"customer_core":2,"qa":1,"postgres":18,"vector":42}.get(key,1)
-    d=loads(i.details_json,{}); before_errors=int(d.get("errors",0));i.object_count+=bump;i.last_sync_at=utcnow();d["errors"]=max(0,before_errors-1);d["last_batch"]=bump
-    if d.get("errors",0)==0:d.pop("note",None)
-    i.details_json=dumps(d)
-    append_entry(db,"INTEGRATION_SYNC",user.email,{"integration":key,"new_objects":bump,"object_count":i.object_count,"errors_before":before_errors,"errors_after":d.get("errors",0)})
-    db.commit();db.refresh(i);return ser(i)
+    d=loads(i.details_json,{})
+    mode=d.get("adapter_mode")
+    if mode=="deterministic_finals_adapter":
+        # Never pretend that a finals fixture contacted Microsoft/Google. Counts remain immutable
+        # until a real tenant adapter is configured. The live signed webhook is the executable
+        # machine-to-machine ingress contract used on stage.
+        append_entry(db,"INTEGRATION_FIXTURE_INSPECTED",user.email,{"integration":key,"object_count":i.object_count,"adapter_mode":mode})
+        db.commit()
+        out=ser(i);out["operation"]={"mode":"fixture_no_mutation","live_network_call":False,"message":"Deterministic finals fixture inspected; no vendor network sync was claimed or simulated."}
+        return out
+    if i.status!="connected":
+        raise HTTPException(409,f"{i.name} is inactive. Connect it before refreshing.")
+    if key=="customer_core":
+        i.object_count=db.execute(select(CustomerCase)).scalars().all().__len__()
+    elif key=="postgres":
+        i.object_count=sum(len(db.execute(select(model)).scalars().all()) for model in (CustomerCase,Evidence,Conflict,LedgerEntry))
+    elif key=="vector":
+        rows=db.execute(select(Evidence)).scalars().all()
+        i.object_count=sum(len(((e.title or '')+' '+(e.body or '')).split()) for e in rows)
+    # webhook count is updated only by real authenticated POSTs, not by this refresh endpoint.
+    i.last_sync_at=utcnow();d["errors"]=0;i.details_json=dumps(d)
+    append_entry(db,"LOCAL_RUNTIME_REFRESH",user.email,{"integration":key,"object_count":i.object_count,"adapter_mode":mode})
+    db.commit();db.refresh(i)
+    out=ser(i);out["operation"]={"mode":mode or "local_runtime","live_network_call":False,"message":"Count recomputed from current local governed state."}
+    return out
 
 @router.post("/{key}/connect")
 def connect(key:str,body:IntegrationConfigRequest,db:Session=Depends(get_db),user:User=Depends(require_roles("manager","compliance_manager","product_owner"))):
-    i=_get(db,key);d=loads(i.details_json,{})|body.config;i.status="connected";i.last_sync_at=utcnow();d["errors"]=0;d.pop("note",None)
-    if i.object_count==0:i.object_count={"gmail":126,"outlook":20,"teams":20}.get(key,10)
-    i.details_json=dumps(d);append_entry(db,"INTEGRATION_CONNECTED",user.email,{"integration":key,"configuration":body.config,"object_count":i.object_count});db.commit();db.refresh(i);return ser(i)
+    i=_get(db,key);d=loads(i.details_json,{})
+    if d.get("adapter_mode")=="deterministic_finals_adapter":
+        raise HTTPException(409,"This finals adapter is an offline fixture and will not fake a vendor connection. Configure a real tenant adapter for production, or use the HMAC-signed webhook to demonstrate live ingress.")
+    i.status="connected";i.last_sync_at=utcnow();d=loads(i.details_json,{})|body.config;d["errors"]=0;i.details_json=dumps(d)
+    append_entry(db,"INTEGRATION_CONNECTED",user.email,{"integration":key,"configuration":body.config,"adapter_mode":d.get("adapter_mode")})
+    db.commit();db.refresh(i);return ser(i)
 
 @router.post("/{key}/pause")
 def pause(key:str,db:Session=Depends(get_db),user:User=Depends(require_roles("manager","compliance_manager","product_owner"))):

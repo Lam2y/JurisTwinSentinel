@@ -8,8 +8,8 @@ def test_championship_ui_serves_only_current_runtime_assets():
     with client:
         finals = client.get('/finals')
         assert finals.status_code == 200
-        assert '/static/sentinel.css?v=5.5.0' in finals.text
-        assert '/static/sentinel.js?v=5.5.0' in finals.text
+        assert '/static/sentinel.css?v=5.7.0' in finals.text
+        assert '/static/sentinel.js?v=5.7.0' in finals.text
         assert 'experience.css' not in finals.text
         assert 'prototype.css' not in finals.text
         assert client.get('/static/sentinel.css').status_code == 200
@@ -24,7 +24,7 @@ def test_ui_contract_includes_bounded_graph_and_consistent_sheet_controls():
         assert 'setPointerCapture' in js
         assert 'releasePointerCapture' in js
         assert 'data-close-sheet' in js
-        assert "['overview','Overview'" in js
+        assert "['overview','Ask JurisTwin'" in js
         assert "['conflict','Conflict Map'" in js
         assert "['twin','Digital Twin'" in js
         assert "['assurance','Assurance'" in js

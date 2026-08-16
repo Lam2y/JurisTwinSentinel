@@ -1,7 +1,7 @@
-# Project Structure — Championship v5.4
+# Project Structure — Championship v5.7
 
 ```text
-JurisTwinSentinel-Championship-v5.4-MaxScore/
+JurisTwinSentinel-Championship-v5.7-Track2-MaxScore/
 ├── backend/
 │   ├── app/
 │   │   ├── core/                 # config + JWT/RBAC + secure env loading

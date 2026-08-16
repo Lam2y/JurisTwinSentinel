@@ -30,12 +30,11 @@ def test_v16_dynamic_twin_memory_and_admin_controls():
 
         gmail=next(x for x in client.get('/api/integrations',headers=h).json() if x['key']=='gmail')
         assert gmail['status']=='inactive'
-        con=client.post('/api/integrations/gmail/connect',headers=h,json={'config':{'tenant':'finals-demo'}}).json()
-        assert con['status']=='connected' and con['object_count']>0
-        synced=client.post('/api/integrations/gmail/sync',headers=h).json()
-        assert synced['object_count']>con['object_count']
-        paused=client.post('/api/integrations/gmail/pause',headers=h).json()
-        assert paused['status']=='inactive'
+        con=client.post('/api/integrations/gmail/connect',headers=h,json={'config':{'tenant':'finals-demo'}})
+        assert con.status_code==409 and 'will not fake a vendor connection' in con.json()['detail']
+        synced=client.post('/api/integrations/outlook/sync',headers=h).json()
+        assert synced['operation']['mode']=='fixture_no_mutation'
+        assert synced['operation']['live_network_call'] is False
 
         cfg=client.get('/api/system/config',headers=h).json();mask=next(x for x in cfg['shields'] if x['key']=='data_masking')
         changed=client.patch('/api/system/shields/data_masking',headers=h,json={'enabled':not mask['enabled']}).json()

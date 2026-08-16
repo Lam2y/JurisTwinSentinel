@@ -1,8 +1,8 @@
-# JurisTwin Sentinel — Championship Judge-Clarity MaxScore Edition v5.5
+# JurisTwin Sentinel — Championship Adversarial MaxScore Edition v5.7
 
 JurisTwin Sentinel is a **hybrid-AI decision-integrity control plane** for regulated enterprises. It connects fragmented evidence, gives permission-safe plain-language answers, detects contradictory policy, traces downstream exposure, stress-tests response options, enforces human governance, propagates approved decisions and preserves replayable cryptographic proof.
 
-v5.5 is the finals build designed around the exact operating story:
+v5.7 is the finals build designed around the exact operating story:
 
 > **CONNECT → EXPOSE → SIMULATE → RECOMMEND → APPROVE → PROTECT**
 
@@ -23,7 +23,7 @@ The finals UI is served directly by FastAPI and requires **no Node/npm runtime o
 
 ## Five judge-facing destinations
 
-1. **Overview** — the customer contradiction, exposure and next action.
+1. **Ask JurisTwin** — Track 2 plain-language governed Q&A, source mix, citations and one-click role redaction.
 2. **Conflict Map** — draggable evidence network with authority, versions and live relationships.
 3. **Digital Twin** — 1,500-scenario stress test, sensitivity, Pareto analysis and decision robustness.
 4. **Assurance** — readiness, governance gate, Proof Pack, Decision Replay and adversarial self-test.
@@ -31,7 +31,17 @@ The finals UI is served directly by FastAPI and requires **no Node/npm runtime o
 
 Use **Final Flow** for the six-stage pitch story. Use **Platform** to expose the full technical stack without cluttering the main demonstration.
 
-## What changed in v5.5
+## What changed in v5.7
+
+
+### Adversarial finals hardening
+
+- Attack Sentinel JWT tamper testing now mutates an interior base64url signature character, eliminating a machine-secret-dependent false failure discovered on Windows.
+- `industry_preflight.py` reconfigures stdout/stderr to UTF-8 itself, so a default cp1252 console cannot crash on status glyphs.
+- `run_finals.bat` now delegates to a heartbeat launcher that prints visible startup progress while scikit-learn warms, waits for the real health endpoint, opens the browser only when healthy, and fails over from an occupied port automatically.
+- `setup_windows.bat` uses the virtual-environment Python explicitly, repairs incomplete venvs, supports standard CPython 3.10–3.14 while preferring 3.12/3.11, warms the local AI stack, and runs a compact preflight before declaring setup complete.
+- Vendor fixture connectors no longer increment fake object counts. The **Signed Webhook Gateway** is surfaced as the genuine HMAC-authenticated live HTTP ingress, and its accepted-event count is driven only by real signed requests.
+- The Track-2 answer now exposes a one-click **How AI verified this** proof with held-out Macro-F1, deterministic verifier, offline status and **model publication authority = 0**.
 
 ### Judge Clarity Layer
 Every conflict now names and quotes the exact governed sources that disagree, explains why they conflict, why the canonical source wins and the customer consequence. Digital Twin recommendations explain Why not A / Why not B / Why C in plain English before exposing Monte Carlo, sensitivity and Pareto proof. Judge Challenge uses the same evidence-first explanation pattern.
@@ -137,16 +147,17 @@ Decision Replay + AI Bodyguard
 
 ## Finals verification
 
-```bash
-cd backend
-pytest -q
-python scripts/industry_preflight.py
+```bat
+backend\.venv\Scripts\python.exe -X utf8 -m pytest -q
+backend\.venv\Scripts\python.exe -X utf8 backend\scripts\industry_preflight.py
 ```
 
-Expected v5.5 release baseline:
+On Windows, the easiest option is simply `run_preflight.bat`. Never depend on a bare `python` PATH alias during finals.
 
-- **39/39 automated tests**
-- **20/20 championship preflight controls**
+Expected v5.7 release baseline:
+
+- **55/55 automated tests**
+- **32/32 championship preflight controls**
 - **16/16 adversarial controls**
 - post-approval readiness **READY · 100%**
 - fresh-process stress: **60/60 concurrent live evidence writes succeeded**, ledger chain verified, readiness remained **100%**
@@ -163,7 +174,7 @@ The script loads the locally generated `.env`, sends a real HTTP POST, signs it 
 
 ## Claims boundary
 
-JurisTwin v5.5 is an **enterprise-grade proof of concept**, not regulator-certified production banking software.
+JurisTwin v5.7 is an **enterprise-grade proof of concept**, not regulator-certified production banking software.
 
 - Vendor-branded connector counts use deterministic finals adapters unless a real tenant is connected.
 - The machine-to-machine webhook is a genuine live HTTP integration contract.

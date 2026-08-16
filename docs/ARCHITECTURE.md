@@ -1,4 +1,4 @@
-# JurisTwin Sentinel — Championship v5.4 Architecture
+# JurisTwin Sentinel — Championship v5.7 Architecture
 
 ```text
 Enterprise systems / judge input / signed webhook

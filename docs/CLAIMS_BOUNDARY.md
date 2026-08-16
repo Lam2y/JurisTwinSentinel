@@ -1,4 +1,4 @@
-# Claims Boundary — Championship v5.4
+# Claims Boundary — Championship v5.7
 
 JurisTwin is presented as an **enterprise-grade proof of concept**, not as a regulator-certified production banking platform. The boundary is explicit so every finals claim remains defensible under technical questioning.
 

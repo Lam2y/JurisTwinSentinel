@@ -20,7 +20,7 @@ def overview(db: Session = Depends(get_db), user: User = Depends(current_user)):
     gate=governance_gate(db,"CF-INCOME-001")
     return {
         "status":"OPERATIONAL" if inv["status"]=="HEALTHY" else "DEGRADED",
-        "platform":"JurisTwin Sentinel Championship v5.5",
+        "platform":"JurisTwin Sentinel Championship v5.7",
         "telemetry":metrics,
         "invariants":inv,
         "flagship_governance_gate":gate,

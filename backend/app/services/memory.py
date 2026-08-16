@@ -6,7 +6,7 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from ..db.models import Evidence, User, RolePolicy, SecurityShield, Conflict, DecisionContract
+from ..db.models import Evidence, User, RolePolicy, SecurityShield, Conflict, ConflictEvidence, DecisionContract
 from .common import loads, iso
 from .policy_ml import get_policy_ai
 
@@ -38,7 +38,7 @@ def _can_access(db:Session,user:User,e:Evidence):
     level=SENSITIVITY_LEVEL.get((e.sensitivity or "internal").lower(),1)
     if level<=max_level:
         if user.role=="officer" and e.case_ref:
-            assigned=set(loads(user.assigned_case_refs,[])); return e.case_ref in assigned or e.case_ref=="JT-2026-084"
+            assigned=set(loads(user.assigned_case_refs,[])); return e.case_ref in assigned
         return True
     return False
 
@@ -172,6 +172,56 @@ def search_memory(db:Session,user:User,query:str,limit:int=10,filters:dict|None=
 
 
 
+def _source_mix(db: Session, user: User, conflict: Conflict | None, rule_key: str, limit: int = 5) -> list[dict]:
+    """Return a role-safe, explainable cross-source view for Track 2."""
+    relation_by_id: dict[int, str] = {}
+    if conflict:
+        links = db.execute(select(ConflictEvidence).where(ConflictEvidence.conflict_id == conflict.id)).scalars().all()
+        relation_by_id = {x.evidence_id: x.relation for x in links}
+    rows = db.execute(
+        select(Evidence).where(Evidence.rule_key == rule_key)
+        .order_by(Evidence.authority_level.desc(), Evidence.id.desc())
+    ).scalars().all()
+    out=[]
+    for e in rows:
+        item=serialize_evidence(db,e,user)
+        rel=relation_by_id.get(e.id)
+        if not rel:
+            if e.approved and not e.superseded: rel='approved'
+            elif e.superseded or (e.status or '').lower()=='outdated': rel='outdated'
+            else: rel='context'
+        body=item.get('body') or item.get('claim') or ''
+        out.append({
+            'evidence_ref':item.get('evidence_ref'),'source':item.get('source'),'title':item.get('title'),
+            'message':body[:360],'authority':item.get('authority'),'authority_level':item.get('authority_level'),
+            'version':item.get('version'),'status':item.get('status'),'sensitivity':item.get('sensitivity'),
+            'relation':rel,'redacted':str(body).startswith('[REDACTED'),
+        })
+        if len(out)>=limit: break
+    return out
+
+
+def _source_synthesis(source_mix: list[dict], conflict: Conflict | None, contract: DecisionContract | None) -> dict:
+    visible=[x for x in source_mix if not x.get('redacted')]
+    approved=next((x for x in visible if x.get('relation')=='approved'), visible[0] if visible else None)
+    disagree=[x for x in visible if x.get('relation') in {'conflict','informal','outdated'}]
+    operational=[x for x in visible if x.get('relation')=='operational']
+    if contract:
+        headline='One governed answer, with the older disagreement still traceable.'
+        summary=f"The active Decision Contract {contract.decision_ref} is the current source of truth. JurisTwin keeps the earlier source disagreement visible for audit instead of deleting it."
+    elif conflict and conflict.status in {'unresolved','quarantined'}:
+        names=', '.join(dict.fromkeys(x.get('source') or 'Evidence' for x in disagree[:3])) or 'other enterprise sources'
+        canon=(approved or {}).get('source') or 'the highest-authority approved source'
+        headline=f"{len(visible) or len(source_mix)} governed sources checked — they do not all agree."
+        summary=f"{canon} provides the current governed instruction, while {names} still contain incompatible or stale guidance. JurisTwin exposes the disagreement instead of blending it into a fake consensus."
+    else:
+        headline=f"{len(visible) or len(source_mix)} governed sources checked."
+        summary='The retrieved evidence is consistent with the current governed answer.'
+    if operational:
+        summary += f" Operational evidence from {operational[0].get('source')} shows the rule is already affecting live case handling."
+    return {'headline':headline,'summary':summary,'sources_considered':len(source_mix),'visible_sources':len(visible)}
+
+
 def governed_answer(db: Session, user: User, question: str) -> dict:
     """Return a short, evidence-bound answer from governed enterprise memory.
 
@@ -215,6 +265,9 @@ def governed_answer(db: Session, user: User, question: str) -> dict:
         ).order_by(Evidence.authority_level.desc(), Evidence.id.desc())
     ).scalars().first()
 
+    source_mix = _source_mix(db, user, conflict, rule_key, limit=5)
+    synthesis = _source_synthesis(source_mix, conflict, contract)
+
     if not contract and not evidence:
         return {
             "status": "NEEDS_REVIEW",
@@ -224,6 +277,8 @@ def governed_answer(db: Session, user: User, question: str) -> dict:
             "rule_key": rule_key,
             "model": {"engine": model.get("engine"), "domain_confidence": round(confidence, 4), "abstained": False},
             "citations": [],
+            "source_mix": source_mix,
+            "synthesis": synthesis,
             "guardrail": "Evidence-bound answering only; no generated facts beyond governed evidence.",
         }
 
@@ -241,6 +296,8 @@ def governed_answer(db: Session, user: User, question: str) -> dict:
             "conflict_ref": conflict.conflict_ref if conflict else None,
             "model": {"engine": model.get("engine"), "domain_confidence": round(confidence, 4), "abstained": False},
             "citations": [citation],
+            "source_mix": source_mix,
+            "synthesis": synthesis,
             "guardrail": "Role-aware answer: restricted evidence is never revealed through the answer layer.",
         }
 
@@ -274,6 +331,19 @@ def governed_answer(db: Session, user: User, question: str) -> dict:
         if len(citations) >= 3:
             break
 
+    card = get_policy_ai().model_card()
+    bench = card.get("held_out_development_benchmark", {})
+    ai_verification = {
+        "learned_component": True,
+        "architecture": card.get("architecture"),
+        "domain_macro_f1": bench.get("domain_macro_f1"),
+        "stance_macro_f1": bench.get("stance_macro_f1"),
+        "symbolic_verifier": "Policy Atom Reasoner",
+        "publication_authority": 0,
+        "internet_required": False,
+        "decision_rule": "Learned model routes; symbolic reasoning verifies; human authority publishes.",
+    }
+
     return {
         "status": status,
         "answer": answer,
@@ -293,5 +363,8 @@ def governed_answer(db: Session, user: User, question: str) -> dict:
             "publication_authority": 0,
         },
         "citations": citations,
+        "source_mix": source_mix,
+        "synthesis": synthesis,
+        "ai_verification": ai_verification,
         "guardrail": "Answer text is bound to governed evidence/decision contracts; the learned model only routes the question and cannot publish policy.",
     }

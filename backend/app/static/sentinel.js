@@ -36,10 +36,13 @@
     healthTimer: null,
     statusTimer: null,
     presentation: storage.get('jt_presentation') === '1',
+    overviewQuestion: 'Can gig workers use bank statements as income evidence?',
+    overviewRole: 'manager',
+    overviewAnswer: null,
   };
 
   const NAV = [
-    ['overview','Overview','home'],
+    ['overview','Ask JurisTwin','home'],
     ['conflict','Conflict Map','network'],
     ['twin','Digital Twin','spark'],
     ['assurance','Assurance','shield'],
@@ -49,7 +52,7 @@
   const PITCH_OPTION_LABELS = {A:'Take No Action',B:'Update the FSD Only',C:'Align the Complete Process'};
 
   const META = {
-    overview:['Overview','Decision integrity, at a glance'],
+    overview:['Ask JurisTwin','Permission-safe answers across scattered enterprise knowledge'],
     conflict:['Conflict Map','Trace the contradiction and blast radius'],
     twin:['Digital Twin','Stress-test before anything publishes'],
     assurance:['Assurance','Prove the decision is safe to trust'],
@@ -329,7 +332,7 @@
   }
 
   function sourcePills(){
-    return `<div class="source-pills"><span>Teams</span><span>Outlook</span><span>Gmail</span><span>Documents</span><span>Customer Data</span><i>${icon('arrow',12)}</i><b>AI Classification</b><i>${icon('arrow',12)}</i><b>Vector Evidence Vault</b></div>`;
+    return `<div class="source-pills"><span>Teams</span><span>Outlook</span><span>Gmail</span><span>Documents</span><span>Customer Data</span><i>${icon('arrow',12)}</i><b>AI Classification</b><i>${icon('arrow',12)}</i><b>Governed Evidence Index</b></div>`;
   }
 
   async function openMemoryCapability(){
@@ -348,7 +351,7 @@
       <div id="memoryResults" class="feature-list">${initial}</div>`,onOpen:()=>{
         let preview='manager';
         const run=async()=>{try{const r=await api('/memory/search',{method:'POST',body:JSON.stringify({query:$('#memoryQuery').value,limit:8,filters:{},preview_role:preview})});$('#memoryRoleLabel').textContent=`Preview: ${cap(r.role)}`;$('#memoryResults').innerHTML=r.results.length?r.results.map(memoryResultRow).join(''):'<div class="feature-empty">No governed evidence matched that query.</div>';status(`${cap(r.role)} view · ${r.count} governed results`,'ok');}catch(e){status(e.message,'error',3000);}};
-        const ask=async()=>{const q=$('#memoryQuestion')?.value.trim();if(!q||q.length<5){status('Ask a complete policy question','error');return;}const out=$('#memoryAnswerResult');if(out){out.className='verified-answer-result loading';out.innerHTML='<span>Checking learned routing, authority and governed evidence…</span>';}try{const r=await api('/memory/answer',{method:'POST',body:JSON.stringify({question:q,preview_role:preview})});if(out){const tone=r.status==='VERIFIED'?'verified':r.status==='CONFLICT_PRESENT'?'warning':r.status==='RESTRICTED'?'restricted':'review';const cites=(r.citations||[]).slice(0,3).map(c=>`<span>${esc(c.source||'Evidence')} · ${esc(c.version||'current')} · ${esc(c.authority||'governed')}</span>`).join('');out.className=`verified-answer-result ${tone}`;out.innerHTML=`<div class="verified-answer-status"><span class="chip ${r.status==='VERIFIED'?'green':r.status==='CONFLICT_PRESENT'?'amber':r.status==='RESTRICTED'?'red':'cyan'}">${esc(r.status)}</span><small>${esc(cap(r.role||preview))} view · ${Math.round(Number(r.model?.domain_confidence||0)*100)}% domain routing</small></div><strong>${esc(r.answer||'')}</strong>${r.warning?`<p>${esc(r.warning)}</p>`:''}<div class="answer-proof"><b>${esc(r.authority||'Governed authority')}</b><span>${esc(r.source||r.rule_key||'Enterprise Memory')} · ${esc(r.version||'current')}</span>${r.decision_ref?`<code>${esc(r.decision_ref)}</code>`:''}</div>${cites?`<div class="answer-citations"><small>Evidence lineage</small>${cites}</div>`:''}`;}status(`${cap(r.status)} · governed answer returned`,'ok',2600);}catch(e){if(out){out.className='verified-answer-result review';out.innerHTML=`<span>${esc(e.message)}</span>`;}status(e.message,'error',3000);}};
+        const ask=async()=>{const q=$('#memoryQuestion')?.value.trim();if(!q||q.length<5){status('Ask a complete policy question','error');return;}const out=$('#memoryAnswerResult');if(out){out.className='verified-answer-result loading';out.innerHTML='<span>Checking learned routing, authority and governed evidence…</span>';}try{const r=await api('/memory/answer',{method:'POST',body:JSON.stringify({question:q,preview_role:preview})});if(out){const tone=r.status==='VERIFIED'?'verified':r.status==='CONFLICT_PRESENT'?'warning':r.status==='RESTRICTED'?'restricted':'review';const cites=(r.citations||[]).slice(0,3).map(c=>`<span>${esc(c.source||'Evidence')} · ${esc(c.version||'current')} · ${esc(c.authority||'governed')}</span>`).join('');out.className=`verified-answer-result ${tone}`;out.innerHTML=`<div class="verified-answer-status"><span class="chip ${r.status==='VERIFIED'?'green':r.status==='CONFLICT_PRESENT'?'amber':r.status==='RESTRICTED'?'red':'cyan'}">${esc(r.status)}</span><small>${esc(cap(r.role||preview))} view · ${Math.round(Number(r.model?.domain_confidence||0)*100)}% domain routing</small></div><strong>${esc(r.answer||'')}</strong>${r.warning?`<p>${esc(r.warning)}</p>`:''}<div class="answer-proof"><b>${esc(r.authority||'Governed authority')}</b><span>${esc(r.source||r.rule_key||'Enterprise Memory')} · ${esc(r.version||'current')}</span>${r.decision_ref?`<code>${esc(r.decision_ref)}</code>`:''}</div>${cites?`<div class="answer-citations"><small>Evidence lineage</small>${cites}</div>`:''}${sourceMixMarkup(r,3)}`;}status(`${cap(r.status)} · governed answer returned`,'ok',2600);}catch(e){if(out){out.className='verified-answer-result review';out.innerHTML=`<span>${esc(e.message)}</span>`;}status(e.message,'error',3000);}};
         $$('[data-role-preview]',portal).forEach(b=>b.addEventListener('click',()=>{preview=b.dataset.rolePreview;$$('[data-role-preview]',portal).forEach(x=>x.classList.toggle('active',x===b));run();const out=$('#memoryAnswerResult');if(out&&!out.classList.contains('idle'))ask();}));
         $('#memorySearch')?.addEventListener('click',run);
         $('#memoryAnswer')?.addEventListener('click',ask);
@@ -425,11 +428,13 @@
   async function openIntegrationsCapability(){
     const items=await api('/integrations');
     openSheet({title:'Enterprise Connectors',subtitle:'Scattered systems → governed evidence',wide:true,body:`
-      <div class="platform-intro compact"><span class="eyebrow">CONNECT</span><h3>${items.filter(x=>x.status==='connected').length}/${items.length} integration adapters connected.</h3><p>Pitch-deck sources are represented through the integration/evidence layer. A separate HMAC-signed webhook demonstrates genuine machine-to-machine HTTP ingress without pretending to be a live Microsoft tenant.</p></div>
+      <div class="platform-intro compact"><span class="eyebrow">CONNECT</span><h3>Scattered sources, one governed ingestion layer.</h3><p>Vendor-branded connectors are clearly labelled deterministic finals adapters. The HMAC-signed webhook is the genuine machine-to-machine HTTP ingress path used to prove live input.</p></div>
       <div class="connector-source-band"><span>Outlook</span><span>Teams</span><span>Gmail</span><span>SharePoint</span><span>ClickUp</span><span>Customer System</span><span>FSD evidence</span></div>
-      <div class="integration-grid">${items.map(i=>`<div class="integration-card"><div><b>${esc(i.name)}</b><small>${esc(cap(i.kind))} · ${fmt(i.object_count)} objects</small></div><span class="chip ${i.status==='connected'?'green':'amber'}">${esc(i.status)}</span><em>${esc(i.last_sync_label||'Never')}</em><button class="btn integration-action" data-integration="${esc(i.key)}" data-status="${esc(i.status)}">${i.status==='connected'?'Sync now':'Connect'}</button></div>`).join('')}</div>
+      <div class="integration-grid">${items.map(i=>`<div class="integration-card"><div><b>${esc(i.name)}</b><small>${esc(cap(i.kind))} · ${fmt(i.object_count)} ${esc(i.details?.metric||'indexed items')}</small></div><span class="chip ${i.status==='connected'?'green':'amber'}">${esc(i.status)}</span><em>${esc(i.details?.adapter_mode==='deterministic_finals_adapter'?'OFFLINE FINALS ADAPTER':i.details?.adapter_mode==='live_http_ingress'?'LIVE SIGNED HTTP INGRESS':(i.details?.pilot_target?'LOCAL RUNTIME · PILOT TARGET '+i.details.pilot_target:(i.last_sync_label||'Never')))}</em>${i.details?.adapter_mode==='deterministic_finals_adapter'?`<button class="btn integration-action" data-adapter-info="${esc(i.key)}">Inspect adapter</button>`:i.details?.adapter_mode==='live_http_ingress'?`<button class="btn integration-action" data-live-ingress="${esc(i.key)}">Live HTTP proof</button>`:`<button class="btn integration-action" data-integration="${esc(i.key)}" data-status="${esc(i.status)}">${i.status==='connected'?'Refresh local index':'Connect'}</button>`}</div>`).join('')}</div>
       <div class="webhook-proof"><div><span class="eyebrow">REAL NETWORK INGRESS</span><h4>HMAC-SHA256 signed webhook + replay protection</h4><p>Run a second process and send unseen evidence over HTTP into the exact same reasoning pipeline.</p></div><button class="btn primary" id="webhookDetails">Show proof path</button></div>`,onOpen:()=>{
-        $$('[data-integration]',portal).forEach(b=>b.addEventListener('click',async()=>{try{const key=b.dataset.integration;const connected=b.dataset.status==='connected';await api(`/integrations/${key}/${connected?'sync':'connect'}`,{method:'POST',body:connected?'{}':JSON.stringify({config:{demo:true}})});status(`${key} ${connected?'synced':'connected'}`,'ok');await openIntegrationsCapability();}catch(e){status(e.message,'error',3000);}}));
+        $$('[data-integration]',portal).forEach(b=>b.addEventListener('click',async()=>{try{const key=b.dataset.integration;const connected=b.dataset.status==='connected';await api(`/integrations/${key}/${connected?'sync':'connect'}`,{method:'POST',body:connected?'{}':JSON.stringify({config:{demo:true}})});status(`${key} ${connected?'refreshed':'connected'}`,'ok');await openIntegrationsCapability();}catch(e){status(e.message,'error',3000);}}));
+        $$('[data-live-ingress]',portal).forEach(b=>b.addEventListener('click',showWebhookProof));
+        $$('[data-adapter-info]',portal).forEach(b=>b.addEventListener('click',()=>openSheet({title:'Deterministic finals adapter',subtitle:'Honest offline representation of a vendor connector',body:`<div class="sheet-section"><span class="chip amber">OFFLINE ADAPTER</span><h4 style="margin-top:14px">This source is represented by a deterministic finals dataset, not a live vendor tenant.</h4><p>The real machine-to-machine ingress contract is the signed webhook, which can accept judge-controlled evidence over HTTP into the same reasoning pipeline.</p><button class="btn primary" id="adapterWebhook">Show live webhook proof</button></div>`,onOpen:()=>$('#adapterWebhook')?.addEventListener('click',showWebhookProof)})));
         $('#webhookDetails')?.addEventListener('click',showWebhookProof);
       }});
   }
@@ -479,7 +484,7 @@
 
   function showPositioning(){openSheet({title:'Not another enterprise chatbot',subtitle:'Decision intelligence, not answer generation',wide:true,body:`<div class="positioning-pairs"><div><small>CHATBOTS</small><b>Answer.</b><span>SENTINEL</span><strong>Governs.</strong></div><div><small>CHATBOTS</small><b>Retrieve.</b><span>SENTINEL</span><strong>Verifies.</strong></div><div><small>CHATBOTS</small><b>Summarise.</b><span>SENTINEL</span><strong>Simulates.</strong></div></div><div class="positioning-wedge"><span class="eyebrow">THE WEDGE</span><h3>Decision memory + explainable simulation + governance ledger in one loop.</h3><p>Others retrieve knowledge. JurisTwin turns conflicting evidence into safe, testable, governed decisions.</p></div>`});}
 
-  function showPilotScale(){openSheet({title:'Built for a pilot. Designed to scale.',subtitle:'Pitch-deck commercial path + truthful finals runtime',wide:true,body:`<div class="pilot-grid"><article><span class="eyebrow">PILOT TARGETS</span><ul><li><b>50%</b> faster case investigation</li><li><b>30%</b> fewer duplicate requests</li><li><b>60%</b> faster access to approved decisions</li><li><b>100%</b> evidence-linked final decisions</li><li><b>Zero</b> restricted-data exposure target</li></ul></article><article><span class="eyebrow">FEASIBLE MVP</span><ul><li>1 customer case</li><li>3 employee roles</li><li>1 decision conflict</li><li>3 simulated actions</li><li>1 security incident</li><li>1 version-controlled decision</li></ul></article><article><span class="eyebrow">COMMERCIAL PATH</span><ul><li>JurisTech internal pilot</li><li>Existing banking clients</li><li>Insurance + regulated enterprises</li><li>Enterprise licence</li><li>Implementation fee</li><li>Governance services</li></ul></article></div><div class="runtime-truth"><div><b>Verified finals runtime</b><span>Zero-build SPA · FastAPI · SQLAlchemy · local learned NLP + symbolic reasoner · SQLite/PostgreSQL compatibility · RBAC</span></div><div><b>Pilot target architecture shown in deck</b><span>React · FastAPI · ChromaDB · PostgreSQL · Interpretable ML · RBAC</span></div></div>`});}
+  function showPilotScale(){openSheet({title:'Built for a pilot. Designed to scale.',subtitle:'Pitch-deck commercial path + truthful finals runtime',wide:true,body:`<div class="pilot-grid"><article><span class="eyebrow">PILOT TARGETS</span><ul><li><b>50%</b> faster case investigation</li><li><b>30%</b> fewer duplicate requests</li><li><b>60%</b> faster access to approved decisions</li><li><b>100%</b> evidence-linked final decisions</li><li><b>Zero</b> restricted-data exposure target</li></ul></article><article><span class="eyebrow">FEASIBLE MVP</span><ul><li>1 customer case</li><li>3 employee roles</li><li>1 decision conflict</li><li>3 simulated actions</li><li>1 security incident</li><li>1 version-controlled decision</li></ul></article><article><span class="eyebrow">COMMERCIAL PATH</span><ul><li>JurisTech internal pilot</li><li>Existing banking clients</li><li>Insurance + regulated enterprises</li><li>Enterprise licence</li><li>Implementation fee</li><li>Governance services</li></ul></article></div><div class="runtime-truth"><div><b>Verified finals runtime</b><span>Zero-build SPA · FastAPI · SQLAlchemy · local learned NLP + symbolic reasoner · SQLite/PostgreSQL compatibility · RBAC</span></div><div><b>Pilot target architecture shown in deck</b><span>React · FastAPI · ChromaDB (pilot target) · PostgreSQL · Interpretable ML · RBAC</span></div></div>`});}
 
   function workspaceMenu(){
     openSheet({title:'Workspace',subtitle:'Finals controls',body:`
@@ -503,7 +508,7 @@
     try {
       status('Resetting finals scenario…');
       await api('/demo/reset',{method:'POST',body:'{}'});
-      closeSheet(); state.sim=null; state.lastChallenge=null; state.selectedOption='C'; state.graphPositions={}; state.assurance=null; state.readiness=null; state.decisionRefs={}; await refreshCore(); renderShell(); status('Finals scenario restored','ok');
+      closeSheet(); state.sim=null; state.lastChallenge=null; state.overviewAnswer=null; state.overviewRole='manager'; state.selectedOption='C'; state.graphPositions={}; state.assurance=null; state.readiness=null; state.decisionRefs={}; await refreshCore(); renderShell(); status('Finals scenario restored','ok');
     } catch(e) { status(e.message,'error',3200); }
   }
 
@@ -527,20 +532,94 @@
     return renderOverview();
   }
 
+  function answerTone(statusValue){
+    return statusValue==='VERIFIED'?'verified':statusValue==='CONFLICT_PRESENT'?'warning':statusValue==='RESTRICTED'?'restricted':'review';
+  }
+
+  function answerChip(statusValue){
+    return statusValue==='VERIFIED'?'green':statusValue==='CONFLICT_PRESENT'?'amber':statusValue==='RESTRICTED'?'red':'cyan';
+  }
+
+  function sourceRelationLabel(x){
+    const r=(x.relation||'context').toLowerCase();
+    if(r==='approved')return 'GOVERNED';
+    if(r==='conflict')return 'CONFLICTING';
+    if(r==='outdated')return 'OUTDATED';
+    if(r==='informal')return 'INFORMAL';
+    if(r==='operational')return 'CUSTOMER IMPACT';
+    return cap(r);
+  }
+
+  function sourceRelationClass(x){
+    const r=(x.relation||'context').toLowerCase();
+    return r==='approved'?'green':(r==='conflict'||r==='outdated')?'red':r==='informal'?'amber':r==='operational'?'cyan':'';
+  }
+
+  function sourceMixMarkup(r,limit=4){
+    const rows=(r?.source_mix||[]).slice(0,limit);
+    if(!rows.length)return '';
+    return `<div class="source-mix"><div class="source-mix-head"><b>What JurisTwin checked</b><span>${fmt(r.synthesis?.sources_considered||rows.length)} governed sources · role-filtered</span></div><div class="source-mix-grid">${rows.map(x=>`<article class="source-proof ${x.redacted?'redacted':''}"><div class="source-proof-top"><span class="chip ${sourceRelationClass(x)}">${esc(sourceRelationLabel(x))}</span><small>${esc(x.source||'Evidence')} · ${esc(x.version||'current')}</small></div><b>${esc(x.title||x.source||'Governed evidence')}</b><p>${esc(x.redacted?'Restricted content hidden for this role.':(x.message||'').slice(0,190))}</p><footer>${esc(x.authority||'Governed source')}</footer></article>`).join('')}</div></div>`;
+  }
+
+  function overviewAnswerMarkup(){
+    const r=state.overviewAnswer;
+    if(!r)return `<div class="overview-answer-placeholder"><div><b>Ask the prepared question live.</b><span>JurisTwin will search across Outlook, Teams, FSD, training and customer evidence — then refuse to hide disagreement.</span></div><div class="source-mini-row"><span>Outlook</span><span>Teams</span><span>FSD</span><span>Training</span><span>Customer Core</span></div></div>`;
+    const synth=r.synthesis||{};
+    return `<div class="overview-answer-result ${answerTone(r.status)}"><div class="overview-answer-status"><span class="chip ${answerChip(r.status)}">${esc(r.status)}</span><span>${esc(cap(r.role||state.overviewRole))} view · ${Math.round(Number(r.model?.domain_confidence||0)*100)}% routing confidence</span></div><h3>${esc(r.answer||'')}</h3>${r.warning?`<p class="answer-warning">${esc(r.warning)}</p>`:''}<div class="answer-trust"><div><small>WHY YOU CAN TRUST THIS</small><b>${esc(r.authority||'Governed authority')}</b><span>${esc(r.source||r.rule_key||'Enterprise Memory')} · ${esc(r.version||'current')}</span></div><div><small>MULTI-SOURCE SYNTHESIS</small><b>${esc(synth.headline||'Governed sources checked')}</b><span>${esc(synth.summary||'JurisTwin keeps source disagreement visible instead of flattening it.')}</span></div></div>${sourceMixMarkup(r,4)}<div class="answer-proof-row"><span>Learned AI routes · symbolic rules verify · human authority publishes</span><button class="btn quiet" id="overviewAIProof">How AI verified this</button></div></div>`;
+  }
+
+  function showOverviewAIProof(){
+    const r=state.overviewAnswer;if(!r)return;const a=r.ai_verification||{};
+    openSheet({title:'How AI verified this answer',subtitle:'Measured learning + deterministic verification + zero model publication authority',body:`<div class="platform-intro compact"><span class="eyebrow">HYBRID AI · INSPECTABLE BY DESIGN</span><h3>Learned AI generalises. Symbolic reasoning verifies. Humans publish.</h3><p>The statistical model can route unfamiliar language, but it cannot create or publish governed policy.</p></div><div class="assurance-kpis"><div><b>${Math.round(Number(a.domain_macro_f1||0)*1000)/10}%</b><span>Domain Macro-F1</span></div><div><b>${Math.round(Number(a.stance_macro_f1||0)*1000)/10}%</b><span>Stance Macro-F1</span></div><div><b>${a.publication_authority??0}</b><span>Model publication authority</span></div></div><div class="plain-answer-grid"><div><small>LEARNED COMPONENT</small><p>${esc(a.architecture||'TF-IDF word + character features with Logistic Regression')}</p></div><div><small>DETERMINISTIC VERIFIER</small><p>${esc(a.symbolic_verifier||'Policy Atom Reasoner')} checks the policy collision before governance.</p></div><div><small>RESILIENCE</small><p>Internet required: <b>${a.internet_required?'Yes':'No'}</b>. Low-confidence or disagreement routes to review rather than fabricated certainty.</p></div><div><small>PUBLICATION CONTROL</small><p>${esc(a.decision_rule||'Learned model routes; symbolic reasoning verifies; human authority publishes.')}</p></div></div>`});
+  }
+
+  async function runOverviewAnswer(role=state.overviewRole){
+    const input=$('#overviewQuestion');
+    const q=(input?.value||state.overviewQuestion||'').trim();
+    if(q.length<5){status('Ask a complete policy question','error');return;}
+    state.overviewQuestion=q; state.overviewRole=role;
+    const btn=$('#overviewAsk');if(btn){btn.disabled=true;btn.textContent='Checking…';}
+    try{
+      const r=await api('/memory/answer',{method:'POST',body:JSON.stringify({question:q,preview_role:role})});
+      state.overviewAnswer=r; renderShell();
+      status(`${cap(r.status)} · ${fmt(r.synthesis?.sources_considered||r.citations?.length||0)} sources checked`,'ok',2800);
+    }catch(e){status(e.message,'error',3200);if(btn){btn.disabled=false;btn.textContent='Ask JurisTwin';}}
+  }
+
   function renderOverview(){
-    const d=state.dashboard||{}, m=d.metrics||{}, conflicts=d.priority_conflicts||[], i=d.integrity||{};
+    const d=state.dashboard||{}, m=d.metrics||{}, i=d.integrity||{};
     const flagship = state.conflicts.find(c=>c.conflict_ref==='CF-INCOME-001') || state.conflicts[0] || {};
     const resolved = flagship.status === 'resolved';
     const focusCount=Number(flagship.affected_customers||27);
-    const heroTitle = resolved ? `${focusCount} customers are now protected.` : `${focusCount} customers exposed by one contradiction.`;
-    const heroSub = resolved ? 'The governed decision has propagated. AI Bodyguard and the ledger now protect the approved version.' : 'One organisation. Two answers. JurisTwin connects the evidence, exposes the conflict and tests the response before the customer becomes the experiment.';
+    const heroTitle = resolved ? 'One governed answer. Every source traceable.' : 'Ask the organisation. Not one document.';
+    const heroSub = resolved ? 'JurisTwin answers from the active Decision Contract while keeping every prior source and approval traceable.' : 'Company knowledge is split across Outlook, Teams, FSD, training and customer systems. Ask in plain language; JurisTwin answers by authority, role and evidence — and shows the conflict instead of inventing consensus.';
     return `<div class="page">
-      <section class="page-hero reveal"><div><span class="eyebrow">FROM CONFLICT TO CLARITY</span><h2>${esc(heroTitle)}</h2><p>${esc(heroSub)}</p></div><div class="hero-actions"><button class="btn" id="overviewFlow">Final Flow</button><button class="btn primary" id="openCritical">${resolved?'Review proof':'Open critical conflict'} ${icon('arrow',13)}</button></div></section>
+      <section class="page-hero track2-hero reveal"><div><span class="eyebrow">TRACK 2 · CUSTOMER INTELLIGENCE & PROCESS OPTIMISATION</span><h2>${esc(heroTitle)}</h2><p>${esc(heroSub)}</p></div><div class="hero-actions"><button class="btn" id="overviewFlow">Final Flow</button><button class="btn primary" id="openCritical">${resolved?'Review governed decision':'Open exposed conflict'} ${icon('arrow',13)}</button></div></section>
+      <section class="surface track2-ask reveal" aria-label="Ask JurisTwin"><div class="track2-ask-head"><div><span class="eyebrow">PLAIN-LANGUAGE ENTERPRISE MEMORY</span><h3>Can the organisation answer one question consistently?</h3><p>Ask once. JurisTwin checks scattered sources, respects permissions and cites the evidence behind the answer.</p></div><span class="chip green">EVIDENCE-BOUND</span></div><div class="track2-query"><div class="track2-input-wrap">${icon('spark',17)}<input id="overviewQuestion" value="${esc(state.overviewQuestion)}" aria-label="Ask JurisTwin a policy question"></div><button class="btn primary" id="overviewAsk">Ask JurisTwin</button></div><div class="track2-role-row"><span>Show answer as:</span><button class="role-pill ${state.overviewRole==='manager'?'active':''}" data-overview-role="manager">Manager · full evidence</button><button class="role-pill ${state.overviewRole==='intern'?'active':''}" data-overview-role="intern">Intern · redacted</button><small>Same question. Different authorised view.</small></div>${overviewAnswerMarkup()}</section>
       <section class="metric-strip reveal">${metricStrip('Active cases',m.active_cases,'operational')}${metricStrip('Open conflicts',m.decision_conflicts,'need alignment','alert')}${metricStrip('Customers at risk',m.customers_at_risk,'current exposure','alert')}${metricStrip('Protected',m.protected_decisions,'governed decisions','good')}</section>
       <section class="command-grid">
-        <article class="surface focus-panel reveal"><div class="focus-top"><span class="chip ${resolved?'green':'red'}">${resolved?'RESOLVED':'CRITICAL'}</span><span class="muted" style="font-size:11px">${esc(flagship.conflict_ref||'CF-INCOME-001')}</span></div><h3>${esc(flagship.name||'Income-document eligibility')}</h3><p>${esc(flagship.root_cause||'Approved bank-statement policy conflicts with stale payslip-only operational guidance.')}</p><div class="impact-line"><div><b>${fmt(focusCount)}</b><span>customers</span></div><div><b>${fmt(flagship.systems_affected||5)}</b><span>systems</span></div><div><b>${Math.round(Number(flagship.confidence||.942)*100)}%</b><span>confidence</span></div></div><button class="btn focus-cta" id="overviewTwin">${resolved?'Inspect decision':'Run Digital Twin'} ${icon('play',12)}</button><div class="story-rail six"><div class="story-step done">Connect</div><div class="story-step done">Expose</div><div class="story-step ${state.sim||resolved?'done':''}">Simulate</div><div class="story-step ${state.sim||resolved?'done':''}">Recommend</div><div class="story-step ${resolved?'done':''}">Approve</div><div class="story-step ${resolved?'done':''}">Protect</div></div></article>
-        <aside class="surface integrity-panel reveal"><div class="integrity-head"><div><b>Decision integrity</b><span>Cross-system alignment</span></div><span class="chip ${Number(i.score||0)>=90?'green':'amber'}">${esc(i.threshold||'Watch')}</span></div><div class="integrity-main"><div class="score-ring" style="--score:${Number(i.score||0)}"><strong>${Number(i.score||0)}</strong><small>/100</small></div><div class="integrity-bars">${bar('Evidence',i.evidence_alignment)}${bar('Versions',i.version_consistency)}${bar('Access',i.access_compliance)}${bar('Propagation',i.decision_propagation)}</div></div><button class="btn quiet integrity-flow-btn" id="overviewPlatform">See full platform</button></aside>
-        <section class="surface queue-panel reveal"><div class="queue-head"><div><b>Priority queue</b><span> · only what needs attention</span></div><span>${conflicts.length} open</span></div>${conflicts.length?conflicts.slice(0,3).map(c=>`<button class="queue-row" data-open-conflict="${esc(c.conflict_ref)}" type="button" style="border-left:0;border-right:0;border-bottom:0;background:transparent;color:inherit;width:100%;text-align:left;cursor:pointer"><div><b>${esc(c.name)}</b><small>${esc(c.conflict_ref)}</small></div><span class="count">${fmt(c.affected_customers)} affected</span><span class="chip ${String(c.severity).toLowerCase()==='critical'?'red':String(c.severity).toLowerCase()==='high'?'amber':'cyan'}">${esc(c.severity)}</span></button>`).join(''):'<div class="feature-empty"><b>All seeded conflicts governed.</b><br>Decision Replay and Bodyguard retain the complete history.</div>'}</section>
+        <article class="surface focus-panel reveal"><div class="focus-top"><span class="chip ${resolved?'green':'red'}">${resolved?'RESOLVED':'CRITICAL'}</span><span class="muted" style="font-size:11px">${esc(flagship.conflict_ref||'CF-INCOME-001')}</span></div><h3>${esc(flagship.name||'Income-document eligibility')}</h3><p>${esc(flagship.root_cause||'Approved bank-statement policy conflicts with stale payslip-only operational guidance.')}</p><div class="impact-line"><div><b>${fmt(focusCount)}</b><span>customers</span></div><div><b>${fmt(flagship.systems_affected||5)}</b><span>systems</span></div><div><b>${Math.round(Number(flagship.confidence||.942)*100)}%</b><span>confidence</span></div></div><button class="btn focus-cta" id="overviewTwin">${resolved?'Inspect decision':'Run process optimisation'} ${icon('play',12)}</button><div class="story-rail six"><div class="story-step done">Connect</div><div class="story-step done">Expose</div><div class="story-step ${state.sim||resolved?'done':''}">Simulate</div><div class="story-step ${state.sim||resolved?'done':''}">Recommend</div><div class="story-step ${resolved?'done':''}">Approve</div><div class="story-step ${resolved?'done':''}">Protect</div></div></article>
+        <aside class="surface integrity-panel reveal">
+          <div class="integrity-head">
+            <div class="integrity-title"><span class="eyebrow">SYSTEM ASSURANCE</span><b>Decision integrity</b><span>Cross-system alignment</span></div>
+            <span class="chip ${Number(i.score||0)>=90?'green':'amber'}">${esc(i.threshold||'Watch')}</span>
+          </div>
+          <div class="integrity-main">
+            <div class="integrity-gauge" style="--score:${Number(i.score||0)}" aria-label="Decision integrity ${Number(i.score||0)} out of 100">
+              <div class="integrity-gauge-inner"><strong>${Number(i.score||0)}</strong><span>/100</span></div>
+            </div>
+            <div class="integrity-bars">${bar('Evidence',i.evidence_alignment)}${bar('Versions',i.version_consistency)}${bar('Access',i.access_compliance)}${bar('Propagation',i.decision_propagation)}</div>
+          </div>
+          <div class="integrity-foot"><span>${Number(i.score||0)>=90?'All governed layers are aligned.':'One or more governed layers require review.'}</span><button class="btn quiet integrity-flow-btn" id="overviewPlatform">See assurance details ${icon('arrow',12)}</button></div>
+        </aside>
+      </section>
+      <section class="priority-list reveal">
+        <div class="section-title"><div><span class="eyebrow">OTHER LIVE CONFLICTS</span><h3>Prove this is not one hardcoded story.</h3></div><span class="section-note">Select any case to drive the same governed workflow.</span></div>
+        <div class="priority-grid">${state.conflicts.filter(c=>c.conflict_ref!=='CF-INCOME-001').map(c=>`<button class="priority-card" data-open-conflict="${esc(c.conflict_ref)}">
+          <div class="priority-card-top"><div class="priority-status"><span class="severity-dot ${String(c.severity||'medium').toLowerCase()}"></span><span>${esc(c.status==='resolved'?'Resolved':cap(c.severity||'Live'))}</span></div><span class="priority-ref">${esc(c.conflict_ref)}</span></div>
+          <div class="priority-copy"><b>${esc(c.name)}</b><p>${esc(c.root_cause)}</p></div>
+          <div class="priority-foot"><span class="priority-impact"><strong>${fmt(c.affected_customers)}</strong><small>affected</small></span><span class="priority-open">Open case ${icon('arrow',13)}</span></div>
+        </button>`).join('')}</div>
       </section>
     </div>`;
   }
@@ -683,7 +762,7 @@
 
   function renderTwinResults(sim){
     const cert=sim.analysis?.decision_certificate||{}, actions=sim.analysis?.recommended_actions||[], plain=sim.analysis?.plain_language||{}, outcome=plain.customer_outcome||{};
-    return `<div class="twin-summary reveal"><span class="chip green">WHITE-BOX · ${esc(cert.status||'ROBUST')}</span><span><strong>${fmt(sim.analysis?.scenario_count||1500)}</strong> scenarios · simple answer first, technical proof on demand</span></div><section class="decision-lanes reveal">${sim.options.map(o=>`<article class="decision-lane ${state.selectedOption===o.key?'selected':''} ${sim.recommended_option===o.key?'recommended':''}" data-option="${esc(o.key)}" tabindex="0"><div class="lane-key">Option ${esc(o.key)}</div><h3>${esc(sim.analysis?.scenario_profile==='income_document_rule'?(PITCH_OPTION_LABELS[o.key]||cap(o.name)):cap(o.name))}</h3><div class="fit-score">${Number(o.decision_fit).toFixed(1)}<small>/100 fit</small></div><div class="fit-bar"><i style="width:${clamp(Number(o.decision_fit),0,100)}%"></i></div><div class="lane-metrics"><div><b>${Number(o.predicted_delay_days).toFixed(1)}d</b><span>delay</span></div><div><b>${riskLabel(o.complaint_probability)}</b><span>${pct(o.complaint_probability)} complaint</span></div><div><b>${pct(o.policy_alignment)}</b><span>alignment</span></div></div>${o.key==='B'?`<div class="lane-gap">Partial fix · ${fmt(o.applications_affected)} cases remain exposed</div>`:''}${o.key===sim.recommended_option?`<div class="action-chips">${actions.slice(0,5).map(a=>`<span>${esc(a)}</span>`).join('')}</div>`:''}</article>`).join('')}</section>
+    return `<div class="twin-summary reveal"><span class="chip green">PROCESS OPTIMISATION · ${esc(cert.status||'ROBUST')}</span><span><strong>${fmt(sim.analysis?.scenario_count||1500)}</strong> scenarios · simple answer first, technical proof on demand</span></div><section class="decision-lanes reveal">${sim.options.map(o=>`<article class="decision-lane ${state.selectedOption===o.key?'selected':''} ${sim.recommended_option===o.key?'recommended':''}" data-option="${esc(o.key)}" tabindex="0"><div class="lane-key">Option ${esc(o.key)}</div><h3>${esc(sim.analysis?.scenario_profile==='income_document_rule'?(PITCH_OPTION_LABELS[o.key]||cap(o.name)):cap(o.name))}</h3><div class="fit-score">${Number(o.decision_fit).toFixed(1)}<small>/100 fit</small></div><div class="fit-bar"><i style="width:${clamp(Number(o.decision_fit),0,100)}%"></i></div><div class="lane-metrics"><div><b>${Number(o.predicted_delay_days).toFixed(1)}d</b><span>delay</span></div><div><b>${riskLabel(o.complaint_probability)}</b><span>${pct(o.complaint_probability)} complaint</span></div><div><b>${pct(o.policy_alignment)}</b><span>alignment</span></div></div>${o.key==='B'?`<div class="lane-gap">Partial fix · ${fmt(o.applications_affected)} cases remain exposed</div>`:''}${o.key===sim.recommended_option?`<div class="process-opt-label">PROCESS OPTIMISATION</div><div class="action-chips">${actions.slice(0,5).map(a=>`<span>${esc(a)}</span>`).join('')}</div>`:''}</article>`).join('')}</section>
       <section class="surface recommendation-plain reveal"><div class="recommendation-head"><div><span class="eyebrow">WHY OPTION ${esc(sim.recommended_option||'C')} IS THE BEST CHOICE</span><h3>${esc(plain.headline||sim.analysis?.recommended_title||'Choose the complete response.')}</h3><p>${esc(plain.summary||'It fixes the root cause and the downstream process together.')}</p></div><span class="chip green">BEST OVERALL OUTCOME</span></div>
         <div class="recommendation-reasons">${(plain.reasons||[]).map((r,i)=>`<article><span>${i+1}</span><div><b>${esc(r.title)}</b><p>${esc(r.detail)}</p></div></article>`).join('')}</div>
         <div class="option-explain"><div class="option-explain-row muted-choice"><b>Why not A?</b><span>${esc(plain.why_not_a||'It leaves the conflict in place.')}</span></div><div class="option-explain-row partial-choice"><b>Why not B?</b><span>${esc(plain.why_not_b||'It fixes only part of the problem.')}</span></div><div class="option-explain-row best-choice"><b>Why C?</b><span>${esc(plain.why_recommended||'It fixes policy, people and workflow together.')}</span></div></div>
@@ -812,6 +891,10 @@
       $('#openCritical')?.addEventListener('click',()=>{state.selectedConflict='CF-INCOME-001';navigate(state.conflicts.find(c=>c.conflict_ref==='CF-INCOME-001')?.status==='resolved'?'assurance':'conflict');});
       $('#overviewTwin')?.addEventListener('click',()=>{state.selectedConflict='CF-INCOME-001';state.sim=state.sim?.conflict_ref==='CF-INCOME-001'?state.sim:null;if(state.conflicts.find(c=>c.conflict_ref==='CF-INCOME-001')?.status==='resolved')navigate('assurance');else navigate('twin',()=>setTimeout(runTwin,60));});
       $('#overviewFlow')?.addEventListener('click',finalFlowMenu);$('#overviewPlatform')?.addEventListener('click',platformMenu);
+      $('#overviewAsk')?.addEventListener('click',()=>runOverviewAnswer(state.overviewRole));
+      $('#overviewAIProof')?.addEventListener('click',showOverviewAIProof);
+      $('#overviewQuestion')?.addEventListener('keydown',e=>{if(e.key==='Enter')runOverviewAnswer(state.overviewRole);});
+      $$('[data-overview-role]').forEach(b=>b.addEventListener('click',()=>runOverviewAnswer(b.dataset.overviewRole)));
       $$('[data-open-conflict]').forEach(b=>b.addEventListener('click',()=>{state.selectedConflict=b.dataset.openConflict;state.selectedNode=null;navigate('conflict');}));
     }
     if(state.page==='conflict'){

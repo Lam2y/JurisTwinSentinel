@@ -7,8 +7,8 @@ STATIC = ROOT / 'app' / 'static'
 def test_juristech_assets_use_native_document_scroll_and_sticky_chrome():
     css=(STATIC/'sentinel.css').read_text(encoding='utf-8')
     html=(STATIC/'finals.html').read_text(encoding='utf-8')
-    assert '/static/sentinel.css?v=5.5.0' in html
-    assert '/static/sentinel.js?v=5.5.0' in html
+    assert '/static/sentinel.css?v=5.7.0' in html
+    assert '/static/sentinel.js?v=5.7.0' in html
     assert 'body{overflow-x:hidden;overflow-y:auto' in css
     assert '.sidebar{position:sticky;top:0;height:100vh' in css
     assert '.topbar{position:sticky;top:0' in css

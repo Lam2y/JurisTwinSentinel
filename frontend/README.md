@@ -1,4 +1,4 @@
-# JurisTwin Finals Frontend — v5.4
+# JurisTwin Finals Frontend — v5.6
 
 The frontend is a zero-build responsive SPA served by FastAPI. `frontend/src/` is the readable source mirror; deployed files live under `backend/app/static/`.
 
@@ -12,7 +12,7 @@ The frontend is a zero-build responsive SPA served by FastAPI. `frontend/src/` i
 
 Everything else is progressive disclosure through Platform / Final Flow.
 
-## v5.4 UX additions
+## v5.6 UX additions
 
 - Secure Enterprise Memory includes a large **Verified Answer** interaction for plain-language Track 2 access.
 - Answers expose status (`CONFLICT_PRESENT`, `VERIFIED`, `RESTRICTED`, `NEEDS_REVIEW`), authority, version and evidence lineage.

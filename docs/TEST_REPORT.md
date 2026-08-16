@@ -1,8 +1,8 @@
-# JurisTwin Sentinel v5.4 — Release Verification Report
+# JurisTwin Sentinel v5.7 — Release Verification Report
 
 ## Automated regression
 
-Release baseline: **39/39 tests PASS**.
+Release baseline: **55/55 tests PASS**.
 
 The suite covers original application workflows plus:
 
@@ -19,7 +19,7 @@ The suite covers original application workflows plus:
 
 ## Championship preflight
 
-Release baseline: **20/20 controls PASS — 100%**.
+Release baseline: **32/32 controls PASS — 100%**.
 
 Controls:
 
@@ -33,16 +33,23 @@ Controls:
 8. Readiness proof
 9. Hybrid learned AI
 10. Track 2 verified answer
-11. Digital Twin robustness certificate
-12. Governance Gate
-13. Adversarial harness
-14. Unseen evidence reasoning
-15. Explainable blast radius
-16. Proof Pack digest
-17. Live Proof verification
-18. Ledger verification
-19. Operational invariants
-20. Runtime telemetry
+11. Track 2 multi-source synthesis
+12. Track 2 role-safe answer
+13. Track 2 Q&A above the fold
+14. Runtime retrieval truthfulness
+15. Judge clarity — exact conflict messages
+16. Digital Twin robustness certificate
+17. Judge clarity — recommendation rationale
+18. Track 2 process optimisation
+19. Governance Gate
+20. Adversarial harness
+21. Unseen evidence reasoning
+22. Explainable blast radius
+23. Proof Pack digest
+24. Live Proof verification
+25. Ledger verification
+26. Operational invariants
+27. Runtime telemetry
 
 ## Adversarial harness
 
@@ -87,4 +94,4 @@ This is a release-host stress observation, not a production throughput/SLA claim
 
 ## Frontend validation
 
-The responsive shell, native scrolling, sheet close paths and graph drag/bounds mechanics inherit the previously browser-validated v5.2 foundation at 1024×768, 1440×900 and 1920×1080. v5.4 changes are guarded by JavaScript syntax validation, frontend static-contract tests and API/E2E tests. Perform one final visual rehearsal on the actual competition laptop after extraction.
+The responsive shell, native scrolling, sheet close paths and graph drag/bounds mechanics inherit the previously browser-validated v5.2 foundation at 1024×768, 1440×900 and 1920×1080. v5.7 changes are guarded by JavaScript syntax validation, frontend static-contract tests and API/E2E tests. Perform one final visual rehearsal on the actual competition laptop after extraction.

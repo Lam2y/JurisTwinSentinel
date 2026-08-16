@@ -64,7 +64,7 @@ Returns recent hash-ledger entries plus full-chain verification. Used to prove l
 The standard `/api/live/challenge` response now includes `analysis.policy_atoms` and `analysis.impact_graph` so the verdict and affected-case count are independently explainable.
 
 
-## v5.4 Hybrid AI endpoints
+## v5.7 Hybrid AI + Track 2 endpoints
 
 - `GET /api/live/ai-model` — measured local model card, tasks, held-out development metrics, abstention and governance boundary.
 - `POST /api/memory/answer` — plain-language question → learned policy-domain routing → approved evidence / Decision Contract answer with role-aware citations and conflict warning. Unknown questions safely return `NEEDS_REVIEW`.

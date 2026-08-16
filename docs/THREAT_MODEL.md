@@ -1,4 +1,4 @@
-# Threat Model — JurisTwin Sentinel Championship v5.4
+# Threat Model — JurisTwin Sentinel Championship v5.7
 
 ## Protected assets
 

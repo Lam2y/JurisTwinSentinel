@@ -1,6 +1,6 @@
-# JurisTwin Sentinel v5.4 — Pitch Deck Feature Coverage
+# JurisTwin Sentinel v5.7 — Pitch Deck Feature Coverage
 
-v5.4 preserves every capability in the final Team AgenticX deck and all v4 championship controls, while adding the learned-AI and trusted-answer layers required to remove the independent assessment's technical ceilings.
+v5.7 preserves every capability in the final Team AgenticX deck and all v4 championship controls, while adding the learned-AI and trusted-answer layers required to remove the independent assessment's technical ceilings.
 
 ## Pitch deck → live product mapping
 
@@ -12,14 +12,14 @@ v5.4 preserves every capability in the final Team AgenticX deck and all v4 champ
 | Secure Enterprise Memory | Platform → Secure Enterprise Memory |
 | AI Classification | Real local learned classifier; Platform → AI Model Card |
 | Vector Evidence Vault / permission-safe retrieval | Secure Enterprise Memory retrieval + authority/sensitivity/version metadata |
-| Plain-language trustworthy access | **Get verified answer** — evidence-bound answer, conflict warning and citations |
-| Manager full evidence | Memory role preview: Manager |
+| Plain-language trustworthy access | **Ask JurisTwin** — first navigation destination + above-fold evidence-bound answer, conflict warning, source mix and citations |
+| Manager full evidence | Overview one-click role preview + Memory role preview: Manager |
 | Officer assigned cases | Memory role preview: Officer |
-| Intern redacted view | Memory role preview: Intern; server-side Sentinel Shield redaction |
+| Intern redacted view | Overview one-click Intern preview + Memory role preview; server-side Sentinel Shield redaction |
 | Living Decision Digital Twin | Conflict Map + Platform → Living Decision Digital Twin |
 | White-Box Conflict Intelligence Network | Conflict Map; draggable nodes + authority/version/relation |
 | Cross-reference / Detect conflict | Hybrid AI Policy Reasoner + Policy Atom Reasoner |
-| White-Box Future Simulator | Digital Twin |
+| White-Box Future Simulator | Digital Twin — explicitly labelled **Process Optimisation** for Track 2 |
 | Option A / B / C | Exact pitch outputs for flagship + conflict-specific profiles for the other two domains |
 | AI Bodyguard + Decision Ledger | Platform → AI Bodyguard / Decision Ledger |
 | Decision JT-084 | Created after governed flagship publication |

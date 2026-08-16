@@ -1,4 +1,4 @@
-JURISTWIN SENTINEL — CHAMPIONSHIP JUDGE-CLARITY MAXSCORE EDITION v5.5
+JURISTWIN SENTINEL — CHAMPIONSHIP ADVERSARIAL MAXSCORE EDITION v5.7
 =======================================================
 
 START
@@ -42,7 +42,7 @@ BEST 5–7 MINUTE FLOW
 6. APPROVE
    Governance Gate must show 100% PASS before publication.
    Publish JT-084.
-   IMPORTANT: readiness remains READY 100% after approval in v5.5.
+   IMPORTANT: readiness remains READY 100% after approval in v5.7.
 
 7. PROTECT
    Trigger the QA-014 Bodyguard incident and restore the approved version.
@@ -68,13 +68,15 @@ Alt+F  Final Flow
 Esc    Close side sheet
 
 FINALS-DAY CHECK
-cd backend
-python -m pytest -q
-python scripts\industry_preflight.py
+Double-click: run_preflight.bat
 
-EXPECTED v5.5
-39/39 tests PASS
-20/20 preflight PASS
+Manual equivalent from project root:
+backend\.venv\Scripts\python.exe -X utf8 -m pytest -q
+backend\.venv\Scripts\python.exe -X utf8 backend\scripts\industry_preflight.py
+
+EXPECTED v5.7
+55/55 tests PASS
+32/32 preflight PASS
 16/16 Attack Sentinel HARDENED
 Readiness READY 100%
 Fresh-process stress: 60/60 concurrent evidence writes PASS; ledger VERIFIED
@@ -83,8 +85,17 @@ FINAL LINE
 “JurisTwin stops an organisation from contradicting itself — then proves every decision it makes next.”
 
 
-JUDGE CLARITY — v5.5
+JUDGE CLARITY — v5.7
 --------------------
 Conflict Map now quotes the exact approved and conflicting evidence, explains why they disagree, why the canonical source wins and what customers experience.
 Digital Twin explains Why not A / Why not B / Why C in non-technical language. Use See technical proof only when judges ask how the recommendation was validated.
 Judge Challenge applies the same pattern to unseen evidence.
+
+
+WINDOWS FINALS HARDENING — v5.7
+------------------------------
+- `run_finals.bat` prints startup heartbeats while the local AI stack warms; do not Ctrl+C while STARTING is shown.
+- Browser opens only after `/api/system/health` returns 200.
+- If port 8000 is occupied, JurisTwin automatically chooses another free port and prints it.
+- `run_preflight.bat` uses the exact venv Python and UTF-8 mode; no Microsoft Store `python` alias is required.
+- Deterministic vendor adapters never fake-sync counts. Use Evidence Lab or the Signed Webhook Gateway as the real live-input proof.

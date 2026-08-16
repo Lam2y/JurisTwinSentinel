@@ -13,6 +13,23 @@ from .memory import serialize_evidence
 from .policy_ml import get_policy_ai
 
 
+def _mutate_jwt_signature(token: str) -> str:
+    """Return a token with a guaranteed meaningful signature mutation.
+
+    Mutating the final base64url character is not sufficient because its low padding bits may be
+    ignored by the decoder. Mutating an interior character changes six meaningful bits and makes
+    the self-test independent of the machine-specific signing secret.
+    """
+    parts = token.split(".")
+    if len(parts) != 3 or len(parts[2]) < 3:
+        raise ValueError("Unexpected JWT shape")
+    sig = list(parts[2])
+    idx = min(5, len(sig) - 2)
+    sig[idx] = "a" if sig[idx] != "a" else "b"
+    parts[2] = "".join(sig)
+    return ".".join(parts)
+
+
 def run_red_team(db: Session) -> dict:
     tests = []
     def record(key, label, passed, proof):
@@ -88,7 +105,10 @@ def run_red_team(db: Session) -> dict:
     from ..core.config import get_settings
     settings=get_settings()
     good=jwt.encode({"sub":"1","role":"manager"},settings.SECRET_KEY,algorithm="HS256")
-    forged=good[:-1]+("a" if good[-1]!="a" else "b")
+    # Mutate a non-final base64url signature character. The final character may carry padding
+    # bits that do not change the decoded HMAC bytes, which made an older self-test
+    # machine-secret dependent even though PyJWT verification itself was correct.
+    forged=_mutate_jwt_signature(good)
     try:
         jwt.decode(forged,settings.SECRET_KEY,algorithms=["HS256"]); token_rejected=False
     except Exception:
@@ -147,5 +167,5 @@ def run_red_team(db: Session) -> dict:
         "tests": tests,
         "state_mutations_persisted": 0,
         "canonical_decisions_modified": 0,
-        "engine": "Sentinel Adversarial Harness v5.5",
+        "engine": "Sentinel Adversarial Harness v5.7",
     }

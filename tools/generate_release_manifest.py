@@ -34,17 +34,17 @@ def main():
     tree=hashlib.sha256(material.encode()).hexdigest()
     manifest={
         'product':'JurisTwin Sentinel',
-        'release':'JurisTwin Championship Judge-Clarity MaxScore v5.5',
+        'release':'JurisTwin Championship Adversarial MaxScore v5.7',
         'generated_at':datetime.now(timezone.utc).isoformat(),
         'source_tree_sha256':tree,
         'file_count':len(files),
         'files':files,
         'verification':{
-            'backend_tests':'43/43 passed',
-            'industry_preflight':'22/22 passed',
+            'backend_tests':'55/55 passed',
+            'industry_preflight':'32/32 passed',
             'adversarial_harness':'16/16 hardened',
-            'finals_javascript':'sentinel.js syntax verified; v5.5 judge-clarity + static UI contracts passed; graph/scroll/sheet mechanics retain the browser-validated responsive shell',
-            'clean_http_smoke':'fresh Uvicorn: /finals 200 + health 5.5.0 + 3-conflict workflows + verified answer + learned AI + proof verification + post-approval readiness 100%',
+            'finals_javascript':'sentinel.js syntax verified; v5.7 Track-2-first + judge-clarity + adversarial Windows hardening contracts passed; graph/scroll/sheet mechanics retain the browser-validated responsive shell',
+            'clean_http_smoke':'fresh Uvicorn: /finals 200 + health 5.7.0 + Track-2 multi-source answer + role redaction + learned AI proof + approval + proof verification + post-approval readiness 100% + honest fixture sync + real signed webhook',
             'concurrent_http_stress':'60/60 live evidence writes succeeded at 20-way concurrency; ledger chain verified; readiness remained 100%',
         },
     }

@@ -118,7 +118,7 @@ def test_frontend_no_longer_hardcodes_flagship_twin_and_has_live_proof_verify():
     assert "bundle_digest:proof.bundle_digest" in js
     assert "Hybrid AI Model Card" in js
     # The Overview focus card must read all narrative fields from one flagship object.
-    overview=js[js.index('function renderOverview()'):js.index('function metricStrip')]
+    overview=js[js.index('function renderOverview()'):js.index('function bar')]
     assert 'hero.root_cause' not in overview
     assert 'hero.conflict_ref' not in overview
     assert 'flagship.root_cause' in overview
@@ -192,7 +192,7 @@ def test_release_has_no_committed_runtime_secret_literals_and_launcher_has_port_
     assert 'secrets.token_urlsafe' in config
     assert (root/'tools'/'bootstrap_env.py').exists()
     launcher=(root/'run_finals.bat').read_text(encoding='utf-8')
-    assert 'choose_port.py' in launcher
-    assert 'JURISTWIN_PORT' in launcher
+    assert 'finals_launcher.py' in launcher
+    assert 'JURISTWIN_PORT' in (root/'backend'/'scripts'/'finals_launcher.py').read_text(encoding='utf-8')
     ignore=(root/'.gitignore').read_text(encoding='utf-8')
     assert '.env' in ignore and '.juristwin_port' in ignore

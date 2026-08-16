@@ -63,16 +63,17 @@ def seed_database(db: Session):
 
     now = utcnow()
     integrations = [
-        ("outlook", "Outlook Extractor", "mail", "connected", 12410, now-timedelta(minutes=3), {"metric":"mail objects", "errors":0}),
-        ("teams", "MS Teams Listener", "chat", "connected", 45201, now-timedelta(minutes=1), {"metric":"chat lines", "errors":0}),
-        ("gmail", "Gmail Connector", "mail", "inactive", 0, None, {"metric":"objects", "errors":0, "note":"Configuration pending"}),
-        ("sharepoint", "SharePoint Indexer", "documents", "connected", 1420, now-timedelta(minutes=12), {"metric":"files indexed", "errors":1, "note":"1 sync warning"}),
-        ("onedrive", "OneDrive Loader", "documents", "connected", 893, now-timedelta(hours=1), {"metric":"files indexed", "errors":0}),
-        ("clickup", "ClickUp Workspace", "tasks", "connected", 512, now-timedelta(minutes=6), {"metric":"tickets synced", "errors":2, "note":"2 error blocks"}),
+        ("outlook", "Outlook Extractor", "mail", "connected", 12410, now-timedelta(minutes=3), {"metric":"mail objects", "errors":0, "adapter_mode":"deterministic_finals_adapter"}),
+        ("teams", "MS Teams Listener", "chat", "connected", 45201, now-timedelta(minutes=1), {"metric":"chat lines", "errors":0, "adapter_mode":"deterministic_finals_adapter"}),
+        ("gmail", "Gmail Connector", "mail", "inactive", 0, None, {"metric":"objects", "errors":0, "note":"Configuration pending", "adapter_mode":"deterministic_finals_adapter"}),
+        ("sharepoint", "SharePoint Indexer", "documents", "connected", 1420, now-timedelta(minutes=12), {"metric":"files indexed", "errors":1, "note":"1 sync warning", "adapter_mode":"deterministic_finals_adapter"}),
+        ("onedrive", "OneDrive Loader", "documents", "connected", 893, now-timedelta(hours=1), {"metric":"files indexed", "errors":0, "adapter_mode":"deterministic_finals_adapter"}),
+        ("clickup", "ClickUp Workspace", "tasks", "connected", 512, now-timedelta(minutes=6), {"metric":"tickets synced", "errors":2, "note":"2 error blocks", "adapter_mode":"deterministic_finals_adapter"}),
         ("customer_core", "Customer Core API", "customer", "connected", 128, now, {"metric":"customer records", "errors":0, "note":"Consensus validated", "realtime":True}),
-        ("qa", "QA Repository", "qa", "connected", 38, now-timedelta(minutes=15), {"metric":"policies tracked", "errors":0}),
+        ("qa", "QA Repository", "qa", "connected", 38, now-timedelta(minutes=15), {"metric":"policies tracked", "errors":0, "adapter_mode":"deterministic_finals_adapter"}),
         ("postgres", "PostgreSQL DB", "database", "connected", 1426, now, {"metric":"records mirrored", "errors":0, "note":"Mirror transactional", "realtime":True}),
-        ("vector", "ChromaDB vector", "semantic", "connected", 142400, now, {"metric":"embeddings", "errors":0, "realtime":True}),
+        ("vector", "Local Semantic Retrieval Index", "semantic", "connected", 142400, now, {"metric":"indexed evidence terms", "errors":0, "engine":"BM25 + cosine", "pilot_target":"ChromaDB", "adapter_mode":"local_runtime", "note":"Finals runtime uses explainable local retrieval; ChromaDB is a pilot-target adapter."}),
+        ("webhook", "Signed Webhook Gateway", "ingress", "connected", 0, now, {"metric":"authenticated live events", "errors":0, "adapter_mode":"live_http_ingress", "auth":"HMAC-SHA256", "replay_protection":True, "realtime":True, "note":"Genuine external HTTP ingress; use send_live_webhook.py from a second terminal."}),
     ]
     for key, name, kind, status, count, last_sync, details in integrations:
         db.add(Integration(key=key, name=name, kind=kind, status=status, object_count=count, last_sync_at=last_sync, details_json=dumps(details)))
