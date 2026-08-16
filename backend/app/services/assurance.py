@@ -173,7 +173,7 @@ def proof_pack(db: Session, conflict_ref: str = "CF-INCOME-001", decision_ref: s
     model_card = get_policy_ai().model_card()
     benchmark = model_card.get("held_out_development_benchmark", {})
     payload = {
-        "format":"JurisTwin Decision Assurance Proof Pack v5.4",
+        "format":"JurisTwin Decision Assurance Proof Pack v5.5",
         "generated_at":datetime.now(timezone.utc).isoformat(),
         "subject":{"conflict_ref":conflict_ref,"decision_ref":decision_ref if decision else None,"rule_key":c.rule_key},
         "conflict":{"name":c.name,"severity":c.severity,"status":c.status,"confidence":c.confidence,"root_cause":c.root_cause},

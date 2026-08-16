@@ -210,6 +210,83 @@ def _pareto_frontier(options: list[dict]) -> list[str]:
             frontier.append(a["key"])
     return frontier
 
+
+PLAIN_RECOMMENDATION_COPY = {
+    "income_document_rule": {
+        "headline": "Option C fixes the organisation, not just one document.",
+        "summary": "It aligns the approved policy, frontline instructions, affected customer cases, QA tests and duplicate-request controls at the same time.",
+        "reason_titles": [
+            ("Fixes every conflicting source", "The FSD and frontline guidance are updated together, so officers no longer receive two different rules."),
+            ("Protects customers already affected", "The exposed applications are reviewed instead of leaving customers trapped in the old process."),
+            ("Prevents the conflict from returning", "QA and duplicate-request controls are updated so the old payslip-only behaviour cannot quietly reappear."),
+        ],
+        "option_a": "Take no action leaves the contradiction in place, so customers can continue receiving inconsistent requests.",
+        "option_b": "Updating the FSD alone fixes one document, but officers, existing cases and workflow controls can still follow the old rule.",
+        "option_c": "Aligning the complete process fixes policy, people and workflow together, leaving the smallest known operational gap.",
+    },
+    "loan_restructure_rule": {
+        "headline": "Option C fixes the threshold and every decision already touched by the old threshold.",
+        "summary": "It synchronises the governed risk ceiling, recalculates exposed cases, updates QA and blocks the legacy threshold from being reused.",
+        "reason_titles": [
+            ("One approval threshold everywhere", "Risk Operations and frontline processing stop using different cut-offs for the same borrower."),
+            ("Rechecks exposed borrowers", "The affected restructuring cases are recalculated under the governed threshold rather than left in limbo."),
+            ("Stops legacy logic from returning", "QA and workflow controls are updated so the old threshold cannot silently re-enter the process."),
+        ],
+        "option_a": "Take no action leaves two approval thresholds active and preserves inconsistent borrower outcomes.",
+        "option_b": "Synchronising only the threshold fixes the rule but does not repair cases already evaluated under the old value.",
+        "option_c": "Aligning the threshold and recalculating cases fixes both the rule and its operational consequences.",
+    },
+    "notification_deadline": {
+        "headline": "Option C makes the deadline mean the same thing in policy, systems and frontline work.",
+        "summary": "It aligns the SLA definition, scheduler, operating guidance and affected notices so business-day and calendar-day logic cannot coexist.",
+        "reason_titles": [
+            ("One deadline definition", "Compliance, the scheduler and Operations all use the same business-day interpretation."),
+            ("Repairs notices already exposed", "Affected customer notices are reviewed rather than relying only on a future scheduler change."),
+            ("Prevents deadline drift", "Legacy calendar-day logic is blocked from reappearing in manual instructions or system rules."),
+        ],
+        "option_a": "Take no action leaves two deadline definitions active.",
+        "option_b": "Updating the scheduler alone fixes automation, but manual guidance and already-affected notices can remain inconsistent.",
+        "option_c": "Aligning the SLA and operations fixes the definition, the system and the human process together.",
+    },
+}
+
+
+def _plain_recommendation(profile_key: str, options: list[dict], recommended: dict, actions: list[str]) -> dict:
+    copy=PLAIN_RECOMMENDATION_COPY.get(profile_key, {
+        "headline":"Choose the option that removes the whole operating gap.",
+        "summary":"The recommended response performs best across customer impact, delay and policy alignment while addressing the underlying conflict.",
+        "reason_titles":[],
+        "option_a":"Take no action leaves the current conflict in place.",
+        "option_b":"The partial response removes only part of the operating gap.",
+        "option_c":"The complete response aligns the rule and downstream process together.",
+    })
+    by={o["key"]:o for o in options}
+    a=by.get("A",{}); b=by.get("B",{}); c=by.get(recommended.get("key"),recommended)
+    return {
+        "headline":copy["headline"],
+        "summary":copy["summary"],
+        "reasons":[{"title":t,"detail":d} for t,d in copy["reason_titles"]],
+        "why_not_a":copy["option_a"],
+        "why_not_b":copy["option_b"],
+        "why_recommended":copy["option_c"],
+        "comparison":{
+            "A":copy["option_a"], "B":copy["option_b"], "C":copy["option_c"],
+        },
+        "customer_outcome":{
+            "delay_before_days":a.get("predicted_delay_days"),
+            "delay_after_days":c.get("predicted_delay_days"),
+            "complaint_before_pct":a.get("complaint_probability"),
+            "complaint_after_pct":c.get("complaint_probability"),
+            "affected_before":a.get("applications_affected"),
+            "affected_after":c.get("applications_affected"),
+            "alignment_before_pct":a.get("policy_alignment"),
+            "alignment_after_pct":c.get("policy_alignment"),
+        },
+        "actions":actions,
+        "non_technical_takeaway":copy["headline"],
+        "technical_proof_available":True,
+    }
+
 def run_simulation(db: Session, conflict: Conflict, user: User, weights: dict | None = None):
     weights = _normalize(weights)
     profile = SCENARIO_PROFILES.get(conflict.rule_key, SCENARIO_PROFILES["income_document_rule"])
@@ -260,6 +337,7 @@ def run_simulation(db: Session, conflict: Conflict, user: User, weights: dict | 
             f"stable in {robustness:.0f}% of ±10pp priority stress tests; Pareto frontier: {', '.join(pareto)}; "
             f"p10 worst-case fit: {recommended_worst_fit}%."
         ),
+        "plain_language":_plain_recommendation(conflict.rule_key, options, recommended, profile["actions"]),
         "validation_note":"Finals model is intentionally white-box. Point coefficients are prototype-calibrated; uncertainty, sensitivity and Pareto analysis test decision robustness rather than claiming statistically trained production forecasts.",
     }
 

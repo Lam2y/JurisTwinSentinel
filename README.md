@@ -1,8 +1,8 @@
-# JurisTwin Sentinel — Championship MaxScore Edition v5.4
+# JurisTwin Sentinel — Championship Judge-Clarity MaxScore Edition v5.5
 
 JurisTwin Sentinel is a **hybrid-AI decision-integrity control plane** for regulated enterprises. It connects fragmented evidence, gives permission-safe plain-language answers, detects contradictory policy, traces downstream exposure, stress-tests response options, enforces human governance, propagates approved decisions and preserves replayable cryptographic proof.
 
-v5.4 is the finals build designed around the exact operating story:
+v5.5 is the finals build designed around the exact operating story:
 
 > **CONNECT → EXPOSE → SIMULATE → RECOMMEND → APPROVE → PROTECT**
 
@@ -31,7 +31,11 @@ The finals UI is served directly by FastAPI and requires **no Node/npm runtime o
 
 Use **Final Flow** for the six-stage pitch story. Use **Platform** to expose the full technical stack without cluttering the main demonstration.
 
-## What changed in v5.4
+## What changed in v5.5
+
+### Judge Clarity Layer
+Every conflict now names and quotes the exact governed sources that disagree, explains why they conflict, why the canonical source wins and the customer consequence. Digital Twin recommendations explain Why not A / Why not B / Why C in plain English before exposing Monte Carlo, sensitivity and Pareto proof. Judge Challenge uses the same evidence-first explanation pattern.
+
 
 ### Genuine learned AI, without giving a model decision authority
 
@@ -139,7 +143,7 @@ pytest -q
 python scripts/industry_preflight.py
 ```
 
-Expected v5.4 release baseline:
+Expected v5.5 release baseline:
 
 - **39/39 automated tests**
 - **20/20 championship preflight controls**
@@ -159,7 +163,7 @@ The script loads the locally generated `.env`, sends a real HTTP POST, signs it 
 
 ## Claims boundary
 
-JurisTwin v5.4 is an **enterprise-grade proof of concept**, not regulator-certified production banking software.
+JurisTwin v5.5 is an **enterprise-grade proof of concept**, not regulator-certified production banking software.
 
 - Vendor-branded connector counts use deterministic finals adapters unless a real tenant is connected.
 - The machine-to-machine webhook is a genuine live HTTP integration contract.

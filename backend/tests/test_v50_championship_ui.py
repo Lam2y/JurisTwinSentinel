@@ -8,8 +8,8 @@ def test_championship_ui_serves_only_current_runtime_assets():
     with client:
         finals = client.get('/finals')
         assert finals.status_code == 200
-        assert '/static/sentinel.css?v=5.4.0' in finals.text
-        assert '/static/sentinel.js?v=5.4.0' in finals.text
+        assert '/static/sentinel.css?v=5.5.0' in finals.text
+        assert '/static/sentinel.js?v=5.5.0' in finals.text
         assert 'experience.css' not in finals.text
         assert 'prototype.css' not in finals.text
         assert client.get('/static/sentinel.css').status_code == 200

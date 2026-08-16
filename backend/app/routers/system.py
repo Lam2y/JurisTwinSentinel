@@ -21,7 +21,7 @@ def shield_ser(s):
 
 @router.get("/health")
 def health(db:Session=Depends(get_db)):
-    db.execute(text("SELECT 1"));return {"status":"operational","database":"ok","decision_ledger":verify_chain(db),"version":"5.4.0","service":"JurisTwin Sentinel JurisTech"}
+    db.execute(text("SELECT 1"));return {"status":"operational","database":"ok","decision_ledger":verify_chain(db),"version":"5.5.0","service":"JurisTwin Sentinel JurisTech"}
 
 @router.get("/readiness")
 def readiness(db:Session=Depends(get_db),user:User=Depends(current_user)):
@@ -121,7 +121,7 @@ def readiness(db:Session=Depends(get_db),user:User=Depends(current_user)):
 @router.get("/config")
 def config(db:Session=Depends(get_db),user:User=Depends(current_user)):
     roles=db.execute(select(RolePolicy).order_by(RolePolicy.id)).scalars().all();shields=db.execute(select(SecurityShield).order_by(SecurityShield.id)).scalars().all()
-    return {"rbac":[role_ser(r) for r in roles],"shields":[shield_ser(s) for s in shields],"retention":"7-Year Ledger Retention","mode":"JurisTwin Sentinel v5.4 MaxScore Hybrid Decision Assurance Platform","current_role":user.role}
+    return {"rbac":[role_ser(r) for r in roles],"shields":[shield_ser(s) for s in shields],"retention":"7-Year Ledger Retention","mode":"JurisTwin Sentinel v5.5 MaxScore Hybrid Decision Assurance Platform","current_role":user.role}
 
 @router.patch("/roles/{role}")
 def update_role(role:str,body:RolePolicyUpdate,db:Session=Depends(get_db),user:User=Depends(require_roles("manager","compliance_manager"))):

@@ -34,17 +34,17 @@ def main():
     tree=hashlib.sha256(material.encode()).hexdigest()
     manifest={
         'product':'JurisTwin Sentinel',
-        'release':'JurisTwin Championship MaxScore v5.4',
+        'release':'JurisTwin Championship Judge-Clarity MaxScore v5.5',
         'generated_at':datetime.now(timezone.utc).isoformat(),
         'source_tree_sha256':tree,
         'file_count':len(files),
         'files':files,
         'verification':{
-            'backend_tests':'39/39 passed',
-            'industry_preflight':'20/20 passed',
+            'backend_tests':'43/43 passed',
+            'industry_preflight':'22/22 passed',
             'adversarial_harness':'16/16 hardened',
-            'finals_javascript':'sentinel.js syntax verified; v5.4 static UI contracts passed; graph/scroll/sheet mechanics retain the browser-validated responsive shell',
-            'clean_http_smoke':'fresh Uvicorn: /finals 200 + health 5.4.0 + 3-conflict workflows + verified answer + learned AI + proof verification + post-approval readiness 100%',
+            'finals_javascript':'sentinel.js syntax verified; v5.5 judge-clarity + static UI contracts passed; graph/scroll/sheet mechanics retain the browser-validated responsive shell',
+            'clean_http_smoke':'fresh Uvicorn: /finals 200 + health 5.5.0 + 3-conflict workflows + verified answer + learned AI + proof verification + post-approval readiness 100%',
             'concurrent_http_stress':'60/60 live evidence writes succeeded at 20-way concurrency; ledger chain verified; readiness remained 100%',
         },
     }

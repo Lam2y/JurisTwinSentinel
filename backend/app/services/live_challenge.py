@@ -64,6 +64,57 @@ RULE_PROFILES = {
 }
 
 
+PLAIN_LIVE_COPY = {
+    "income_document_rule": {
+        "why_it_matters":"Following the incoming instruction could make officers reject evidence the organisation has already approved, so the same gig worker can receive two different answers.",
+        "conflict_label":"Bank-statement eligibility",
+    },
+    "loan_restructure_rule": {
+        "why_it_matters":"Using different risk thresholds can make the same borrower eligible in one workflow and ineligible in another.",
+        "conflict_label":"Restructuring approval threshold",
+    },
+    "notification_deadline": {
+        "why_it_matters":"Using business days in one place and calendar days in another can produce different deadlines for the same customer notice.",
+        "conflict_label":"Customer notification deadline",
+    },
+}
+
+
+def _plain_live_explanation(rule_key: str, verdict: str, incoming_body: str, incoming_source: str, canonical: Evidence | None, atom_reasoning: dict, blast_radius: int) -> dict:
+    copy=PLAIN_LIVE_COPY.get(rule_key,{
+        "why_it_matters":"Conflicting policy evidence can produce inconsistent customer decisions until a human resolves which instruction governs.",
+        "conflict_label":"Policy instruction",
+    })
+    collision=(atom_reasoning.get("collisions") or [{}])[0]
+    if verdict=="CONTRADICTION":
+        why_conflict=collision.get("explanation") or "The incoming instruction disagrees with the current approved rule."
+        headline=f"Conflict detected: {copy['conflict_label']} has two incompatible instructions."
+    elif verdict=="ALIGNED":
+        why_conflict="The incoming instruction agrees with the current approved rule."
+        headline=f"No conflict: {copy['conflict_label']} is aligned."
+    else:
+        why_conflict="JurisTwin cannot safely prove that the incoming instruction matches an approved rule, so it is held for review."
+        headline=f"Human review required: {copy['conflict_label']} is not safe to auto-resolve."
+    which_wins=(
+        f"The approved {canonical.source} evidence remains authoritative because it was approved by {canonical.authority} "
+        f"at authority level {canonical.authority_level}. New evidence is quarantined until a human approves a change."
+        if canonical else
+        "No approved canonical source exists for this topic, so JurisTwin does not guess which instruction should win."
+    )
+    return {
+        "headline":headline,
+        "what_incoming_says":incoming_body.strip(),
+        "incoming_source":incoming_source,
+        "what_canonical_says":canonical.body if canonical else None,
+        "canonical_source":canonical.source if canonical else None,
+        "canonical_authority":canonical.authority if canonical else None,
+        "why_conflict":why_conflict,
+        "which_source_wins":which_wins,
+        "why_it_matters":copy["why_it_matters"],
+        "customer_impact":f"{blast_radius} customer cases are connected to this policy through the governed dependency graph." if blast_radius else "No live customer cases are currently linked to this policy.",
+    }
+
+
 def _tokens(text: str) -> set[str]:
     return set(TOKEN_RE.findall((text or "").lower()))
 
@@ -475,6 +526,7 @@ def run_live_challenge(db: Session, body, user) -> dict:
             "decision_ref": None,
             "action": "HUMAN_REVIEW_BEFORE_CANONICALISATION",
         },
+        "plain_language": _plain_live_explanation(rule_key, verdict, body.body, body.source, canonical, atom_reasoning, blast_radius),
         "reasons": rule_reasons + stance_reasons + ([
             "Structured policy-atom comparison found an incompatible governed modality."
         ] if opposite else []),

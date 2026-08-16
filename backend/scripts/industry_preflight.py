@@ -36,7 +36,7 @@ def main():
         passed.append(ok('Deterministic reset',reset.status_code==200))
         health=c.get('/api/system/health',headers=h)
         hj=health.json()
-        passed.append(ok('Service health',health.status_code==200 and hj.get('version')=='5.4.0',hj.get('version','?')))
+        passed.append(ok('Service health',health.status_code==200 and hj.get('version')=='5.5.0',hj.get('version','?')))
         passed.append(ok('Security headers',health.headers.get('x-frame-options')=='DENY' and bool(health.headers.get('content-security-policy'))))
         from app.core.config import get_settings
         settings=get_settings()
@@ -52,7 +52,7 @@ def main():
         port_ok=choice.isdigit() and int(choice)!=busy
         passed.append(ok('Automatic port failover',port_ok,f"busy={busy} → selected={choice}"))
         finals=c.get('/finals')
-        frontend_ok=finals.status_code==200 and '/static/sentinel.css?v=5.4.0' in finals.text and '/static/sentinel.js?v=5.4.0' in finals.text
+        frontend_ok=finals.status_code==200 and '/static/sentinel.css?v=5.5.0' in finals.text and '/static/sentinel.js?v=5.5.0' in finals.text
         passed.append(ok('Pitch-aligned JurisTech frontend',frontend_ok,'responsive SPA assets served'))
         ready=c.get('/api/system/readiness',headers=h).json()
         passed.append(ok('Readiness proof',ready.get('status')=='READY' and ready.get('score')==100,f"{ready.get('score')}%"))
@@ -61,9 +61,16 @@ def main():
         passed.append(ok('Hybrid learned AI',model.get('learned_component') is True and bench.get('domain_macro_f1',0)>=0.85 and bench.get('stance_macro_f1',0)>=0.85,f"domain F1={bench.get('domain_macro_f1')} · stance F1={bench.get('stance_macro_f1')}"))
         answer=c.post('/api/memory/answer',headers=h,json={'question':'Can gig workers use bank statements as income evidence?','preview_role':'manager'}).json()
         passed.append(ok('Track 2 verified answer',answer.get('status')=='CONFLICT_PRESENT' and answer.get('rule_key')=='income_document_rule' and len(answer.get('citations',[]))>=1,f"{answer.get('status')} · {len(answer.get('citations',[]))} citation(s)"))
+        conflict=c.get('/api/conflicts/CF-INCOME-001',headers=h).json()
+        plain=conflict.get('plain_explanation',{})
+        clarity_ok=bool(plain.get('canonical',{}).get('message')) and len(plain.get('conflicting_evidence',[]))>=2 and 'two different answers' in plain.get('why_it_matters','').lower()
+        passed.append(ok('Judge clarity — exact conflict messages',clarity_ok,'approved vs conflicting evidence + plain-English impact'))
         sim=c.post('/api/simulations/conflict/CF-INCOME-001/run',headers=h,json={}).json()
         cert=sim.get('analysis',{}).get('decision_certificate',{})
         passed.append(ok('Twin robustness certificate',cert.get('status')=='ROBUST',f"stability={cert.get('sensitivity_stability_pct')}%"))
+        simple=sim.get('analysis',{}).get('plain_language',{})
+        rec_ok='organisation' in simple.get('headline','').lower() and 'one document' in simple.get('why_not_b','').lower() and len(simple.get('reasons',[]))>=3
+        passed.append(ok('Judge clarity — recommendation rationale',rec_ok,'Why not A / Why not B / Why C exposed before technical proof'))
         gate=c.get('/api/assurance/governance-gate/CF-INCOME-001',headers=h).json()
         passed.append(ok('Governance gate',gate.get('status')=='PASS' and gate.get('score')==100,f"{gate.get('score')}%"))
         attack=c.post('/api/live/red-team',headers=h,json={}).json()

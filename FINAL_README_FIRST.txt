@@ -1,4 +1,4 @@
-JURISTWIN SENTINEL — CHAMPIONSHIP MAXSCORE EDITION v5.4
+JURISTWIN SENTINEL — CHAMPIONSHIP JUDGE-CLARITY MAXSCORE EDITION v5.5
 =======================================================
 
 START
@@ -42,7 +42,7 @@ BEST 5–7 MINUTE FLOW
 6. APPROVE
    Governance Gate must show 100% PASS before publication.
    Publish JT-084.
-   IMPORTANT: readiness remains READY 100% after approval in v5.4.
+   IMPORTANT: readiness remains READY 100% after approval in v5.5.
 
 7. PROTECT
    Trigger the QA-014 Bodyguard incident and restore the approved version.
@@ -72,7 +72,7 @@ cd backend
 python -m pytest -q
 python scripts\industry_preflight.py
 
-EXPECTED v5.4
+EXPECTED v5.5
 39/39 tests PASS
 20/20 preflight PASS
 16/16 Attack Sentinel HARDENED
@@ -81,3 +81,10 @@ Fresh-process stress: 60/60 concurrent evidence writes PASS; ledger VERIFIED
 
 FINAL LINE
 “JurisTwin stops an organisation from contradicting itself — then proves every decision it makes next.”
+
+
+JUDGE CLARITY — v5.5
+--------------------
+Conflict Map now quotes the exact approved and conflicting evidence, explains why they disagree, why the canonical source wins and what customers experience.
+Digital Twin explains Why not A / Why not B / Why C in non-technical language. Use See technical proof only when judges ask how the recommendation was validated.
+Judge Challenge applies the same pattern to unseen evidence.

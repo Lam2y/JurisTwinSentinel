@@ -27,9 +27,9 @@ def test_security_headers_runtime_telemetry_and_readiness_v4():
         assert r.headers['x-frame-options']=='DENY'
         assert r.headers['x-juristwin-governed']=='true'
         assert r.headers.get('content-security-policy')
-        assert r.json()['version']=='5.4.0'
+        assert r.json()['version']=='5.5.0'
         a=client.get('/api/assurance/overview',headers=h).json()
-        assert a['platform']=='JurisTwin Sentinel Championship v5.4'
+        assert a['platform']=='JurisTwin Sentinel Championship v5.5'
         assert a['invariants']['status']=='HEALTHY'
         assert a['telemetry']['requests']>=1
         ready=client.get('/api/system/readiness',headers=h).json()

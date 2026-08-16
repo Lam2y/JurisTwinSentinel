@@ -147,5 +147,5 @@ def run_red_team(db: Session) -> dict:
         "tests": tests,
         "state_mutations_persisted": 0,
         "canonical_decisions_modified": 0,
-        "engine": "Sentinel Adversarial Harness v5.4",
+        "engine": "Sentinel Adversarial Harness v5.5",
     }
