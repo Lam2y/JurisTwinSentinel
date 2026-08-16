@@ -1,0 +1,762 @@
+[
+  {
+    "text": "Restructuring is not permitted for accounts outside the approved risk band.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Operations can use the approved three-business-day service window.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Credit staff can authorise revised instalments inside delegated authority.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "An officer can accept recurring-credit bank statements for freelance income checks.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Do not approve a gig-worker case using only an account statement.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Officers discussed payslips and account statements during training.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The team must not accept account statements in place of payslips.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "The loan restructuring SOP was updated yesterday.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The team audited notification timestamps from recent decisions.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The marketing approval workflow changed its naming convention.",
+    "domain": "general_policy_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Approved hardship cases can receive revised instalments under the current policy.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The customer uploaded several income-related documents to the vault.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The data-retention policy document received a formatting update.",
+    "domain": "general_policy_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The notification SLA appears in the current policy library.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The approval threshold is displayed in the risk engine.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The scheduler recorded the notice timestamp.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Alternative income documents can include bank statements for self-employed customers.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The procurement team archived an old vendor form.",
+    "domain": "general_policy_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Officers may accept bank statements when payslips are unavailable.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The scheduler is allowed to calculate notification due dates using business days.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The restructuring SOP has several version-history entries.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Notices can be issued during the approved three working-day SLA.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Credit officers cannot bypass committee approval for high-risk restructures.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Officers must not rely on the superseded calendar-day procedure.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "The legacy three-calendar-day SLA is no longer permitted.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "The customer may receive the notice within three working days.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Loan restructuring is prohibited when affordability review fails.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "A notice sent inside three working days satisfies the current SLA.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Verified statements qualify as acceptable alternative evidence under the waiver.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The policy recognises bank records as valid evidence for approved gig-worker cases.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Compliance sampled adverse-decision notices for review.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Repayment restructuring may proceed after the required risk assessment.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Customer notification must not use calendar days under the new policy.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "The branch opening-hours procedure was updated.",
+    "domain": "general_policy_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Account statements are prohibited as standalone income evidence.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "For approved gig-worker cases, account statements may be used for income verification.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "A reviewer opened the bank-statement document in the evidence vault.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The superseded score threshold must not be used to approve cases.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Borrowers meeting the approved score threshold may enter a restructuring plan.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Income checks require payslips; statements are invalid for this purpose.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Hardship restructuring may proceed for eligible accounts.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Compliance reviewed the adverse-notice template.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "A customer notification was stored in the case timeline.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The calendar-day timer is forbidden under the current compliance rule.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Officers must request payslips from every freelance applicant.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Compliance allows the adverse-decision letter to be issued by business day three.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Applicants may present verified account statements to evidence recurring income.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Freelancers can provide account statements as valid income proof.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Self-employed applicants are allowed to use account statements to demonstrate income.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Income evidence must consist of payslips only; bank statements are excluded.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Loan restructuring is allowed for cases below the current committee threshold.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The restructuring queue contains eleven customer cases.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Customer notices may be sent within three business days.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The document checklist contains a section about freelance income.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Risk Operations reviewed the restructuring queue.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The latest income evidence file contains both statements and payslips.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The team compared historic bank-statement and payslip records.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The policy permits completion of customer notification by the third business day.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Restructure requests above the risk ceiling must be rejected.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Restructuring is permitted once the case passes the committee risk rule.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The gig-worker income verification workflow has a new document version.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Bank statement evidence is forbidden for this eligibility decision.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Eligible borrowers can receive a term extension after risk review.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Applications failing the risk review are denied restructuring.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "A term-extension request was assigned to Credit Operations.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Operations can notify the customer by the end of the third business day.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Bank statements are accepted for eligible freelance applicants.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Operations must use business days and cannot apply the old calendar-day timer.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "A customer asked about changing their repayment tenure.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Restructuring may be approved when the risk score is within the authorised threshold.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Do not restructure loans that breach the risk ceiling.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Bank account records may satisfy the income-document requirement when verified.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The organisation published a new travel expense handbook.",
+    "domain": "general_policy_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "A three-business-day notification window is permitted by Compliance.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The company newsletter mentions a future training session.",
+    "domain": "general_policy_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The risk engine stores a score beside each loan application.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The policy library contains a document about office equipment.",
+    "domain": "general_policy_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The customer notification procedure was reviewed by Compliance.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The committee reviewed several hardship applications.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The current policy allows adverse notice within three business days.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Only salary slips may be accepted for income verification.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Gig workers may submit verified bank statements as income evidence.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Customers within the approved score band are eligible for restructuring.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Payscale evidence is mandatory and alternative bank records must not be accepted.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "A repayment extension is allowed once affordability and risk checks pass.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Gig workers must provide payslips and cannot use bank statements.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "The bank statement submitted by a self-employed applicant is eligible income evidence.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Do not use a three-calendar-day deadline for adverse notices.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Restructuring must not be approved above the current risk threshold.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Repayment changes require committee approval and may not bypass the threshold.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Where payslips are unavailable, an authenticated bank statement is a permitted substitute.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The old notification timer is invalid and must be replaced.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Bank records are not permitted as proof of salary for this workflow.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "The approved service level uses three working days for adverse-decision notifications.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Operations opened the notification procedure during training.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The SLA configuration includes a date calculation field.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "A new office badge policy is available in the intranet.",
+    "domain": "general_policy_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Alternative statements are disallowed for income verification.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "No term extension may be granted where the risk score exceeds policy.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "The notification scheduler processed six cases this morning.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Bank statements are permitted as an alternative to salary slips.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The Risk Committee may approve a repayment restructure after affordability review.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Every applicant must submit payslips before the income check can pass.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "A customer notice was generated by the workflow.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Compliance accepts a business-day clock for customer notification.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The restructure workflow stores the latest risk score.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Calendar-day language is prohibited for the current customer notification SLA.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Officers cannot approve revised repayments outside the authorised threshold.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "The latest risk policy permits term extensions below the committee ceiling.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "A tenure extension can be authorised when the latest risk threshold is satisfied.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The case record references a freelance income evidence checklist.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The income-document rule is scheduled for a governance review.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The old threshold cannot be used for new restructuring approvals.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Repayment options were discussed in the weekly operations meeting.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Cases exceeding the committee score limit are not eligible for a term extension.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Freelancers are required to submit salary slips before approval.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "The deadline configuration was migrated to the new scheduler.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The scheduler may not calculate the adverse-notice deadline using calendar days.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "An audit sampled bank statements and payslips across recent applications.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The annual leave calendar was shared with employees.",
+    "domain": "general_policy_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The facilities team revised parking guidance.",
+    "domain": "general_policy_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Income evidence metadata was migrated into the new case system.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The superseded SLA cannot be applied to new decisions.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "An analyst reviewed the risk threshold configuration.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Notifications may not be scheduled using the legacy calendar-day clock.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "The policy library contains both old and new SLA versions.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Approved cases may move into the restructuring workflow after risk validation.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Random unrelated operational guidance was added to the repository.",
+    "domain": "general_policy_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Credit Operations compared old and new restructuring procedures.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The cafeteria supplier list was reviewed by Procurement.",
+    "domain": "general_policy_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Bank statements are no longer accepted as income proof; payslips are compulsory.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "The workflow requires salary slips and rejects bank records as a substitute.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Customer notification may occur within three working days of the decision.",
+    "domain": "notification_deadline",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The committee dashboard lists pending repayment-change requests.",
+    "domain": "loan_restructure_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Notifications sent after the approved business-day deadline are non-compliant.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Income verification can use a verified bank statement instead of a payslip.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "The bank statement has three pages and a verification timestamp.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Risk scores above the limit require rejection of the restructuring request.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "A verified account statement is acceptable proof of income.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Operations discussed business days and calendar days in training.",
+    "domain": "notification_deadline",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "The income evidence procedure was reviewed by Operations this morning.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Operations are required to stop using calendar-day language immediately.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "A bank statement was attached to the customer file for reference.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Operations compared document versions for the income workflow.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Bank statements remain an allowed document for gig-worker income assessment.",
+    "domain": "income_document_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Bank statements cannot be used for gig-worker income verification.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "A restructure must be declined when the affordability test fails.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Repayment extensions are forbidden for cases outside delegated authority.",
+    "domain": "loan_restructure_rule",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "Credit Operations may approve a restructure within the delegated threshold.",
+    "domain": "loan_restructure_rule",
+    "stance": "PERMISSIVE"
+  },
+  {
+    "text": "Customer notices must use working days rather than calendar days.",
+    "domain": "notification_deadline",
+    "stance": "RESTRICTIVE"
+  },
+  {
+    "text": "The income verification team met to discuss document quality.",
+    "domain": "income_document_rule",
+    "stance": "UNSPECIFIED"
+  },
+  {
+    "text": "Applications without payslips must be rejected even if a bank statement is supplied.",
+    "domain": "income_document_rule",
+    "stance": "RESTRICTIVE"
+  }
+]

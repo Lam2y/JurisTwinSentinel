@@ -1,54 +1,90 @@
-# JurisTwin Sentinel v5.3 — Verification Report
+# JurisTwin Sentinel v5.4 — Release Verification Report
 
 ## Automated regression
 
-`pytest -q`
+Release baseline: **39/39 tests PASS**.
 
-Release result: **31/31 tests pass**.
+The suite covers original application workflows plus:
 
-Coverage includes authentication/session handling, RBAC, governed decision workflow, Digital Twin robustness, Governance Gate enforcement, signed Proof Packs, Decision Replay, progressive rollout, rate containment, unseen-evidence reasoning, webhook authentication/replay protection, readiness, adversarial controls, frontend asset contracts, JurisTech hierarchy, Presentation Mode, exact pitch-deck feature coverage, Manager/Officer/Intern role previews, and the six-stage operating model.
+- learned AI model training/metrics and zero-publication boundary;
+- cross-domain unseen evidence generalisation;
+- policy modality, numeric-threshold and temporal-semantics collisions;
+- all three seeded conflicts end-to-end;
+- post-approval health/readiness regression;
+- exact emitted Proof Pack live verification;
+- evidence-bound plain-language answers;
+- role-aware answer redaction;
+- out-of-domain answer refusal;
+- frontend anti-hardcoding/static contracts.
 
-## Industry preflight
+## Championship preflight
 
-`python backend/scripts/industry_preflight.py`
+Release baseline: **20/20 controls PASS — 100%**.
 
-Release result: **15/15 controls pass — 100%**.
+Controls:
 
 1. Authentication
 2. Deterministic reset
 3. Service health
 4. Security headers
-5. Pitch-aligned JurisTech frontend
-6. Readiness proof
-7. Twin robustness certificate
-8. Governance Gate
-9. Adversarial harness
-10. Unseen evidence reasoning
-11. Explainable blast radius
-12. Proof Pack digest
-13. Ledger verification
-14. Operational invariants
-15. Runtime telemetry
-
-## Clean Uvicorn smoke test
-
-The release was started from a clean SQLite database with the actual Uvicorn launcher. Verified:
-
-- `/finals` → HTTP 200
-- `/api/system/health` → version 5.3.0
-- `/api/demo/story` → CONNECT / EXPOSE / SIMULATE / RECOMMEND / APPROVE / PROTECT
-- JT-084 → Product Owner + Functional Lead, effective 24 Jul 2026
-- operating propagation → 27 applications, 1 rejected case, 8 QA tests, 3 documents superseded, 4 officers notified
-- Decision Replay → REPLAYABLE
-- Progressive Rollout → CANARY / CONTROLLED / FULL, 27 cases reconciled
-- Bodyguard pitch incident → QA-014 / Credit Policy v4.2 / 01:43 AM modification
-- Bodyguard Review / Explain / Revoke / Escalate / Authorise Overwrite / Restore → HTTP 200
-- Ledger remains valid after restoration
-
-## UI validation boundary
-
-The underlying v5.2 responsive shell and graph mechanics were previously browser-validated at 1440×900, 1024×768 and 1920×1080 with all graph nodes draggable/in-bounds and all sheet close paths working. The v5.3 release preserves those mechanics and adds progressive-disclosure panels. In this packaging environment, Chromium is managed with a URLBlocklist and therefore a new local browser automation run cannot be honestly claimed. v5.3 is instead protected by JavaScript syntax validation, static UI contract tests, API/E2E tests and the clean Uvicorn smoke test above. Run the app once on the actual finals laptop after extraction as the final visual rehearsal.
+5. Runtime secret hygiene
+6. Automatic port failover
+7. Pitch-aligned JurisTech frontend
+8. Readiness proof
+9. Hybrid learned AI
+10. Track 2 verified answer
+11. Digital Twin robustness certificate
+12. Governance Gate
+13. Adversarial harness
+14. Unseen evidence reasoning
+15. Explainable blast radius
+16. Proof Pack digest
+17. Live Proof verification
+18. Ledger verification
+19. Operational invariants
+20. Runtime telemetry
 
 ## Adversarial harness
 
-ATTACK SENTINEL remains a live backend control and returns **14/14 HARDENED** with zero persisted attack mutations and zero canonical decisions modified.
+Attack Sentinel baseline: **16/16 HARDENED**.
+
+The harness includes malformed evidence, prompt-like hostile text isolation, ledger tamper detection, RBAC/DLP, canonicalisation poisoning prevention, transaction rollback, redaction, JWT tampering, webhook forgery, safe-state invariants, rollout reconciliation, signed Proof Pack integrity, learned-AI governance boundaries and statistical abstention.
+
+## Post-approval acceptance gate
+
+The previous v5.3 regression where approval degraded assurance is fixed. After publishing JT-084:
+
+- operational invariants = **HEALTHY**;
+- readiness = **READY · 100%**;
+- assurance overview = **OPERATIONAL**;
+- Attack Sentinel = **HARDENED · 100%**.
+
+The same invariant remains healthy after independently publishing the other two seeded policy domains.
+
+## Fresh-process HTTP rehearsal
+
+The release was also exercised through a real Uvicorn process on a fresh SQLite database rather than only through `TestClient`:
+
+- `/finals`, login, passive session discovery and health: **HTTP 200**;
+- evidence-bound Track 2 answer: **CONFLICT_PRESENT** with governed citations before approval;
+- completely unseen judge evidence: **CONTRADICTION**, quarantined, blast radius **27**;
+- all three seeded conflicts: simulation → 100% Governance Gate → approval → propagation → Decision Replay → signed Proof Pack → live proof verification;
+- readiness after all three publications: **READY · 100%**;
+- Attack Sentinel: **16/16 HARDENED**.
+
+A deliberately later contradictory judge event correctly re-opens the answer state as `CONFLICT_PRESENT` while still binding the answer to the already-published Decision Contract. This is intentional safe-state behavior rather than a regression: newly arrived contradictory evidence cannot be ignored simply because an earlier decision exists.
+
+## Concurrent write / ledger stress
+
+A real HTTP stress run sent **60 live evidence writes with 20-way concurrency**:
+
+- **60/60 HTTP 200**;
+- completed in approximately **1.9 seconds** on the release test host;
+- ledger after the run: **62 linked entries, chain verified**;
+- readiness after the run: **READY · 100%**.
+
+This is a release-host stress observation, not a production throughput/SLA claim.
+
+## Frontend validation
+
+The responsive shell, native scrolling, sheet close paths and graph drag/bounds mechanics inherit the previously browser-validated v5.2 foundation at 1024×768, 1440×900 and 1920×1080. v5.4 changes are guarded by JavaScript syntax validation, frontend static-contract tests and API/E2E tests. Perform one final visual rehearsal on the actual competition laptop after extraction.

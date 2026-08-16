@@ -6,8 +6,9 @@ from collections import Counter
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-from ..db.models import Evidence, User, RolePolicy, SecurityShield
+from ..db.models import Evidence, User, RolePolicy, SecurityShield, Conflict, DecisionContract
 from .common import loads, iso
+from .policy_ml import get_policy_ai
 
 TOKEN_RE = re.compile(r"[a-z0-9]+")
 SENSITIVITY_LEVEL = {"public": 0, "internal": 1, "confidential": 2, "restricted": 3}
@@ -168,3 +169,129 @@ def search_memory(db:Session,user:User,query:str,limit:int=10,filters:dict|None=
             }))
     ranked.sort(key=lambda x:(x[0],x[1].created_at),reverse=True)
     return [serialize_evidence(db,e,user,s,r) for s,e,r in ranked[:limit]]
+
+
+
+def governed_answer(db: Session, user: User, question: str) -> dict:
+    """Return a short, evidence-bound answer from governed enterprise memory.
+
+    This closes the Track-2 trust gap without introducing a free-form hallucination surface. The
+    learned classifier is used only to route the question to a policy domain. The answer itself is
+    copied/summarised from the highest-authority approved evidence or active Decision Contract and
+    is never invented by a generative model.
+    """
+    model = get_policy_ai().predict(question)
+    domain = model.get("domain", {})
+    rule_key = None if domain.get("abstain") else domain.get("label")
+    confidence = float(domain.get("confidence") or 0)
+
+    if not rule_key or rule_key == "general_policy_rule":
+        return {
+            "status": "NEEDS_REVIEW",
+            "answer": "JurisTwin cannot bind this question to a governed policy domain with enough confidence. Please narrow the question or escalate to an authorised reviewer.",
+            "question": question,
+            "role": user.role,
+            "rule_key": rule_key or "unknown",
+            "model": {"engine": model.get("engine"), "domain_confidence": round(confidence, 4), "abstained": True},
+            "citations": [],
+            "guardrail": "Evidence-bound answering only; Sentinel does not invent policy facts when authority is uncertain.",
+        }
+
+    conflict = db.execute(
+        select(Conflict).where(Conflict.rule_key == rule_key).order_by(Conflict.id.desc())
+    ).scalars().first()
+    open_conflict = bool(conflict and conflict.status in {"unresolved", "quarantined"})
+
+    contract = db.execute(
+        select(DecisionContract).where(DecisionContract.rule_key == rule_key, DecisionContract.status == "active")
+        .order_by(DecisionContract.id.desc())
+    ).scalars().first()
+
+    evidence = db.execute(
+        select(Evidence).where(
+            Evidence.rule_key == rule_key,
+            Evidence.approved.is_(True),
+            Evidence.superseded.is_(False),
+        ).order_by(Evidence.authority_level.desc(), Evidence.id.desc())
+    ).scalars().first()
+
+    if not contract and not evidence:
+        return {
+            "status": "NEEDS_REVIEW",
+            "answer": "No active governed evidence is available for this policy domain. JurisTwin will not fabricate an answer.",
+            "question": question,
+            "role": user.role,
+            "rule_key": rule_key,
+            "model": {"engine": model.get("engine"), "domain_confidence": round(confidence, 4), "abstained": False},
+            "citations": [],
+            "guardrail": "Evidence-bound answering only; no generated facts beyond governed evidence.",
+        }
+
+    citation = serialize_evidence(db, evidence, user) if evidence else None
+    redacted = bool(citation and str(citation.get("body") or "").startswith("[REDACTED"))
+
+    # A lower-authority role may learn that a governed answer exists, but not its restricted text.
+    if redacted and not contract:
+        return {
+            "status": "RESTRICTED",
+            "answer": "A governed answer exists, but the supporting evidence is restricted for this role. Escalate to an authorised reviewer.",
+            "question": question,
+            "role": user.role,
+            "rule_key": rule_key,
+            "conflict_ref": conflict.conflict_ref if conflict else None,
+            "model": {"engine": model.get("engine"), "domain_confidence": round(confidence, 4), "abstained": False},
+            "citations": [citation],
+            "guardrail": "Role-aware answer: restricted evidence is never revealed through the answer layer.",
+        }
+
+    if contract:
+        answer = contract.approved_rule
+        authority = contract.approved_by
+        version = contract.version
+        decision_ref = contract.decision_ref
+        source = "Decision Ledger"
+    else:
+        answer = evidence.body
+        authority = evidence.authority
+        version = evidence.version
+        decision_ref = None
+        source = evidence.source
+
+    # When a conflict is still open, JurisTwin gives the current highest-authority answer but makes
+    # the disagreement impossible to miss. It never silently flattens unresolved organisational truth.
+    status = "CONFLICT_PRESENT" if open_conflict else "VERIFIED"
+    warning = None
+    if open_conflict:
+        warning = f"A live contradiction remains open under {conflict.conflict_ref}; follow the governed source while the conflict is reviewed."
+
+    citations = []
+    if citation:
+        citations.append(citation)
+    # Add at most two explainable retrieval hits as supporting lineage, still role-filtered.
+    for row in search_memory(db, user, question, limit=4, filters={}):
+        if row.get("evidence_ref") not in {c.get("evidence_ref") for c in citations}:
+            citations.append(row)
+        if len(citations) >= 3:
+            break
+
+    return {
+        "status": status,
+        "answer": answer,
+        "warning": warning,
+        "question": question,
+        "role": user.role,
+        "rule_key": rule_key,
+        "decision_ref": decision_ref,
+        "conflict_ref": conflict.conflict_ref if conflict else None,
+        "authority": authority,
+        "version": version,
+        "source": source,
+        "model": {
+            "engine": model.get("engine"),
+            "domain_confidence": round(confidence, 4),
+            "abstained": False,
+            "publication_authority": 0,
+        },
+        "citations": citations,
+        "guardrail": "Answer text is bound to governed evidence/decision contracts; the learned model only routes the question and cannot publish policy.",
+    }

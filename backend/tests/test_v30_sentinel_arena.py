@@ -116,7 +116,7 @@ def test_v30_digital_twin_emits_robust_decision_certificate():
         h=login(); client.post('/api/demo/reset',headers=h)
         sim=client.post('/api/simulations/conflict/CF-INCOME-001/run',headers=h,json={}).json()
         cert=sim['analysis']['decision_certificate']
-        assert sim['analysis']['engine'].endswith('v3')
+        assert sim['analysis']['engine'].endswith('v4')
         assert cert['recommended_option']==sim['recommended_option']
         assert cert['pareto_optimal'] is True
         assert cert['recommended_option'] in cert['pareto_frontier']

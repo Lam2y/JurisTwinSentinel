@@ -1,34 +1,51 @@
-# Claims Boundary — Championship v5
+# Claims Boundary — Championship v5.4
 
-JurisTwin is presented as an enterprise-grade proof of concept, not as a regulator-certified production banking platform. The boundary below is intentional so every finals claim remains defensible under technical questioning.
+JurisTwin is presented as an **enterprise-grade proof of concept**, not as a regulator-certified production banking platform. The boundary is explicit so every finals claim remains defensible under technical questioning.
 
 ## Implemented and demonstrable
 
-- SQL-backed application state and governed state transitions.
-- Runtime ingestion of typed evidence and supported judge-supplied files.
-- HMAC-authenticated HTTP webhook ingress with replay protection.
-- Structured white-box policy-atom extraction and modality-collision reasoning.
-- Explainable BFS dependency traversal over current customer-case state.
-- Responsive, draggable conflict graph backed by the same conflict/case data.
-- 1,500-scenario Digital Twin stress test with sensitivity and Pareto analysis.
-- RBAC, role-aware redaction, DLP controls and approval-authority checks.
-- Governance gates that can block unsafe publication.
-- Append-only SHA-256 linked audit ledger, decision replay and signed assurance proof packs.
-- Progressive rollout planning, operational invariants, runtime telemetry and adversarial self-tests.
+- SQL-backed governed state transitions.
+- Runtime typed/file evidence ingestion.
+- HMAC-authenticated external HTTP webhook with replay protection.
+- A real local learned NLP component trained from a bundled labelled development corpus.
+- Held-out development metrics exposed through an inspectable model card.
+- Confidence-based abstention and learned/symbolic disagreement handling.
+- Evidence-bound plain-language answers with authority/version/citations and role-aware redaction.
+- Structured Policy Atom extraction with modality, numeric-threshold and temporal-semantics collision rules.
+- Authority-Weighted Hybrid Consensus across learned, symbolic, authority, semantic and agreement signals.
+- BFS dependency traversal over current case state.
+- Draggable conflict graph backed by the same conflict/evidence data.
+- 1,500-scenario Digital Twin with uncertainty, sensitivity and Pareto analysis.
+- Enforced pre-publication Governance Gate.
+- Full governed workflows for all three seeded conflicts.
+- Progressive rollout planning and operational invariants.
+- Append-only SHA-256 ledger, Decision Replay and HMAC-signed/verifiable Assurance Proof Packs.
+- AI Bodyguard containment/restoration controls.
+- JWT/RBAC, DLP/redaction, rate containment, security headers and request telemetry.
 - Deterministic reset and offline finals operation.
 
-## Prototype-calibrated
+## Prototype-calibrated / development-scoped
 
-- Outlook/Teams/SharePoint object counts and vendor-branded connector adapters unless an actual tenant is connected.
-- Digital Twin scenario coefficients. They are transparent and stress-tested, but are not claimed to be statistically trained production forecasts.
-- Local observability store. A production deployment would export telemetry to the organisation's monitoring/SIEM stack.
-- The built-in policy atom reasoner demonstrates deterministic explainable reasoning; a production pilot would benchmark and extend it against a labelled enterprise policy corpus.
+- Outlook/Teams/SharePoint/ClickUp object counts and vendor-branded adapters unless a real tenant is connected.
+- The learned policy corpus and held-out metrics are a **development benchmark**, not production validation or regulatory model approval.
+- Digital Twin scenario coefficients are transparent prototype assumptions. They are stress-tested, but not presented as production-trained forecasts.
+- Local observability. A production pilot would export telemetry to enterprise monitoring/SIEM.
+- The current semantic memory ranking uses explainable local retrieval; the pitch deck's ChromaDB/React items are pilot-target architecture, not falsely claimed as required finals runtime.
 
 ## Deliberately not claimed
 
 - Vendor-certified Microsoft connectivity without tenant credentials.
-- A hidden LLM as an authoritative source of truth.
-- Regulated-bank production certification, formal penetration-test clearance or model-risk approval.
-- Unlimited production scale based on a hackathon workload.
+- An LLM as an authoritative policy source.
+- Regulator certification, formal pen-test clearance or model-risk approval.
+- Unlimited production scale based on hackathon workloads.
+- Academic novelty of AWHC as a published algorithm. It is a custom JurisTwin decision-integrity fusion rule built for inspectable governance.
 
-JurisTwin's product principle is that the system should clearly distinguish **evidence it can prove**, **decisions humans have authorised**, and **assumptions the Twin is modelling**.
+## Product principle
+
+JurisTwin always separates:
+
+1. **what evidence says**;
+2. **what a model predicts**;
+3. **what policy authority establishes**;
+4. **what humans approve**;
+5. **what the Digital Twin is only simulating**.

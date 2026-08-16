@@ -11,6 +11,10 @@ class MemorySearchRequest(BaseModel):
     filters: dict[str, Any] = {}
     preview_role: str | None = None
 
+class MemoryAnswerRequest(BaseModel):
+    question: str = Field(min_length=5, max_length=500)
+    preview_role: str | None = None
+
 class MemoryIngestRequest(BaseModel):
     source: str
     title: str
@@ -87,5 +91,8 @@ class SignedWebhookRequest(BaseModel):
 
 
 class ProofVerifyRequest(BaseModel):
-    digest: str = Field(min_length=64, max_length=64, pattern="^[0-9a-fA-F]{64}$")
+    # ``bundle_digest`` is the field emitted by the proof-pack response. ``digest`` remains accepted
+    # for backward compatibility with the offline verifier and earlier clients.
+    digest: str | None = Field(default=None, min_length=64, max_length=64, pattern="^[0-9a-fA-F]{64}$")
+    bundle_digest: str | None = Field(default=None, min_length=64, max_length=64, pattern="^[0-9a-fA-F]{64}$")
     signature: str = Field(min_length=64, max_length=64, pattern="^[0-9a-fA-F]{64}$")

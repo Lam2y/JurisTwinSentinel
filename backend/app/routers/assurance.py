@@ -20,7 +20,7 @@ def overview(db: Session = Depends(get_db), user: User = Depends(current_user)):
     gate=governance_gate(db,"CF-INCOME-001")
     return {
         "status":"OPERATIONAL" if inv["status"]=="HEALTHY" else "DEGRADED",
-        "platform":"JurisTwin Sentinel JurisTech v5.3",
+        "platform":"JurisTwin Sentinel Championship v5.4",
         "telemetry":metrics,
         "invariants":inv,
         "flagship_governance_gate":gate,
@@ -68,7 +68,7 @@ def replay(decision_ref: str, db: Session = Depends(get_db), user: User = Depend
 @router.get("/proof-pack")
 def get_proof_pack(
     conflict_ref: str = Query(default="CF-INCOME-001", max_length=80),
-    decision_ref: str = Query(default="JT-084", max_length=80),
+    decision_ref: str | None = Query(default=None, max_length=80),
     download: bool = False,
     db: Session = Depends(get_db),
     user: User = Depends(current_user),
@@ -84,4 +84,7 @@ def get_proof_pack(
 
 @router.post("/verify-proof")
 def verify_proof(body: ProofVerifyRequest, user: User = Depends(current_user)):
-    return verify_proof_signature(body.digest.lower(), body.signature.lower())
+    digest = body.digest or body.bundle_digest
+    if not digest:
+        raise HTTPException(422, "Provide digest or bundle_digest from the proof pack")
+    return verify_proof_signature(digest.lower(), body.signature.lower())

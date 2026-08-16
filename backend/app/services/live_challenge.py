@@ -22,6 +22,7 @@ from .common import dumps, loads, iso
 from .ledger import append_entry
 from .policy_reasoner import extract_policy_atoms, compare_policy_atoms
 from .impact_graph import build_impact_graph
+from .policy_ml import get_policy_ai
 
 TOKEN_RE = re.compile(r"[a-z0-9]+")
 
@@ -124,6 +125,79 @@ def _stance(rule_key: str, text: str) -> tuple[str, float, list[str]]:
     return label, round(confidence, 3), reasons
 
 
+
+
+def _hybrid_classify(text: str, explicit_rule: str | None = None) -> dict:
+    """Fuse learned NLP with deterministic policy logic using abstention-first arbitration."""
+    learned = get_policy_ai().predict(text)
+    rule_key, rule_conf, rule_reasons = _infer_rule(text, explicit_rule)
+    rule_stance, rule_stance_conf, stance_reasons = _stance(rule_key, text)
+
+    ml_domain = learned["domain"]
+    ml_stance = learned["stance"]
+    disagreements = []
+
+    if explicit_rule:
+        final_rule, final_rule_conf = rule_key, rule_conf
+        domain_source = "operator_explicit"
+    elif not ml_domain.get("abstain"):
+        if rule_conf < 0.70 or rule_key == "general_policy_rule":
+            final_rule, final_rule_conf = ml_domain["label"], ml_domain["confidence"]
+            domain_source = "learned_classifier"
+        elif ml_domain["label"] == rule_key:
+            final_rule = rule_key
+            final_rule_conf = min(0.995, (rule_conf + ml_domain["confidence"] + 0.15) / 2)
+            domain_source = "dual_consensus"
+        else:
+            disagreements.append(f"domain:{rule_key}!={ml_domain['label']}")
+            # The white-box signature wins when it is strong; otherwise the agent abstains to a
+            # generic policy review rather than making an overconfident domain claim.
+            if rule_conf >= 0.86 and ml_domain["confidence"] < 0.78:
+                final_rule, final_rule_conf, domain_source = rule_key, rule_conf, "symbolic_guard"
+            elif ml_domain["confidence"] >= 0.82 and rule_conf < 0.78:
+                final_rule, final_rule_conf, domain_source = ml_domain["label"], ml_domain["confidence"], "learned_classifier"
+            else:
+                final_rule, final_rule_conf, domain_source = "general_policy_rule", 0.50, "abstained_disagreement"
+    else:
+        final_rule, final_rule_conf, domain_source = rule_key, rule_conf, "symbolic_fallback"
+
+    # Re-run the transparent stance lexicon using the final domain so the reasoning and learned
+    # proposal are evaluated against the same policy context.
+    symbolic_stance, symbolic_stance_conf, symbolic_reasons = _stance(final_rule, text)
+    if not ml_stance.get("abstain"):
+        if symbolic_stance == "UNSPECIFIED":
+            final_stance, final_stance_conf, stance_source = ml_stance["label"], ml_stance["confidence"], "learned_classifier"
+        elif symbolic_stance == ml_stance["label"]:
+            final_stance = symbolic_stance
+            final_stance_conf = min(0.995, (symbolic_stance_conf + ml_stance["confidence"] + 0.18) / 2)
+            stance_source = "dual_consensus"
+        else:
+            disagreements.append(f"stance:{symbolic_stance}!={ml_stance['label']}")
+            final_stance, final_stance_conf, stance_source = "UNSPECIFIED", 0.50, "abstained_disagreement"
+    else:
+        final_stance, final_stance_conf, stance_source = symbolic_stance, symbolic_stance_conf, "symbolic_fallback"
+
+    return {
+        "rule_key": final_rule,
+        "rule_confidence": round(float(final_rule_conf), 3),
+        "stance": final_stance,
+        "stance_confidence": round(float(final_stance_conf), 3),
+        "learned": learned,
+        "symbolic": {
+            "rule_key": rule_key, "rule_confidence": rule_conf, "rule_reasons": rule_reasons,
+            "stance": symbolic_stance, "stance_confidence": symbolic_stance_conf, "stance_reasons": symbolic_reasons,
+        },
+        "arbitration": {
+            "engine": "Sentinel Dual-Control Consensus v1",
+            "domain_source": domain_source,
+            "stance_source": stance_source,
+            "disagreements": disagreements,
+            "abstained": bool(disagreements and (domain_source == "abstained_disagreement" or stance_source == "abstained_disagreement")),
+            "principle": "Learned model proposes; symbolic policy atoms and authority controls verify. Disagreement abstains rather than fabricates certainty.",
+        },
+        "reasons": rule_reasons + symbolic_reasons,
+    }
+
 def _canonical_for(db: Session, rule_key: str) -> Evidence | None:
     rows = db.execute(
         select(Evidence).where(
@@ -192,34 +266,69 @@ def run_live_challenge(db: Session, body, user) -> dict:
             "detail": detail,
         })
 
-    # 1. Understand the unseen input.
+    # 1. Understand the unseen input with a genuine learned classifier under a deterministic
+    # dual-control safety layer. The model proposes; the white-box reasoner can confirm or abstain.
     s = perf_counter()
-    rule_key, rule_conf, rule_reasons = _infer_rule(f"{body.title} {body.body}", body.rule_key)
-    stance, stance_conf, stance_reasons = _stance(rule_key, body.body)
-    mark("Policy classification", s, f"{rule_key} · {stance}")
+    hybrid = _hybrid_classify(f"{body.title} {body.body}", body.rule_key)
+    rule_key, rule_conf = hybrid["rule_key"], hybrid["rule_confidence"]
+    stance, stance_conf = hybrid["stance"], hybrid["stance_confidence"]
+    rule_reasons = hybrid["symbolic"]["rule_reasons"]
+    stance_reasons = hybrid["symbolic"]["stance_reasons"]
+    mark("Hybrid AI policy classification", s, f"{rule_key} · {stance} · {hybrid['arbitration']['domain_source']}/{hybrid['arbitration']['stance_source']}")
 
     # 2. Retrieve the highest-authority canonical evidence already in Enterprise Memory.
     s = perf_counter()
     canonical = _canonical_for(db, rule_key)
-    canonical_stance, canonical_stance_conf, _ = _stance(
-        rule_key, (canonical.claim or canonical.body) if canonical else ""
-    )
+    canonical_hybrid = _hybrid_classify(canonical.body if canonical else "", rule_key) if canonical else None
+    canonical_stance = canonical_hybrid["stance"] if canonical_hybrid else "UNSPECIFIED"
+    canonical_stance_conf = canonical_hybrid["stance_confidence"] if canonical_hybrid else 0.45
     incoming_atoms = extract_policy_atoms(body.body, rule_key)
-    canonical_atoms = extract_policy_atoms((canonical.claim or canonical.body) if canonical else "", rule_key)
+    canonical_atoms = extract_policy_atoms(canonical.body if canonical else "", rule_key)
     atom_reasoning = compare_policy_atoms(canonical_atoms, incoming_atoms) if canonical else {
         "collision": False, "collisions": [], "alignments": [], "confidence": 0.55,
-        "engine": "JurisTwin Policy Atom Reasoner v3",
+        "engine": "JurisTwin Policy Atom Reasoner v4",
     }
     mark("Canonical evidence retrieval", s, canonical.evidence_ref if canonical else "No approved canonical evidence")
 
     # 3. Authority-aware contradiction decision. Unspecified wording is quarantined for review
     # rather than falsely classified as a contradiction.
     s = perf_counter()
-    overlap = _semantic_overlap(body.body, (canonical.claim or canonical.body) if canonical else "")
+    overlap = _semantic_overlap(body.body, canonical.body if canonical else "")
     opposite = bool(canonical is not None and (atom_reasoning.get("collision") or (stance != "UNSPECIFIED" and canonical_stance != "UNSPECIFIED" and stance != canonical_stance)))
+
+    # Custom Authority-Weighted Hybrid Consensus (AWHC). This is not presented as a novel
+    # research algorithm; it is JurisTwin's hackathon-specific decision-integrity fusion rule.
+    # It makes the arbitration inspectable by combining independent learned, symbolic, authority,
+    # semantic and operational-impact signals rather than accepting any one model as truth.
+    learned_domain_conf=float(hybrid["learned"]["domain"].get("confidence",0.0))
+    learned_stance_conf=float(hybrid["learned"]["stance"].get("confidence",0.0))
+    learned_signal=(learned_domain_conf+learned_stance_conf)/2
+    symbolic_signal=float(atom_reasoning.get("confidence",0.55))
+    authority_signal=min(1.0,float(canonical.authority_level or 0)/6.0) if canonical else 0.0
+    semantic_signal=min(1.0,overlap*3.0)
+    agreement_signal=1.0 if not hybrid["arbitration"].get("disagreements") else (0.65 if atom_reasoning.get("collision") else 0.25)
+    # Blast radius is calculated later; this preliminary score intentionally excludes impact so
+    # classification remains independent of how many customers happen to be linked.
+    reasoning_consensus=round(100*(0.30*symbolic_signal+0.25*learned_signal+0.20*authority_signal+0.15*semantic_signal+0.10*agreement_signal),1)
+    consensus_breakdown={
+        "engine":"Sentinel Authority-Weighted Hybrid Consensus v1",
+        "score":reasoning_consensus,
+        "components":{
+            "symbolic_policy_atoms":round(symbolic_signal*100,1),
+            "learned_classifier":round(learned_signal*100,1),
+            "canonical_authority":round(authority_signal*100,1),
+            "semantic_overlap":round(semantic_signal*100,1),
+            "model_symbolic_agreement":round(agreement_signal*100,1),
+        },
+        "weights":{"symbolic":30,"learned":25,"authority":20,"semantic":15,"agreement":10},
+        "safety_rule":"Consensus score explains confidence only. It never grants publication authority; contradiction still requires governed evidence comparison and human approval.",
+    }
     if canonical is None:
         verdict = "NOVEL"
         contradiction_conf = 0.55
+    elif hybrid["arbitration"]["abstained"] and not atom_reasoning.get("collision"):
+        verdict = "NEEDS_REVIEW"
+        contradiction_conf = 0.60
     elif opposite:
         verdict = "CONTRADICTION"
         contradiction_conf = min(0.99, max(atom_reasoning.get("confidence", 0.0), 0.72 + 0.12 * stance_conf + 0.08 * canonical_stance_conf + 0.06 * min(1.0, overlap * 3)))
@@ -264,6 +373,8 @@ def run_live_challenge(db: Session, body, user) -> dict:
             "origin": "judge_challenge",
             "classification_confidence": rule_conf,
             "stance": stance,
+            "ai_engine": hybrid["learned"]["engine"],
+            "ai_arbitration": hybrid["arbitration"]["engine"],
             "verdict": verdict,
             "content_sha256": content_sha256,
         }),
@@ -317,6 +428,25 @@ def run_live_challenge(db: Session, body, user) -> dict:
         "verdict": verdict,
         "contradiction_confidence": contradiction_conf,
         "semantic_overlap": round(overlap, 3),
+        "hybrid_ai": {
+            "learned": hybrid["learned"],
+            "arbitration": hybrid["arbitration"],
+            "canonical_learned": canonical_hybrid["learned"] if canonical_hybrid else None,
+            "model_card_summary": {
+                "learned_component": True,
+                "model_can_publish": False,
+                "offline": True,
+            },
+            "governed_consensus": consensus_breakdown,
+        },
+        "agent_trace": {
+            "engine": "Sentinel Agentic Resolution Orchestrator v1",
+            "steps": [
+                "classify_with_learned_model", "cross_check_symbolic_atoms", "retrieve_authoritative_evidence",
+                "resolve_or_abstain", "traverse_operational_impact", "quarantine_and_route_for_human_governance"
+            ],
+            "autonomous_side_effect_policy": "No model output may canonicalise or publish a decision.",
+        },
         "policy_atoms": {"incoming": incoming_atoms, "canonical": canonical_atoms, "reasoning": atom_reasoning},
         "impact_graph": impact_graph,
         "blast_radius": blast_radius,

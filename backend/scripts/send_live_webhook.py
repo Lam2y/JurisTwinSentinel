@@ -12,9 +12,18 @@ import json
 import os
 import urllib.request
 import urllib.error
+from pathlib import Path
+from dotenv import load_dotenv
 
-URL=os.getenv("JURISTWIN_WEBHOOK_URL","http://127.0.0.1:8000/api/live/webhook")
-SECRET=os.getenv("WEBHOOK_SECRET","juristwin-finals-webhook-secret")
+load_dotenv(Path(__file__).resolve().parents[2] / ".env", override=False)
+
+ROOT=Path(__file__).resolve().parents[2]
+PORT_FILE=ROOT / ".juristwin_port"
+default_port=PORT_FILE.read_text(encoding="ascii").strip() if PORT_FILE.exists() else "8000"
+URL=os.getenv("JURISTWIN_WEBHOOK_URL",f"http://127.0.0.1:{default_port}/api/live/webhook")
+SECRET=os.getenv("WEBHOOK_SECRET")
+if not SECRET:
+    raise SystemExit("WEBHOOK_SECRET is not configured. Run setup_windows.bat or tools/bootstrap_env.py first.")
 PAYLOAD={
     "event_id":"evt-live-finals-001",
     "source":"External Policy Bus",

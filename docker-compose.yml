@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: juristwin
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run tools/bootstrap_env.py before Docker Compose}
     volumes:
       - juristwin_pg:/var/lib/postgresql/data
     healthcheck:
@@ -17,9 +17,10 @@ services:
   api:
     build: ./backend
     environment:
-      DATABASE_URL: postgresql+psycopg2://postgres:${POSTGRES_PASSWORD:-postgres}@db:5432/juristwin
-      SECRET_KEY: ${SECRET_KEY:-replace-this-secret}
-      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-replace-this-webhook-secret}
+      DATABASE_URL: postgresql+psycopg2://postgres:${POSTGRES_PASSWORD:?Run tools/bootstrap_env.py before Docker Compose}@db:5432/juristwin
+      SECRET_KEY: ${SECRET_KEY:?Run tools/bootstrap_env.py before Docker Compose}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:?Run tools/bootstrap_env.py before Docker Compose}
+      PROOF_SIGNING_SECRET: ${PROOF_SIGNING_SECRET:?Run tools/bootstrap_env.py before Docker Compose}
       DEMO_PASSWORD: ${DEMO_PASSWORD:-Finals2026!}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:8000,http://localhost:8000}
     ports:

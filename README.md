@@ -1,91 +1,137 @@
-# JurisTwin Sentinel — JurisTech Pitch-Aligned Edition v5.3
+# JurisTwin Sentinel — Championship MaxScore Edition v5.4
 
-JurisTwin Sentinel is a decision-integrity control plane for enterprises. It detects when authoritative evidence contradicts operational guidance, traces the affected customers and systems, stress-tests the response, requires governed approval, propagates the decision, and preserves a replayable cryptographic proof.
+JurisTwin Sentinel is a **hybrid-AI decision-integrity control plane** for regulated enterprises. It connects fragmented evidence, gives permission-safe plain-language answers, detects contradictory policy, traces downstream exposure, stress-tests response options, enforces human governance, propagates approved decisions and preserves replayable cryptographic proof.
 
-## Launch on Windows
+v5.4 is the finals build designed around the exact operating story:
+
+> **CONNECT → EXPOSE → SIMULATE → RECOMMEND → APPROVE → PROTECT**
+
+## Windows launch
 
 1. Run `setup_windows.bat` once.
 2. Run `run_finals.bat`.
-3. Open `http://127.0.0.1:8000/finals`.
+3. Open the Finals URL printed by `run_finals.bat` (normally `http://127.0.0.1:8000/finals`; JurisTwin automatically fails over to the next free local port if 8000 is busy).
 
 Demo login:
 
-- Email: `operations@regulatedbank.com`
-- Password: `Finals2026!`
+- **Email:** `operations@regulatedbank.com`
+- **Password:** `Finals2026!`
 
-The finals UI is served by FastAPI and needs **no Node/npm runtime**.
+`setup_windows.bat` now generates a local `.env` containing independent cryptographically random JWT, webhook, Proof Pack and optional PostgreSQL secrets. The `.env` file is ignored from release provenance and should never be committed.
 
-## The five screens judges need
+The finals UI is served directly by FastAPI and requires **no Node/npm runtime or internet connection**.
 
-1. **Overview** — one conflict, current exposure, decision-integrity score.
-2. **Conflict Map** — draggable evidence network with bounded nodes and live relationships.
-3. **Digital Twin** — 1,500 scenario stress test, sensitivity and robustness certificate.
-4. **Assurance** — readiness, governance gate, proof pack and adversarial self-test.
-5. **Evidence Lab** — type or drop unseen policy evidence and let JurisTwin reason over it live.
+## Five judge-facing destinations
 
-Use **Final Flow** for the exact pitch-deck operating loop: **Connect → Expose → Simulate → Recommend → Approve → Protect**. Use **Challenge Sentinel** for the strongest unscripted proof. Use **Platform** when a judge asks to inspect the full pitch-deck feature set or the v4 assurance controls.
+1. **Overview** — the customer contradiction, exposure and next action.
+2. **Conflict Map** — draggable evidence network with authority, versions and live relationships.
+3. **Digital Twin** — 1,500-scenario stress test, sensitivity, Pareto analysis and decision robustness.
+4. **Assurance** — readiness, governance gate, Proof Pack, Decision Replay and adversarial self-test.
+5. **Evidence Lab** — type or drop unseen policy evidence and let JurisTwin analyse it live.
 
-Keyboard shortcuts:
+Use **Final Flow** for the six-stage pitch story. Use **Platform** to expose the full technical stack without cluttering the main demonstration.
 
-- `Alt + J` Judge input
-- `Alt + C` Conflict map
-- `Alt + T` Digital twin
-- `Alt + A` Assurance
-- `Alt + P` Presentation Mode for projectors
-- `Alt + F` Final Flow
-- `Esc` closes every side sheet
+## What changed in v5.4
+
+### Genuine learned AI, without giving a model decision authority
+
+A bundled labelled development corpus trains two local statistical NLP classifiers on startup:
+
+- policy-domain classification;
+- policy-stance classification.
+
+Architecture: **word + character TF-IDF → Logistic Regression**.
+
+Measured deterministic held-out development benchmark:
+
+- Domain macro-F1: **0.9035**
+- Stance macro-F1: **0.9666**
+
+The learned model only proposes intent. A white-box Policy Atom Reasoner, authority controls and abstention logic verify the proposal. The model has **zero publication authority**.
+
+### Evidence-bound plain-language answers
+
+Secure Enterprise Memory now answers normal questions such as:
+
+> *Can gig workers use bank statements as income evidence?*
+
+The learned layer routes the question, but answer text is bound to approved evidence or an active Decision Contract. An open contradiction is surfaced instead of hidden; lower-authority roles receive redaction; unknown questions return **NEEDS_REVIEW** instead of invented policy.
+
+### Every seeded conflict is now fully drivable
+
+All three policy domains support the complete governed workflow:
+
+- `CF-INCOME-001` → `JT-084`
+- `CF-RESTRUCTURE-002` → `JT-RESTRUCTURE-002`
+- `CF-NOTIFY-003` → `JT-NOTIFY-003`
+
+Each has its own evidence graph, Digital Twin scenario, governance gate, approval, propagation, replay and signed Proof Pack.
+
+### Assessment blockers removed
+
+- Post-approval readiness remains **READY · 100%**.
+- Overview no longer mixes fields from different conflicts.
+- Proof Pack now has a live **Verify this proof** control and API verification path.
+- Flagship-only hardcoding is removed from the core workflow.
+- Hybrid learned AI closes the previous regex-only technical-depth ceiling.
 
 ## Functional architecture
 
 ```text
-Unseen / enterprise evidence
+Enterprise / judge evidence
         ↓
-Provenance + policy atoms
+Provenance + permission controls
         ↓
-Authority-aware contradiction reasoning
+Learned NLP proposal
+        ↓
+Symbolic Policy Atom verification
+        ↓
+Authority-Weighted Hybrid Consensus
+        ↓
+Conflict Intelligence / abstention
         ↓
 Dependency graph + BFS blast radius
         ↓
 Decision Digital Twin
+Monte Carlo + sensitivity + Pareto
         ↓
-Governance Gate
+Enforced Governance Gate
         ↓
 Human approval + controlled propagation
         ↓
-SHA-256 ledger + signed assurance proof
+Progressive rollout
         ↓
-Decision replay + adversarial protection
+SHA-256 Decision Ledger
+        ↓
+HMAC-signed Assurance Proof Pack
+        ↓
+Decision Replay + AI Bodyguard
 ```
 
-### Implemented technical controls
+## Implemented technical controls
 
 - FastAPI + SQLAlchemy with SQLite finals mode and PostgreSQL support.
-- JWT authentication, RBAC, DLP/redaction and security shields.
-- Stateful enterprise evidence and customer-case data.
-- Explainable Policy Atom Reasoner.
-- Draggable SVG conflict network; every node is clamped to the visible canvas.
+- Local learned NLP pipeline with measured development metrics and safe abstention.
+- Evidence-bound, role-aware plain-language answers.
+- Permission-aware hybrid Enterprise Memory retrieval.
+- Policy Atom extraction and explicit modality/numeric/temporal collision rules.
+- Authority-Weighted Hybrid Consensus for explainable multi-signal arbitration.
 - BFS dependency/blast-radius traversal.
-- 1,500-scenario deterministic Monte Carlo Digital Twin with sensitivity analysis.
+- 1,500-scenario deterministic Monte Carlo Twin with uncertainty, sensitivity and Pareto analysis.
 - Enforced pre-publication Governance Gate.
-- Progressive rollout planning and safe-state invariants.
-- Append-only SHA-256 decision ledger.
-- HMAC-SHA256 signed Decision Assurance Proof Pack.
+- Progressive CANARY → CONTROLLED → FULL rollout planning.
+- JWT authentication, RBAC, DLP/redaction and security shields.
+- Append-only SHA-256 ledger.
+- Proof-carrying Decision Assurance packs that cryptographically bind evidence, learned-model boundary, reasoning, impact, simulation, governance and ledger state; live HMAC verification included.
 - HMAC-authenticated real HTTP webhook with replay protection.
-- Runtime request tracing, latency/error telemetry, rate containment and security headers.
+- Decision Replay / time machine.
+- AI Bodyguard incident containment and version restoration.
+- Operational safe-state invariants.
+- Request IDs, latency/error telemetry, rate containment and security headers.
 - Adversarial self-test harness.
-- Docker/Compose, CI and release-manifest support.
+- Docker/Compose, CI and release-manifest verification.
 
-## Frontend design
-
-v5.3 uses a JurisTech-inspired brand direction: generous white space, large black typography and Juris red for primary actions/authority. Dark analytical canvases are reserved for the conflict network and decision proof moments. The responsive zero-build SPA uses native View Transitions when supported, native document scrolling, a reusable side-sheet interaction model, a single non-stacking status capsule, and progressive disclosure.
-
-The **Platform** drawer explicitly preserves every pitch-deck feature while also surfacing the v4 championship controls: Secure Enterprise Memory, Living Decision Digital Twin, White-Box Future Simulator, AI Bodyguard, Decision Ledger, Policy Reasoner, Enterprise Connectors, Progressive Rollout, Decision Replay, Decision Assurance, the exact Operating Model, product positioning and Pilot & Scale. Presentation Mode (`Alt + P`) provides an additional projector-readability boost.
-
-Source mirror: `frontend/src/`
-
-Deployable files: `backend/app/static/finals.html`, `sentinel.css`, `sentinel.js`
-
-## Verification
+## Finals verification
 
 ```bash
 cd backend
@@ -93,27 +139,40 @@ pytest -q
 python scripts/industry_preflight.py
 ```
 
-The release is expected to pass all automated backend tests and the complete industry preflight before presentation.
+Expected v5.4 release baseline:
+
+- **39/39 automated tests**
+- **20/20 championship preflight controls**
+- **16/16 adversarial controls**
+- post-approval readiness **READY · 100%**
+- fresh-process stress: **60/60 concurrent live evidence writes succeeded**, ledger chain verified, readiness remained **100%**
 
 ## Real machine-to-machine ingress
 
 With JurisTwin already running, open a second terminal from the project root:
 
-```bash
+```bat
 backend\.venv\Scripts\python.exe backend\scripts\send_live_webhook.py
 ```
 
-The event is sent through an actual HTTP POST, authenticated with HMAC-SHA256 and replay-protected.
+The script loads the locally generated `.env`, sends a real HTTP POST, signs it with HMAC-SHA256 and exercises replay protection.
 
 ## Claims boundary
 
-This is an **enterprise-grade proof of concept**, not production banking software. Outlook/Teams/SharePoint adapters use deterministic finals data unless a real enterprise tenant is connected. The Policy Atom Reasoner and Digital Twin are intentionally white-box and explainable rather than pretending an unvalidated black-box model is production-ready.
+JurisTwin v5.4 is an **enterprise-grade proof of concept**, not regulator-certified production banking software.
+
+- Vendor-branded connector counts use deterministic finals adapters unless a real tenant is connected.
+- The machine-to-machine webhook is a genuine live HTTP integration contract.
+- The learned classifier is real and measured, but its metrics are a development benchmark, not production validation.
+- Digital Twin coefficients are transparent prototype-calibrated assumptions, stress-tested rather than falsely presented as learned production forecasts.
+- No learned model may publish or canonicalise policy; human governance remains mandatory.
 
 Read next:
 
 - `FINAL_README_FIRST.txt`
-- `docs/DEMO_FLOW_v53.md`
+- `docs/DEMO_FLOW_v54.md`
+- `docs/JUDGING_GAP_CLOSURE_v54.md`
+- `docs/AI_MODEL_CARD.md`
 - `docs/PITCH_DECK_FEATURE_COVERAGE.md`
-- `docs/UI_UX_v5_3.md`
 - `docs/CLAIMS_BOUNDARY.md`
 - `docs/THREAT_MODEL.md`

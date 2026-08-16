@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 from ..db.database import get_db
 from ..db.models import Evidence, User, SecurityShield
 from ..core.security import current_user, require_roles
-from ..schemas import MemorySearchRequest, MemoryIngestRequest
-from ..services.memory import search_memory, serialize_evidence
+from ..schemas import MemorySearchRequest, MemoryIngestRequest, MemoryAnswerRequest
+from ..services.memory import search_memory, serialize_evidence, governed_answer
 from ..services.common import dumps
 from ..services.ledger import append_entry
 
@@ -20,6 +20,16 @@ def search(body:MemorySearchRequest,db:Session=Depends(get_db),user:User=Depends
         if candidate: search_user=candidate
     results=search_memory(db,search_user,body.query,body.limit,body.filters)
     return {"query":body.query,"role":search_user.role,"requested_by":user.role,"filters":body.filters,"count":len(results),"results":results}
+
+@router.post("/answer")
+def answer(body:MemoryAnswerRequest,db:Session=Depends(get_db),user:User=Depends(current_user)):
+    answer_user=user
+    if body.preview_role and user.role in {"manager","compliance_manager"}:
+        candidate=db.execute(select(User).where(User.role==body.preview_role)).scalars().first()
+        if candidate: answer_user=candidate
+    result=governed_answer(db,answer_user,body.question)
+    result["requested_by"]=user.role
+    return result
 
 @router.get("/sources")
 def sources(db:Session=Depends(get_db),user:User=Depends(current_user)):

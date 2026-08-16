@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal EnableExtensions
 set "ROOT=%~dp0"
 set "BACKEND=%ROOT%backend"
 
@@ -20,14 +20,23 @@ if not exist ".venv\Scripts\python.exe" (
 )
 
 set "PYTHONPATH=%CD%"
+for /f "delims=" %%P in ('.venv\Scripts\python.exe scripts\choose_port.py') do set "JURISTWIN_PORT=%%P"
+if not defined JURISTWIN_PORT (
+    echo [ERROR] Could not select a free local port.
+    pause
+    exit /b 1
+)
+
+set "JURISTWIN_BASE=http://127.0.0.1:%JURISTWIN_PORT%"
 
 echo ================================================
-echo   JurisTwin Sentinel - Championship v5
+echo   JurisTwin Sentinel - Championship v5.4
 echo ================================================
-echo Backend:   http://127.0.0.1:8000
-echo Finals UI: http://127.0.0.1:8000/finals
-echo Swagger:   http://127.0.0.1:8000/docs
+echo Backend:   %JURISTWIN_BASE%
+echo Finals UI: %JURISTWIN_BASE%/finals
+echo Swagger:   %JURISTWIN_BASE%/docs
 echo.
+if not "%JURISTWIN_PORT%"=="8000" echo [INFO] Port 8000 was busy. JurisTwin safely selected port %JURISTWIN_PORT%.
 echo Starting local decision-integrity runtime...
 echo The browser will open automatically when JurisTwin is ready.
 echo.

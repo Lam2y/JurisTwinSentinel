@@ -1,29 +1,40 @@
-"""Open the finals UI only after the local API is actually ready."""
+"""Open the finals UI only after the selected local API port is actually ready."""
 from __future__ import annotations
-
+import os
 import time
 import urllib.error
 import urllib.request
 import webbrowser
+from pathlib import Path
 
-HEALTH_URL = "http://127.0.0.1:8000/api/system/health"
-FINALS_URL = "http://127.0.0.1:8000/finals"
+ROOT = Path(__file__).resolve().parents[2]
+MARKER = ROOT / ".juristwin_port"
 
 
-def ready() -> bool:
+def port() -> int:
+    if os.getenv("JURISTWIN_PORT"):
+        return int(os.environ["JURISTWIN_PORT"])
+    if MARKER.exists():
+        return int(MARKER.read_text(encoding="ascii").strip())
+    return 8000
+
+
+def ready(url: str) -> bool:
     try:
-        with urllib.request.urlopen(HEALTH_URL, timeout=0.75) as response:
+        with urllib.request.urlopen(url, timeout=0.75) as response:
             return response.status == 200
     except (urllib.error.URLError, TimeoutError, OSError):
         return False
 
 
 def main() -> int:
-    # Give Uvicorn up to 30 seconds on a slower finals laptop.
+    p = port()
+    health = f"http://127.0.0.1:{p}/api/system/health"
+    finals = f"http://127.0.0.1:{p}/finals"
     deadline = time.monotonic() + 30.0
     while time.monotonic() < deadline:
-        if ready():
-            webbrowser.open(FINALS_URL, new=2)
+        if ready(health):
+            webbrowser.open(finals, new=2)
             return 0
         time.sleep(0.25)
     return 1

@@ -30,9 +30,9 @@ def test_finals_experience_assets_and_favicon_are_served():
     with client:
         finals = client.get('/finals')
         assert finals.status_code == 200
-        assert '/static/sentinel.css?v=5.3.0' in finals.text
-        assert '/static/sentinel.js?v=5.3.0' in finals.text
-        assert '/static/favicon.svg?v=5.3.0' in finals.text
+        assert '/static/sentinel.css?v=5.4.0' in finals.text
+        assert '/static/sentinel.js?v=5.4.0' in finals.text
+        assert '/static/favicon.svg?v=5.4.0' in finals.text
 
         assert client.get('/static/sentinel.css').status_code == 200
         assert client.get('/static/sentinel.js').status_code == 200

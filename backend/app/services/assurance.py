@@ -7,7 +7,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import Session
 
 from ..db.models import (
-    Approval, Conflict, CustomerCase, DecisionContract, DecisionVersion, Evidence,
+    Approval, Conflict, ConflictEvidence, CustomerCase, DecisionContract, DecisionVersion, Evidence,
     Integration, LedgerEntry, LiveChallenge, SecurityAlert, SecurityShield, Simulation,
 )
 from .common import loads, iso
@@ -15,6 +15,7 @@ from .ledger import verify_chain, serialize_entry
 from .policy_reasoner import extract_policy_atoms, compare_policy_atoms
 from .impact_graph import build_impact_graph
 from .twin_engine import serialize_sim
+from .policy_ml import get_policy_ai
 from ..core.config import get_settings
 
 
@@ -65,14 +66,22 @@ def invariant_report(db: Session) -> dict:
     duplicate_domains = [k for k,v in duplicates.items() if v > 1]
     approved_superseded = db.execute(select(func.count(Evidence.id)).where(Evidence.approved.is_(True), Evidence.superseded.is_(True), Evidence.status == "active")).scalar_one()
     protected_high = db.execute(select(func.count(CustomerCase.id)).where(CustomerCase.protected.is_(True), CustomerCase.risk_status.in_(["High","Critical"]))).scalar_one()
-    dangling_cases = db.execute(select(func.count(CustomerCase.id)).where(CustomerCase.conflict_ref.is_not(None))).scalar_one()
-    unresolved = db.execute(select(func.sum(Conflict.affected_customers)).where(Conflict.status == "unresolved")).scalar_one() or 0
+    # A case may retain its historical conflict_ref after resolution so Decision Replay can still
+    # reconstruct why the case changed. Reconciliation must therefore count only links to conflicts
+    # that are still operationally open, not every historical reference.
+    open_conflicts = db.execute(select(Conflict).where(Conflict.status.in_(["unresolved", "quarantined"]))).scalars().all()
+    open_refs = [c.conflict_ref for c in open_conflicts]
+    open_linked_cases = (
+        db.execute(select(func.count(CustomerCase.id)).where(CustomerCase.conflict_ref.in_(open_refs))).scalar_one()
+        if open_refs else 0
+    )
+    open_slots = sum(int(c.affected_customers or 0) for c in open_conflicts)
     checks = [
         {"key":"ledger", "ok":bool(chain.get('ok')), "detail":"Ledger hash-chain verifies end-to-end"},
         {"key":"decision_uniqueness", "ok":not duplicate_domains, "detail":f"Duplicate active decision domains: {duplicate_domains or 'none'}"},
         {"key":"evidence_state", "ok":approved_superseded == 0, "detail":f"{approved_superseded} evidence rows are simultaneously active+approved+superseded"},
         {"key":"protected_risk", "ok":protected_high == 0, "detail":f"{protected_high} protected cases still carry High/Critical risk"},
-        {"key":"blast_radius_reconciliation", "ok":dangling_cases <= unresolved, "detail":f"{dangling_cases} case links vs {unresolved} unresolved-conflict affected slots"},
+        {"key":"blast_radius_reconciliation", "ok":open_linked_cases <= open_slots, "detail":f"{open_linked_cases} live case links vs {open_slots} open-conflict affected slots; resolved links retained for replay"},
     ]
     return {"status":"HEALTHY" if all(x['ok'] for x in checks) else "DEGRADED", "checks":checks}
 
@@ -129,17 +138,31 @@ def decision_replay(db: Session, decision_ref: str) -> dict:
     }
 
 
-def proof_pack(db: Session, conflict_ref: str = "CF-INCOME-001", decision_ref: str = "JT-084") -> dict:
+def proof_pack(db: Session, conflict_ref: str = "CF-INCOME-001", decision_ref: str | None = None) -> dict:
     c = db.execute(select(Conflict).where(Conflict.conflict_ref == conflict_ref)).scalar_one_or_none()
     if not c:
         return {"status":"NOT_FOUND", "conflict_ref":conflict_ref}
     canonical = _canonical(db, c.rule_key)
     sim = db.execute(select(Simulation).where(Simulation.conflict_ref == conflict_ref).order_by(Simulation.id.desc())).scalars().first()
     approval = db.execute(select(Approval).where(Approval.conflict_ref == conflict_ref).order_by(Approval.id.desc())).scalars().first()
-    decision = db.execute(select(DecisionContract).where(DecisionContract.decision_ref == decision_ref)).scalar_one_or_none()
+    if decision_ref:
+        decision = db.execute(select(DecisionContract).where(DecisionContract.decision_ref == decision_ref)).scalar_one_or_none()
+    else:
+        decision = db.execute(
+            select(DecisionContract).where(DecisionContract.rule_key == c.rule_key, DecisionContract.status == "active").order_by(DecisionContract.id.desc())
+        ).scalars().first()
+        decision_ref = decision.decision_ref if decision else None
     impact = build_impact_graph(db, c.rule_key, c.conflict_ref)
     canonical_atoms = extract_policy_atoms(canonical.body if canonical else "", c.rule_key)
-    legacy = db.execute(select(Evidence).where(Evidence.rule_key == c.rule_key, Evidence.superseded.is_(False)).order_by(Evidence.authority_level.asc())).scalars().first()
+    # Use the conflict's linked contradictory evidence even after it has been superseded. Proof Packs
+    # certify *why* the decision existed, so historical contradiction evidence must remain replayable.
+    legacy = db.execute(
+        select(Evidence).join(ConflictEvidence, ConflictEvidence.evidence_id == Evidence.id)
+        .where(ConflictEvidence.conflict_id == c.id, ConflictEvidence.relation == "conflict")
+        .order_by(Evidence.authority_level.asc(), Evidence.id.asc())
+    ).scalars().first()
+    if not legacy:
+        legacy = db.execute(select(Evidence).where(Evidence.rule_key == c.rule_key).order_by(Evidence.authority_level.asc())).scalars().first()
     comparison = compare_policy_atoms(canonical_atoms, extract_policy_atoms(legacy.body if legacy else "", c.rule_key)) if legacy else {}
     ledger = verify_chain(db)
     entries = db.execute(select(LedgerEntry).order_by(LedgerEntry.id.asc())).scalars().all()
@@ -147,13 +170,26 @@ def proof_pack(db: Session, conflict_ref: str = "CF-INCOME-001", decision_ref: s
     gates = governance_gate(db, conflict_ref)
     invariants = invariant_report(db)
     integrations = db.execute(select(Integration).order_by(Integration.id)).scalars().all()
+    model_card = get_policy_ai().model_card()
+    benchmark = model_card.get("held_out_development_benchmark", {})
     payload = {
-        "format":"JurisTwin Decision Assurance Proof Pack v4",
+        "format":"JurisTwin Decision Assurance Proof Pack v5.4",
         "generated_at":datetime.now(timezone.utc).isoformat(),
         "subject":{"conflict_ref":conflict_ref,"decision_ref":decision_ref if decision else None,"rule_key":c.rule_key},
         "conflict":{"name":c.name,"severity":c.severity,"status":c.status,"confidence":c.confidence,"root_cause":c.root_cause},
         "canonical_evidence": None if not canonical else {"evidence_ref":canonical.evidence_ref,"source":canonical.source,"authority":canonical.authority,"authority_level":canonical.authority_level,"version":canonical.version,"body":canonical.body},
         "reasoning":{"canonical_atoms":canonical_atoms,"legacy_comparison":comparison},
+        "ai_assurance":{
+            "engine":model_card.get("engine"),
+            "architecture":model_card.get("architecture"),
+            "learned_component":model_card.get("learned_component"),
+            "domain_macro_f1":benchmark.get("domain_macro_f1"),
+            "stance_macro_f1":benchmark.get("stance_macro_f1"),
+            "benchmark_scope":benchmark.get("scope_note"),
+            "model_can_publish":model_card.get("governance",{}).get("model_can_publish"),
+            "model_can_canonicalise_evidence":model_card.get("governance",{}).get("model_can_canonicalise_evidence"),
+            "safety_pattern":"learned proposal → symbolic verification → authority gate → human publication",
+        },
         "impact":{"algorithm":impact.get('algorithm'),"affected_cases":impact.get('affected_cases'),"affected_systems":impact.get('affected_systems'),"reachable_nodes":impact.get('reachable_nodes'),"sample_paths":impact.get('sample_paths',[])[:5]},
         "simulation":serialize_sim(sim) if sim else None,
         "approval":None if not approval else {"approval_ref":approval.approval_ref,"status":approval.status,"selected_option":approval.selected_option,"requested_by":approval.requested_by,"approved_by":approval.approved_by},
@@ -162,7 +198,7 @@ def proof_pack(db: Session, conflict_ref: str = "CF-INCOME-001", decision_ref: s
         "invariants":invariants,
         "ledger":{"verified":bool(ledger.get('ok')),"entries":ledger.get('entries'),"head_hash":ledger.get('head_hash'),"relevant_events":relevant},
         "integration_posture":{"connected":sum(1 for i in integrations if i.status=='connected'),"total":len(integrations),"real_ingress_contract":"HMAC-SHA256 signed webhook + replay protection"},
-        "claims_boundary":"Prototype coefficients and demo adapters are explicitly labelled. Proof Pack certifies traceability, governance and runtime integrity—not statistical model accuracy or vendor production connectivity.",
+        "claims_boundary":"Prototype coefficients and demo adapters are explicitly labelled. Proof Pack binds the learned-model identity/benchmark boundary plus evidence, reasoning, impact, governance and ledger integrity; it does not certify production model accuracy or vendor connectivity.",
     }
     canonical_json=json.dumps(payload,sort_keys=True,separators=(',',':'),default=str)
     digest=hashlib.sha256(canonical_json.encode()).hexdigest()
@@ -173,7 +209,7 @@ def proof_pack(db: Session, conflict_ref: str = "CF-INCOME-001", decision_ref: s
         "signature_algorithm":"HMAC-SHA256",
         "bundle_digest":digest,
         "signature":signature,
-        "key_id":"juristwin-assurance-local-v4",
+        "key_id":"juristwin-assurance-local-v54",
         "verification":"Re-serialize all fields except status/proof with sorted JSON keys, SHA-256 hash the UTF-8 bytes, then verify HMAC-SHA256 over the hex digest.",
     }
     payload["status"]="ASSURED" if gates.get('status')=='PASS' and invariants.get('status')=='HEALTHY' and ledger.get('ok') else "REVIEW"
@@ -188,6 +224,6 @@ def verify_proof_signature(digest: str, signature: str) -> dict:
         "valid":valid,
         "digest":digest,
         "signature_algorithm":"HMAC-SHA256",
-        "key_id":"juristwin-assurance-local-v4",
+        "key_id":"juristwin-assurance-local-v54",
         "verification_boundary":"Finals/local signing key. Production target: managed KMS/HSM asymmetric signing.",
     }

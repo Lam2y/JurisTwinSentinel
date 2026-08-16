@@ -83,7 +83,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-vis
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
 
 /* ========================================================================== 
-   JurisTech v5.3 — responsive foundation
+   JurisTech v5.4 — responsive foundation
    Purpose: authoritative legal-tech aesthetic, native document scrolling,
    stronger hierarchy, quieter surfaces, stateful motion.
    ========================================================================== */
@@ -273,7 +273,7 @@ body{overflow-x:hidden;overflow-y:auto;background:#04070b}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.app-root:after{display:none}}
 
 /* ========================================================================== 
-   JurisTwin Sentinel v5.3 — Pitch-Aligned Championship
+   JurisTwin Sentinel v5.4 — MaxScore Championship
    Visual direction: JurisTech-inspired white space, red/black brand hierarchy,
    projector-safe typography, selective dark analytical canvases, progressive
    disclosure, native document scrolling.
@@ -784,7 +784,7 @@ body{overflow-x:hidden;overflow-y:auto;background:linear-gradient(180deg,#f8f8f7
 .presentation-mode .feature-row small{font-size:12px}
 
 /* ================================================================
-   JurisTwin Sentinel v5.3 — Pitch-Deck Alignment Layer
+   JurisTwin Sentinel v5.4 — Pitch + MaxScore Alignment Layer
    Keeps the five-screen judge flow simple while exposing every deck
    capability and v4 assurance control through progressive disclosure.
    ================================================================ */
@@ -835,3 +835,25 @@ body{overflow-x:hidden;overflow-y:auto;background:linear-gradient(180deg,#f8f8f7
 .mono{font-family:ui-monospace,SFMono-Regular,Consolas,monospace!important;word-break:break-all}
 @media(max-width:1180px){.final-flow{grid-template-columns:repeat(3,1fr)}.operating-impact{grid-template-columns:repeat(5,minmax(120px,1fr));overflow:auto}.decision-lifecycle{grid-template-columns:repeat(3,1fr)}.pilot-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:760px){.story-rail.six{grid-template-columns:repeat(6,minmax(92px,1fr))}.final-flow{grid-template-columns:1fr 1fr}.contract-impact,.bodyguard-timeline,.rollout-waves,.pilot-grid,.runtime-truth{grid-template-columns:1fr 1fr}.decision-lifecycle{grid-template-columns:1fr 1fr}.memory-proof-line{grid-template-columns:1fr 1fr}.memory-proof-line b{grid-column:1/-1;text-align:left}.positioning-pairs>div{grid-template-columns:72px 1fr}.positioning-pairs span{grid-column:1}.positioning-pairs strong{grid-column:2}.compare-grid{grid-template-columns:1fr}.reasoner-collision{grid-template-columns:1fr}.reasoner-collision>span{transform:rotate(90deg);justify-self:start}.operating-impact{grid-template-columns:repeat(5,minmax(108px,1fr))}.webhook-proof{align-items:flex-start;flex-direction:column}}
+
+/* v5.4 — Evidence-bound plain-language answers for Track 2. */
+.verified-answer-panel{margin:0 0 18px;padding:20px;border:1px solid rgba(16,17,20,.09);border-radius:20px;background:linear-gradient(135deg,#fff 0%,#fff 66%,rgba(239,35,52,.035) 100%);box-shadow:0 12px 32px rgba(16,17,20,.045)}
+.verified-answer-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px}
+.verified-answer-head h4{font-size:23px;line-height:1.12;letter-spacing:-.035em;color:var(--ink);margin:8px 0 6px}
+.verified-answer-head p{font-size:12px;line-height:1.55;color:#777b82;max-width:680px;margin:0}
+.verified-answer-controls{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;margin-top:16px}
+.verified-answer-result{margin-top:11px;padding:16px 17px;border-radius:15px;border:1px solid rgba(16,17,20,.08);background:#f7f7f5;min-height:62px;transition:.2s var(--ease)}
+.verified-answer-result.idle,.verified-answer-result.loading{display:flex;align-items:center;color:#858990;font-size:12px}
+.verified-answer-result.loading{background:#f4f4f2;animation:pulse-soft 1.25s ease-in-out infinite alternate}
+.verified-answer-result.verified{border-color:rgba(29,156,99,.20);background:#f2fbf6}
+.verified-answer-result.warning{border-color:rgba(244,166,42,.24);background:#fff9ed}
+.verified-answer-result.restricted{border-color:rgba(239,35,52,.18);background:#fff6f7}
+.verified-answer-result.review{border-color:rgba(39,142,229,.18);background:#f5f9ff}
+.verified-answer-status{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:11px}.verified-answer-status small{font-size:10px;color:#858990}
+.verified-answer-result>strong{display:block;font-size:18px;line-height:1.42;letter-spacing:-.018em;color:var(--ink);font-weight:790}
+.verified-answer-result>p{font-size:11px;line-height:1.55;color:#8a671e;margin:9px 0 0}
+.answer-proof{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-top:13px;padding-top:12px;border-top:1px solid rgba(16,17,20,.08)}.answer-proof b{font-size:11px;color:var(--ink)}.answer-proof span{font-size:10px;color:#858990}.answer-proof code{font-size:9px;color:var(--jt-red);background:var(--jt-red-soft);padding:5px 7px;border-radius:7px}
+.answer-citations{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:10px}.answer-citations small{font-size:9px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#96999e;margin-right:3px}.answer-citations span{font-size:9px;color:#666b72;background:#fff;border:1px solid rgba(16,17,20,.08);padding:6px 8px;border-radius:999px}
+@keyframes pulse-soft{from{opacity:.72}to{opacity:1}}
+.presentation-mode .verified-answer-head h4{font-size:27px}.presentation-mode .verified-answer-head p{font-size:15px}.presentation-mode .verified-answer-result>strong{font-size:21px}.presentation-mode .verified-answer-result>p{font-size:14px}
+@media(max-width:760px){.verified-answer-head{flex-direction:column}.verified-answer-controls{grid-template-columns:1fr}.verified-answer-status{align-items:flex-start;flex-direction:column}.verified-answer-result>strong{font-size:16px}}

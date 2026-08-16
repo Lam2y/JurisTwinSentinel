@@ -15,8 +15,8 @@ OBJECT_PATTERNS = [
     ("BANK_STATEMENT", [r"bank statements?", r"account statements?"]),
     ("PAYSLIP", [r"pay\s?slips?", r"salary slips?"]),
     ("INCOME_EVIDENCE", [r"income (?:proof|evidence|document)", r"proof of income"]),
-    ("LOAN_RESTRUCTURE", [r"loan restructur(?:e|ing)", r"term extension", r"repayment restructur"]),
-    ("CUSTOMER_NOTIFICATION", [r"customer notifications?", r"customer notice", r"notify (?:the )?customer"]),
+    ("LOAN_RESTRUCTURE", [r"loan restructur(?:e|ing)", r"restructur(?:e|ing|ing desk)", r"term extension", r"repayment restructur", r"risk score.{0,25}(?:threshold|approval|restructur)"]),
+    ("CUSTOMER_NOTIFICATION", [r"customer notifications?", r"customer notice", r"notify (?:the )?customer", r"notification deadline", r"adverse decision notices?", r"notification sla"]),
 ]
 
 SUBJECT_PATTERNS = [
@@ -85,6 +85,40 @@ def _effective(text: str) -> str | None:
     return m.group(1) if m else None
 
 
+
+NUMBER_WORDS = {
+    "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7,
+    "eight": 8, "nine": 9, "ten": 10,
+}
+
+def _number(value: str) -> int | None:
+    value = (value or "").lower().strip()
+    if value.isdigit():
+        return int(value)
+    return NUMBER_WORDS.get(value)
+
+def _parameters(text: str, obj: str) -> dict:
+    """Extract structured numeric/temporal constraints for non-deontic policy collisions."""
+    low = (text or "").lower()
+    out = {}
+    if obj == "LOAN_RESTRUCTURE":
+        m = re.search(r"risk score(?:\s+(?:of|is|at|up to|<=|less than or equal to))?\s*(\d{1,3})", low)
+        if m:
+            out["risk_score_threshold"] = int(m.group(1))
+            if re.search(r"(?:or below|maximum|max|up to|<=|not exceed)", low):
+                out["risk_score_operator"] = "MAX"
+    if obj == "CUSTOMER_NOTIFICATION":
+        m = re.search(r"\b(one|two|three|four|five|six|seven|eight|nine|ten|\d{1,2})[ -](business|working|calendar)[ -]days?\b", low)
+        if m:
+            out["deadline_days"] = _number(m.group(1))
+            out["deadline_basis"] = "BUSINESS" if m.group(2) in {"business", "working"} else "CALENDAR"
+        else:
+            m = re.search(r"\b(one|two|three|four|five|six|seven|eight|nine|ten|\d{1,2})\s+(business|working|calendar)\s+days?\b", low)
+            if m:
+                out["deadline_days"] = _number(m.group(1))
+                out["deadline_basis"] = "BUSINESS" if m.group(2) in {"business", "working"} else "CALENDAR"
+    return out
+
 def extract_policy_atoms(text: str, rule_key: str | None = None) -> list[dict]:
     """Extract one or more normalized policy atoms from prose.
 
@@ -131,6 +165,7 @@ def extract_policy_atoms(text: str, rule_key: str | None = None) -> list[dict]:
             "modality": modality,
             "conditions": conditions,
             "effective": effective,
+            "parameters": _parameters(text, obj),
             "rule_key": rule_key,
             "explanation": reasons,
         })
@@ -165,6 +200,28 @@ def compare_policy_atoms(canonical_atoms: list[dict], incoming_atoms: list[dict]
                     "object": ia["object"],
                     "modality": im,
                 })
+    # Structured-parameter collisions catch policy drift that is not a simple permission word.
+    # Examples: risk threshold 60 vs 70, or business-day vs calendar-day deadlines.
+    for ca in canonical_atoms:
+        for ia in incoming_atoms:
+            if ca.get("object") != ia.get("object"):
+                continue
+            cp, ip = ca.get("parameters") or {}, ia.get("parameters") or {}
+            if ca.get("object") == "LOAN_RESTRUCTURE" and cp.get("risk_score_threshold") is not None and ip.get("risk_score_threshold") is not None and cp.get("risk_score_threshold") != ip.get("risk_score_threshold"):
+                collisions.append({
+                    "type": "NUMERIC_THRESHOLD_COLLISION", "object": "LOAN_RESTRUCTURE",
+                    "canonical_modality": f"RISK_SCORE_MAX_{cp['risk_score_threshold']}",
+                    "incoming_modality": f"RISK_SCORE_MAX_{ip['risk_score_threshold']}",
+                    "explanation": f"The governed restructuring threshold is {cp['risk_score_threshold']} but incoming evidence uses {ip['risk_score_threshold']}.",
+                })
+            if ca.get("object") == "CUSTOMER_NOTIFICATION" and cp.get("deadline_basis") and ip.get("deadline_basis") and (cp.get("deadline_basis") != ip.get("deadline_basis") or cp.get("deadline_days") != ip.get("deadline_days")):
+                collisions.append({
+                    "type": "TEMPORAL_SEMANTICS_COLLISION", "object": "CUSTOMER_NOTIFICATION",
+                    "canonical_modality": f"{cp.get('deadline_days')}_{cp.get('deadline_basis')}_DAYS",
+                    "incoming_modality": f"{ip.get('deadline_days')}_{ip.get('deadline_basis')}_DAYS",
+                    "explanation": f"The governed deadline is {cp.get('deadline_days')} {str(cp.get('deadline_basis')).lower()} days but incoming evidence uses {ip.get('deadline_days')} {str(ip.get('deadline_basis')).lower()} days.",
+                })
+
     # Cross-object exclusivity: canonical bank statement permission versus incoming compulsory payslip.
     c_bank = any(a["object"] == "BANK_STATEMENT" and a["modality"] == "PERMITTED" for a in canonical_atoms)
     i_pay_req = any(a["object"] == "PAYSLIP" and a["modality"] == "REQUIRED" for a in incoming_atoms)
@@ -183,5 +240,5 @@ def compare_policy_atoms(canonical_atoms: list[dict], incoming_atoms: list[dict]
         "collisions": collisions,
         "alignments": alignments,
         "confidence": round(confidence, 3),
-        "engine": "JurisTwin Policy Atom Reasoner v3",
+        "engine": "JurisTwin Policy Atom Reasoner v4",
     }

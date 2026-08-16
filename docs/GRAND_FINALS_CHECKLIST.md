@@ -1,47 +1,49 @@
-# Grand Finals Technical Checklist — Championship v5
+# Grand Finals Technical Checklist — Championship v5.4
 
 ## Before leaving for the venue
 
 - Run `setup_windows.bat` while internet is available.
-- Run `backend\.venv\Scripts\python.exe -m pytest -q` and confirm **23/23** tests pass.
-- Run `backend\.venv\Scripts\python.exe backend\scripts\industry_preflight.py` and confirm **15/15** controls pass.
-- Launch `run_finals.bat`, perform one complete demo, then reset the system.
-- Keep both the ZIP and extracted folder locally; keep a second copy on USB/cloud.
+- Confirm a local `.env` was generated; do not share it.
+- Run `backend\.venv\Scripts\python.exe -m pytest -q` → **39/39 PASS**.
+- Run `backend\.venv\Scripts\python.exe backend\scripts\industry_preflight.py` → **20/20 PASS · 100%**.
+- Launch `run_finals.bat` and perform one complete flagship demo. Confirm the browser uses the port printed by the launcher; port 8000 automatically fails over if occupied.
+- Approve JT-084 and confirm **Readiness stays READY · 100%**.
+- Open Proof Pack and click **Verify this proof**.
+- Reset the scenario before judging.
+- Keep ZIP + extracted folder locally and a second offline copy.
 - Disable sleep, notification popups and Windows auto-update during judging.
-- Use Chrome/Edge at 100% zoom unless the venue projector requires otherwise.
+- Use Chrome/Edge at 100% zoom; turn on Presentation Mode (`Alt+P`) if needed.
 
 ## On stage
 
-1. Launch `run_finals.bat` and open `http://127.0.0.1:8000/finals`.
-2. Login and confirm the compact LIVE status is healthy.
-3. **Overview:** establish the contradiction and the 27 exposed customers in seconds.
-4. **Evidence:** ask a judge for unseen policy text/file and submit it.
-5. **Conflict Map:** show the explicit policy collision and drag a node to prove the graph is live; open the affected-case path only if asked.
-6. **Digital Twin:** show the three decision options and robustness certificate; avoid narrating every metric.
-7. **Assurance:** show the governance gate and, for technical judges, run Attack Sentinel or the signed Proof Pack.
-8. Reset only if a second judging group needs the exact initial story.
-
-## Presentation discipline
-
-- Do not read paragraphs from the interface; the interface is designed around headline → evidence → action.
-- Use one screen for one claim.
-- Open side-sheet detail only in response to judge curiosity or technical Q&A.
-- Avoid showing Swagger unless a technical judge specifically asks to inspect APIs.
-- Do not claim the deterministic finals connector adapters are live Microsoft tenant integrations.
+1. **Overview:** establish the contradiction in seconds.
+2. **Secure Enterprise Memory:** ask one plain-language question, show conflict/citations, switch to Intern once for redaction.
+3. **Evidence Lab:** let a judge give unseen policy text/file.
+4. **Conflict Map:** show the collision, drag one node, explain the 27-case BFS blast radius.
+5. **Digital Twin:** A/B/C, then show 1,500-scenario robustness — do not narrate every metric.
+6. **Governance Gate:** 100% PASS → approve JT-084.
+7. **AI Bodyguard:** simulate QA-014 modification → restore.
+8. **Proof:** Proof Pack → Verify this proof.
 
 ## Technical Q&A anchors
 
-**“Is the simulator really AI/ML?”**  
-The finals Twin is an explainable white-box decision model. It is stress-tested across 1,500 Monte Carlo scenarios, sensitivity checks and Pareto analysis. Production coefficients would be calibrated and validated on enterprise history; the hackathon build deliberately avoids presenting unvalidated ML as fact.
+**“Where is the AI?”**  
+JurisTwin trains a local two-task statistical NLP model on startup. Show the AI Model Card and held-out macro-F1. The model proposes intent; symbolic policy atoms and authority controls verify; it cannot publish policy.
+
+**“Can the AI hallucinate?”**  
+Ask an unrelated policy question. The answer layer returns `NEEDS_REVIEW` and zero citations rather than inventing policy.
+
+**“Is the flagship hardcoded?”**  
+Switch to the restructuring or notification conflict and run its distinct Twin/gate/decision/proof workflow.
+
+**“Is the simulator trained ML?”**  
+No. The Twin is intentionally white-box and prototype-calibrated. It is stress-tested across 1,500 Monte Carlo scenarios, sensitivity and Pareto analysis. Learned production coefficients require enterprise history and formal validation.
 
 **“Is the ledger blockchain?”**  
-No. It is an append-only SHA-256 linked ledger, which provides the tamper evidence this control problem needs without unnecessary blockchain infrastructure.
+No. It is an append-only SHA-256 linked ledger, which gives the required tamper evidence without unnecessary consensus infrastructure.
 
-**“Are Outlook/Teams actually connected?”**  
-The ingestion contract and signed machine-to-machine webhook are real. Vendor-branded adapters use deterministic finals data unless a real tenant and credentials are supplied; we do not embed regulated credentials in a public demo.
+**“Are Microsoft integrations live?”**  
+Vendor-branded finals adapters are deterministic unless tenant credentials are supplied. The signed webhook is a real live machine-to-machine HTTP path and can be demonstrated from a second process.
 
-**“What makes this different from RAG?”**  
-RAG retrieves information. JurisTwin reasons about conflicting authority, calculates downstream exposure, stress-tests decisions, requires governed approval, propagates the resulting decision and preserves replayable proof.
-
-**“How is access control enforced?”**  
-At the API/service layer. Tests verify that restricted evidence is redacted for users without the required capability.
+**“Why is this Track 2 rather than a chatbot?”**  
+Secure Enterprise Memory now provides plain-language, role-aware, cited answers — but JurisTwin's differentiator is making those answers trustworthy when enterprise sources conflict.

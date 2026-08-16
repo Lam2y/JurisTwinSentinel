@@ -77,19 +77,37 @@ def seed_database(db: Session):
     for key, name, kind, status, count, last_sync, details in integrations:
         db.add(Integration(key=key, name=name, kind=kind, status=status, object_count=count, last_sync_at=last_sync, details_json=dumps(details)))
 
-    # 128 active cases; the first 27 share the flagship conflict.
+    # 128 active cases. All three seeded conflicts have real operational cohorts so a judge can
+    # click any conflict and drive it through simulation → governance → decision publication.
     for i in range(128):
         case_ref = DEMO_CASE if i == 0 else f"JT-2026-{85+i:03d}"
-        affected = i < 27
+        if i < 27:
+            conflict_ref, cohort = FLAGSHIP_CONFLICT, "gig-worker-income"
+            customer_type, application_type = "Gig worker", "Financial Assistance Application"
+            risk_status, blocker = "High", "Income document rule conflict"
+            pending = 4.2
+        elif i < 38:
+            conflict_ref, cohort = "CF-RESTRUCTURE-002", "loan-restructure"
+            customer_type, application_type = "Borrower", "Loan Restructuring Application"
+            risk_status, blocker = "Medium", "Restructuring approval threshold mismatch"
+            pending = 3.8
+        elif i < 44:
+            conflict_ref, cohort = "CF-NOTIFY-003", "customer-notification"
+            customer_type, application_type = "Retail customer", "Adverse Decision Notification"
+            risk_status, blocker = "Medium", "Notification SLA definition mismatch"
+            pending = 3.0
+        else:
+            conflict_ref, cohort = None, "baseline"
+            customer_type, application_type = "Retail customer", "Retail Banking Application"
+            risk_status, blocker = "Low", None
+            pending = round(0.3 + (i % 20)*0.1, 1)
         customer = "Aina Rahman" if i == 0 else f"Customer {i+1:03d}"
         db.add(CustomerCase(
-            case_ref=case_ref, customer_name=customer, customer_type="Gig worker" if affected else "Retail customer",
-            application_type="Financial Assistance Application" if affected else "Retail Banking Application",
-            owner_email="officer@regulatedbank.com", status="active", risk_status="High" if affected else "Low",
-            sentiment="Frustrated" if i == 0 else ("Concerned" if affected else "Neutral"),
-            pending_days=4.2 if affected else round(0.3 + (i % 20)*0.1, 1), conflict_ref=FLAGSHIP_CONFLICT if affected else None,
-            current_blocker="Income document rule conflict" if affected else None, protected=(i >= 34),
-            metadata_json=dumps({"cohort": "gig-worker-income" if affected else "baseline", "application_value": 250000 if i == 0 else 50000 + i*500}),
+            case_ref=case_ref, customer_name=customer, customer_type=customer_type,
+            application_type=application_type, owner_email="officer@regulatedbank.com", status="active",
+            risk_status=risk_status, sentiment="Frustrated" if i == 0 else ("Concerned" if conflict_ref else "Neutral"),
+            pending_days=pending, conflict_ref=conflict_ref, current_blocker=blocker, protected=(i >= 34),
+            metadata_json=dumps({"cohort": cohort, "application_value": 250000 if i == 0 else 50000 + i*500}),
         ))
     db.flush()
     flagship = db.execute(select(CustomerCase).where(CustomerCase.case_ref == DEMO_CASE)).scalar_one()
@@ -113,12 +131,13 @@ def seed_database(db: Session):
         ("EV-COMPLAINT-084", "Gmail Connector", "Customer Complaint", "You keep asking for papers I don't have. Please resolve.", "income_document_rule", "customer_frustrated", "Customer", 1, "live", "active", "restricted", DEMO_CASE, False, False),
         ("EV-QA-084", "QA Repository", "Internal QA Memo", "Eight QA tests still assert payslips-only behaviour.", "income_document_rule", "qa_outdated", "QA Analyst", 3, "v3-suite", "active", "confidential", DEMO_CASE, False, False),
         ("EV-CONSENSUS-001", "Decision Ledger", "Consensus Ledger Protocol", "Consensus rules path mapped dynamically from Credit Policy v4.2 with complete approval lineage.", "consensus_protocol", "governed_path", "Compliance Manager", 6, "v4.2", "active", "confidential", None, True, False),
-        ("EV-RISK-011", "SharePoint Indexer", "Loan Restructuring SOP", "Restructuring approval threshold requires risk score review before a term extension can be approved.", "loan_restructure_rule", "risk_review_required", "Risk Committee", 5, "v5.1", "active", "restricted", "JT-2026-091", True, False),
-        ("EV-NOTIFY-021", "Outlook Extractor", "Customer Notification SLA Approval", "Compliance approved a three business-day notification deadline for adverse decisions.", "notification_deadline", "business_days_3", "Compliance Manager", 5, "v2.1", "active", "confidential", "JT-2026-102", True, False),
-        ("EV-LEGACY-019", "SharePoint Indexer", "Legacy Notification Procedure", "Customer notifications must be sent within three calendar days.", "notification_deadline", "calendar_days_3", "Operations", 2, "v1.7", "superseded", "internal", "JT-2026-102", False, True),
-        ("EV-QA-RESTRUCTURE", "QA Repository", "Restructuring Regression Pack", "Regression pack tracks 14 approval edge cases against the latest restructuring policy.", "loan_restructure_rule", "qa_current", "QA Analyst", 3, "v5.1", "active", "internal", "JT-2026-091", False, False),
-        ("EV-TEAMS-NOTIFY", "MS Teams Listener", "Notification Ops Chat", "Operations team is still using calendar-day language in manual customer follow-up instructions.", "notification_deadline", "legacy_instruction", "Operations Officer", 2, "current", "active", "internal", "JT-2026-102", False, False),
-        ("EV-CORE-091", "Customer Core API", "Restructuring Case Mirror", "Customer case is waiting for a threshold decision from the risk engine.", "loan_restructure_rule", "operational_wait", "Customer Core", 3, "live", "active", "restricted", "JT-2026-091", False, False),
+        ("EV-RISK-011", "SharePoint Indexer", "Loan Restructuring SOP", "Risk Committee v5.1 permits delegated loan restructuring only when the risk score is 60 or below and affordability review passes.", "loan_restructure_rule", "risk_threshold_60", "Risk Committee", 5, "v5.1", "active", "restricted", "JT-2026-112", True, False),
+        ("EV-RISK-LEGACY", "SharePoint Indexer", "Legacy Restructuring Desk Guide", "Legacy desk guidance allows restructuring approval up to risk score 70.", "loan_restructure_rule", "risk_threshold_70", "Credit Operations", 2, "v4.3", "outdated", "internal", "JT-2026-112", False, False),
+        ("EV-NOTIFY-021", "Outlook Extractor", "Customer Notification SLA Approval", "Compliance approved a three business-day notification deadline for adverse decisions.", "notification_deadline", "business_days_3", "Compliance Manager", 5, "v2.1", "active", "confidential", "JT-2026-123", True, False),
+        ("EV-LEGACY-019", "SharePoint Indexer", "Legacy Notification Procedure", "Customer notifications must be sent within three calendar days.", "notification_deadline", "calendar_days_3", "Operations", 2, "v1.7", "superseded", "internal", "JT-2026-123", False, True),
+        ("EV-QA-RESTRUCTURE", "QA Repository", "Restructuring Regression Pack", "Regression pack tracks 14 approval edge cases against the latest restructuring policy.", "loan_restructure_rule", "qa_current", "QA Analyst", 3, "v5.1", "active", "internal", "JT-2026-112", False, False),
+        ("EV-TEAMS-NOTIFY", "MS Teams Listener", "Notification Ops Chat", "Operations team is still using calendar-day language in manual customer follow-up instructions.", "notification_deadline", "legacy_instruction", "Operations Officer", 2, "current", "active", "internal", "JT-2026-123", False, False),
+        ("EV-CORE-091", "Customer Core API", "Restructuring Case Mirror", "Customer case is waiting for a threshold decision from the risk engine.", "loan_restructure_rule", "operational_wait", "Customer Core", 3, "live", "active", "restricted", "JT-2026-112", False, False),
     ]
     evidences = {}
     for row in evidence_rows:
@@ -140,13 +159,23 @@ def seed_database(db: Session):
     ]
     for c in conflicts: db.add(c)
     db.flush()
-    flagship_c = db.execute(select(Conflict).where(Conflict.conflict_ref == FLAGSHIP_CONFLICT)).scalar_one()
-    relations = {
-        "EV-OUTLOOK-001": "approved", "EV-TEAMS-001": "informal", "EV-FSD-003": "conflict",
-        "EV-GUIDE-002": "conflict", "EV-CORE-084": "operational", "EV-COMPLAINT-084": "context", "EV-QA-084": "conflict"
+    conflict_map = {c.conflict_ref: c for c in db.execute(select(Conflict)).scalars().all()}
+    relation_sets = {
+        FLAGSHIP_CONFLICT: {
+            "EV-OUTLOOK-001": "approved", "EV-TEAMS-001": "informal", "EV-FSD-003": "conflict",
+            "EV-GUIDE-002": "conflict", "EV-CORE-084": "operational", "EV-COMPLAINT-084": "context", "EV-QA-084": "conflict",
+        },
+        "CF-RESTRUCTURE-002": {
+            "EV-RISK-011": "approved", "EV-RISK-LEGACY": "conflict", "EV-QA-RESTRUCTURE": "context", "EV-CORE-091": "operational",
+        },
+        "CF-NOTIFY-003": {
+            "EV-NOTIFY-021": "approved", "EV-LEGACY-019": "conflict", "EV-TEAMS-NOTIFY": "informal",
+        },
     }
-    for ref, relation in relations.items():
-        db.add(ConflictEvidence(conflict_id=flagship_c.id, evidence_id=evidences[ref].id, relation=relation))
+    for conflict_ref, relations in relation_sets.items():
+        conflict = conflict_map[conflict_ref]
+        for ref, relation in relations.items():
+            db.add(ConflictEvidence(conflict_id=conflict.id, evidence_id=evidences[ref].id, relation=relation))
 
     # Pre-seed a small immutable audit history (not the final decision contract).
     append_entry(db, "EVIDENCE_INGESTED", "outlook-extractor", {"evidence_ref": "EV-OUTLOOK-001", "authority": "Product Owner"})

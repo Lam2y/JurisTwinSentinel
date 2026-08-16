@@ -1,75 +1,83 @@
-JURISTWIN SENTINEL — JURISTECH PITCH-ALIGNED EDITION v5.3
-====================================
+JURISTWIN SENTINEL — CHAMPIONSHIP MAXSCORE EDITION v5.4
+=======================================================
 
 START
 1. First time only: setup_windows.bat
+   - creates backend\.venv
+   - installs dependencies
+   - generates local random security secrets in .env
 2. Every demo: run_finals.bat
-3. Open: http://127.0.0.1:8000/finals
+3. Open the Finals URL printed in the terminal.
+   Normal: http://127.0.0.1:8000/finals
+   If 8000 is busy, JurisTwin automatically selects the next free local port.
 
 LOGIN
 operations@regulatedbank.com
 Finals2026!
 
-DO NOT DEMO TEN FEATURES.
-DEMO ONE STORY: CONNECT → EXPOSE → SIMULATE → RECOMMEND → APPROVE → PROTECT.
+THE RULE
+DO NOT DEMO A FEATURE LIST.
+DEMO ONE INCIDENT: CONNECT → EXPOSE → SIMULATE → RECOMMEND → APPROVE → PROTECT.
 
-Click FINAL FLOW for the exact six-stage operating model from the pitch deck.
-If judges ask whether a pitch-deck or v4 feature still exists, click PLATFORM.
-It exposes Enterprise Memory, Decision Twin, White-Box Simulator, AI Bodyguard, Decision Ledger,
-Policy Reasoner, Connectors, Progressive Rollout, Decision Replay, Assurance, Positioning and Pilot & Scale.
-
-RECOMMENDED 4–6 MINUTE FLOW
+BEST 5–7 MINUTE FLOW
 1. CONNECT — Secure Enterprise Memory
-   Show Manager / Officer / Intern role-aware retrieval.
+   Ask: “Can gig workers use bank statements as income evidence?”
+   Show CONFLICT_PRESENT + cited Product Owner evidence.
+   Switch to Intern once to prove role-aware redaction.
 
-2. EXPOSE — Conflict Map
+2. JUDGE CHALLENGE — Evidence Lab
+   Let the judge type unseen policy text.
+   Show learned routing + symbolic verification + quarantine.
+
+3. EXPOSE — Conflict Map
    Show Outlook vs Teams vs FSD vs Training Guide vs Customer System.
+   Open Explain Blast Radius: 27 affected cases through BFS dependency traversal.
 
-3. SIMULATE — White-Box Future Simulator
-   Run 1,500 scenarios across Options A, B and C.
+4. SIMULATE — Digital Twin
+   Run 1,500 scenarios across A/B/C.
 
-4. RECOMMEND — Robust Decision Certificate
-   Show why Option C remains defensible as assumptions move.
+5. RECOMMEND
+   Option C remains ROBUST under sensitivity/Pareto checks.
 
-5. APPROVE — Governance Gate
-   Publish JT-084 only after every backend control passes.
+6. APPROVE
+   Governance Gate must show 100% PASS before publication.
+   Publish JT-084.
+   IMPORTANT: readiness remains READY 100% after approval in v5.4.
 
-6. PROTECT — AI Bodyguard + Decision Ledger
-   Simulate QA-014 modifying Credit Policy v4.2; Review / Revoke / Escalate / Restore.
+7. PROTECT
+   Trigger the QA-014 Bodyguard incident and restore the approved version.
 
-OPTIONAL WOW MOMENT
-   Challenge Sentinel with a judge-supplied sentence or file, then prove it in the ledger.
+8. PROVE
+   Open Proof Pack → click VERIFY THIS PROOF.
+   Show Digest VALID + Signature VALID + Ledger VERIFIED.
 
-FINAL LINE
-“JurisTwin stops an organisation from contradicting itself.”
+TECHNICAL ENCORE IF ASKED
+- Switch to another conflict and run it end-to-end to prove nothing is flagship-hardcoded.
+- AI Model Card: learned classifier + held-out macro-F1 + zero publication authority.
+- Attack Sentinel: 16/16 HARDENED.
+- Signed webhook: real external HTTP ingress.
+- Decision Replay / Progressive Rollout.
 
-FAST SHORTCUTS
-Alt+J  Judge input
+KEYBOARD
+Alt+J  Evidence Lab / judge challenge
 Alt+C  Conflict map
-Alt+T  Digital twin
+Alt+T  Digital Twin
 Alt+A  Assurance
-Alt+P  Presentation mode
+Alt+P  Presentation Mode
 Alt+F  Final Flow
-Esc    Close any side sheet
+Esc    Close side sheet
 
 FINALS-DAY CHECK
 cd backend
-python scripts/industry_preflight.py
+python -m pytest -q
+python scripts\industry_preflight.py
 
-EXPECTED
-- automated tests pass
-- preflight passes
-- /finals loads with no pre-login 401 noise
-- graph nodes remain visible and draggable
-- all side sheets close via X, Esc and backdrop
-- no stacked toast rectangles
+EXPECTED v5.4
+39/39 tests PASS
+20/20 preflight PASS
+16/16 Attack Sentinel HARDENED
+Readiness READY 100%
+Fresh-process stress: 60/60 concurrent evidence writes PASS; ledger VERIFIED
 
-REAL HTTP WEBHOOK (OPTIONAL WOW MOMENT)
-From a second terminal while JurisTwin is running:
-backend\.venv\Scripts\python.exe backend\scripts\send_live_webhook.py
-
-HONEST POSITIONING
-- Enterprise-grade proof of concept, not production banking software.
-- Enterprise-branded connectors are deterministic finals adapters unless connected to a real tenant.
-- The reasoner and twin are white-box by design.
-- Judge-supplied evidence can never silently become canonical truth.
+FINAL LINE
+“JurisTwin stops an organisation from contradicting itself — then proves every decision it makes next.”

@@ -11,6 +11,7 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from .core.config import get_settings
 from .services.observability import telemetry, rate_limiter
+from .services.policy_ml import get_policy_ai
 from .db.database import Base, engine, SessionLocal
 from .db.seed import seed_database
 from .routers import auth, system, dashboard, cases, conflicts, simulations, approvals, memory, ledger, bodyguard, integrations, search, demo, live, assurance
@@ -23,11 +24,14 @@ async def lifespan(app: FastAPI):
     db = SessionLocal()
     try:
         seed_database(db)
+        # Warm the local learned NLP layer before judges interact with Evidence Lab. The model is
+        # retrained from the bundled labelled corpus and remains fully offline.
+        get_policy_ai()
     finally:
         db.close()
     yield
 
-app = FastAPI(title="JurisTwin Sentinel API", version="5.3.0", description="JurisTwin Sentinel decision assurance, policy reasoning, live evidence challenge, impact intelligence and governed decision system", lifespan=lifespan)
+app = FastAPI(title="JurisTwin Sentinel API", version="5.4.0", description="JurisTwin Sentinel decision assurance, policy reasoning, live evidence challenge, impact intelligence and governed decision system", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=settings.CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 logger = logging.getLogger("juristwin")

@@ -9,6 +9,8 @@ from ..services.common import loads, dumps, iso
 from ..services.ledger import verify_chain, append_entry
 from ..services.policy_reasoner import extract_policy_atoms, compare_policy_atoms
 from ..services.impact_graph import build_impact_graph
+from ..services.policy_ml import get_policy_ai
+from ..services.memory import governed_answer
 
 router=APIRouter(prefix="/system",tags=["system"])
 
@@ -19,7 +21,7 @@ def shield_ser(s):
 
 @router.get("/health")
 def health(db:Session=Depends(get_db)):
-    db.execute(text("SELECT 1"));return {"status":"operational","database":"ok","decision_ledger":verify_chain(db),"version":"5.3.0","service":"JurisTwin Sentinel JurisTech"}
+    db.execute(text("SELECT 1"));return {"status":"operational","database":"ok","decision_ledger":verify_chain(db),"version":"5.4.0","service":"JurisTwin Sentinel JurisTech"}
 
 @router.get("/readiness")
 def readiness(db:Session=Depends(get_db),user:User=Depends(current_user)):
@@ -68,14 +70,31 @@ def readiness(db:Session=Depends(get_db),user:User=Depends(current_user)):
     reason=compare_policy_atoms(canonical_atoms,incoming)
     check("reasoner","Policy Atom Reasoner",reason.get("collision") is True,f"Explainable modality collision engine · {len(reason.get('collisions',[]))} collision(s)")
 
+    try:
+        model_card=get_policy_ai().model_card()
+        bench=model_card.get("held_out_development_benchmark",{})
+        model_ok=(model_card.get("status")=="READY" and model_card.get("learned_component") is True and bench.get("domain_macro_f1",0)>=0.85 and bench.get("stance_macro_f1",0)>=0.85)
+        check("hybrid_ai","Learned + white-box policy AI",model_ok,f"Local learned classifier READY · domain macro-F1 {bench.get('domain_macro_f1','—')} · stance macro-F1 {bench.get('stance_macro_f1','—')} · symbolic fallback enabled")
+    except Exception as exc:
+        # The learned layer is an enhancement, never a single point of failure: the deterministic
+        # reasoner remains available. Readiness still surfaces the model issue visibly.
+        check("hybrid_ai","Learned + white-box policy AI",False,f"Learned layer unavailable: {type(exc).__name__}; symbolic fallback remains safe")
+
     impact=build_impact_graph(db,"income_document_rule","CF-INCOME-001")
     check("impact","Dependency blast-radius engine",impact.get("affected_cases")==27,f"BFS traversed {impact.get('reachable_nodes',0)} nodes to {impact.get('affected_cases',0)} affected cases")
+
+    governed=governed_answer(db,user,"Can gig workers use bank statements as income evidence?")
+    answer_ok=governed.get("status") in {"CONFLICT_PRESENT","VERIFIED"} and governed.get("rule_key")=="income_document_rule" and bool(governed.get("citations"))
+    check("verified_answer","Evidence-bound plain-language answers",answer_ok,f"{governed.get('status')} · {len(governed.get('citations',[]))} cited governed source(s) · learned routing cannot author policy")
 
     from ..core.config import get_settings
     settings_v4=get_settings()
     webhook_secret=settings_v4.WEBHOOK_SECRET
     check("webhook","Signed real-time evidence gateway",len(webhook_secret)>=16,"HMAC-SHA256 machine-to-machine ingress ready · replay-safe contract")
     check("proof_signing","Decision Assurance signing",len(settings_v4.PROOF_SIGNING_SECRET)>=24,"HMAC-SHA256 exported Proof Packs are authenticity-signed")
+    static_markers=("juristwin-finals-local-secret-change-me","juristwin-finals-webhook-secret","juristwin-finals-proof-signing-secret")
+    secret_ok=all(len(x)>=32 and not any(marker in x for marker in static_markers) for x in (settings_v4.SECRET_KEY,settings_v4.WEBHOOK_SECRET,settings_v4.PROOF_SIGNING_SECRET))
+    check("secret_hygiene","Runtime secret hygiene",secret_ok,f"{settings_v4.SECURITY_SECRET_MODE} · independent non-static JWT/webhook/proof keys")
 
     from ..services.assurance import invariant_report
     invariant=invariant_report(db)
@@ -93,7 +112,8 @@ def readiness(db:Session=Depends(get_db),user:User=Depends(current_user)):
         "resilience":{
             "external_ai_required":False,
             "external_network_required":False,
-            "fallback_mode":"Deterministic local evidence analysis + transactional persistence",
+            "learned_ai":"Local TF-IDF word+character n-grams + Logistic Regression; retrained on startup from bundled labelled corpus",
+            "fallback_mode":"Learned proposal + deterministic policy-atom verification; symbolic-only fallback if ML is unavailable",
             "safe_state":"Live evidence is quarantined until governed approval; challenge mode cannot silently overwrite canonical policy.",
         },
     }
@@ -101,7 +121,7 @@ def readiness(db:Session=Depends(get_db),user:User=Depends(current_user)):
 @router.get("/config")
 def config(db:Session=Depends(get_db),user:User=Depends(current_user)):
     roles=db.execute(select(RolePolicy).order_by(RolePolicy.id)).scalars().all();shields=db.execute(select(SecurityShield).order_by(SecurityShield.id)).scalars().all()
-    return {"rbac":[role_ser(r) for r in roles],"shields":[shield_ser(s) for s in shields],"retention":"7-Year Ledger Retention","mode":"JurisTwin Sentinel v5.3 Pitch-Aligned Decision Assurance Platform","current_role":user.role}
+    return {"rbac":[role_ser(r) for r in roles],"shields":[shield_ser(s) for s in shields],"retention":"7-Year Ledger Retention","mode":"JurisTwin Sentinel v5.4 MaxScore Hybrid Decision Assurance Platform","current_role":user.role}
 
 @router.patch("/roles/{role}")
 def update_role(role:str,body:RolePolicyUpdate,db:Session=Depends(get_db),user:User=Depends(require_roles("manager","compliance_manager"))):

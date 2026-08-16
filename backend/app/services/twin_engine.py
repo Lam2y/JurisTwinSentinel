@@ -9,16 +9,59 @@ from ..db.models import Conflict, Simulation, User
 from .common import dumps, loads, iso
 
 DEFAULT_WEIGHTS = {"delay": 0.40, "complaint": 0.35, "alignment": 0.25}
-OPTIONS = {
-    "A": {"name": "TAKE NO ACTION", "update_fsd": 0, "notify_officers": 0, "review_cases": 0, "update_qa": 0, "block_duplicates": 0},
-    "B": {"name": "UPDATE FSD ONLY", "update_fsd": 1, "notify_officers": 0, "review_cases": 0, "update_qa": 0, "block_duplicates": 0},
-    "C": {"name": "ALIGN COMPLETE PROCESS", "update_fsd": 1, "notify_officers": 1, "review_cases": 1, "update_qa": 1, "block_duplicates": 1},
+
+SCENARIO_PROFILES = {
+    "income_document_rule": {
+        "label": "Income-document eligibility",
+        "options": {
+            "A": {"name": "TAKE NO ACTION", "update_fsd": 0, "notify_officers": 0, "review_cases": 0, "update_qa": 0, "block_duplicates": 0},
+            "B": {"name": "UPDATE FSD ONLY", "update_fsd": 1, "notify_officers": 0, "review_cases": 0, "update_qa": 0, "block_duplicates": 0},
+            "C": {"name": "ALIGN COMPLETE PROCESS", "update_fsd": 1, "notify_officers": 1, "review_cases": 1, "update_qa": 1, "block_duplicates": 1},
+        },
+        "base": {
+            "A": {"delay":4.2,"complaint":64,"affected":27,"duplicates":19,"alignment":41},
+            "B": {"delay":2.7,"complaint":39,"affected":14,"duplicates":8,"alignment":71},
+            "C": {"delay":1.1,"complaint":17,"affected":2,"duplicates":1,"alignment":96},
+        },
+        "recommended_title": "Align the complete process — not just one document.",
+        "actions": ["Update FSD", "Notify officers", "Review cases", "Update QA", "Block duplicates"],
+    },
+    "loan_restructure_rule": {
+        "label": "Loan restructuring approval",
+        "options": {
+            "A": {"name": "TAKE NO ACTION", "sync_threshold": 0, "recalculate_cases": 0, "notify_risk": 0, "update_qa": 0, "block_legacy": 0},
+            "B": {"name": "SYNC RISK THRESHOLD ONLY", "sync_threshold": 1, "recalculate_cases": 0, "notify_risk": 0, "update_qa": 0, "block_legacy": 0},
+            "C": {"name": "ALIGN THRESHOLD + RECALCULATE", "sync_threshold": 1, "recalculate_cases": 1, "notify_risk": 1, "update_qa": 1, "block_legacy": 1},
+        },
+        "base": {
+            "A": {"delay":3.8,"complaint":48,"affected":11,"duplicates":7,"alignment":46},
+            "B": {"delay":2.2,"complaint":31,"affected":6,"duplicates":3,"alignment":75},
+            "C": {"delay":0.9,"complaint":13,"affected":1,"duplicates":0,"alignment":97},
+        },
+        "recommended_title": "Synchronise the threshold and recalculate every exposed case.",
+        "actions": ["Sync risk threshold", "Recalculate 11 cases", "Notify Risk Ops", "Update QA", "Block legacy threshold"],
+    },
+    "notification_deadline": {
+        "label": "Customer notification deadline",
+        "options": {
+            "A": {"name": "TAKE NO ACTION", "update_scheduler": 0, "update_guidance": 0, "review_cases": 0, "notify_ops": 0, "block_legacy": 0},
+            "B": {"name": "UPDATE SCHEDULER ONLY", "update_scheduler": 1, "update_guidance": 0, "review_cases": 0, "notify_ops": 0, "block_legacy": 0},
+            "C": {"name": "ALIGN SLA + OPERATIONS", "update_scheduler": 1, "update_guidance": 1, "review_cases": 1, "notify_ops": 1, "block_legacy": 1},
+        },
+        "base": {
+            "A": {"delay":3.0,"complaint":36,"affected":6,"duplicates":4,"alignment":52},
+            "B": {"delay":1.8,"complaint":22,"affected":3,"duplicates":2,"alignment":79},
+            "C": {"delay":0.7,"complaint":8,"affected":1,"duplicates":0,"alignment":98},
+        },
+        "recommended_title": "Align the SLA definition, scheduler and frontline guidance.",
+        "actions": ["Update scheduler", "Update guidance", "Review affected notices", "Notify Operations", "Block calendar-day rule"],
+    },
 }
-BASE = {
-    "A": {"delay":4.2,"complaint":64,"affected":27,"duplicates":19,"alignment":41},
-    "B": {"delay":2.7,"complaint":39,"affected":14,"duplicates":8,"alignment":71},
-    "C": {"delay":1.1,"complaint":17,"affected":2,"duplicates":1,"alignment":96},
-}
+
+# Backward-compatible aliases retained for tests and documentation that inspect the flagship model.
+OPTIONS = SCENARIO_PROFILES["income_document_rule"]["options"]
+BASE = SCENARIO_PROFILES["income_document_rule"]["base"]
+
 
 
 def _clamp(v, lo, hi):
@@ -42,8 +85,8 @@ def _decision_loss(o: dict, weights: dict) -> float:
     )
 
 
-def score_option(key: str, levers: dict, weights: dict):
-    b = BASE[key]
+def score_option(key: str, levers: dict, weights: dict, base: dict | None = None):
+    b = (base or BASE)[key]
     # These are transparent operational coefficients, not hidden AI outputs. The model intentionally
     # exposes how priority changes affect delay, complaints, duplicate work and policy alignment.
     dd = weights["delay"] - DEFAULT_WEIGHTS["delay"]
@@ -120,15 +163,17 @@ def _uncertainty_for_option(option: dict, weights: dict, rng: random.Random, sam
     }
 
 
-def _sensitivity(weights: dict) -> list[dict]:
+def _sensitivity(weights: dict, options_def: dict | None = None, base_def: dict | None = None) -> list[dict]:
     """One-at-a-time ±10 percentage-point sensitivity around normalized priorities."""
-    base=[score_option(k,v,weights) for k,v in OPTIONS.items()]
+    options_def = options_def or OPTIONS
+    base_def = base_def or BASE
+    base=[score_option(k,v,weights,base_def) for k,v in options_def.items()]
     base_rec=min(base,key=lambda x:x["decision_loss"])["key"]
     rows=[]
     for driver in DEFAULT_WEIGHTS:
         for delta in (-0.10,0.10):
             trial=dict(weights); trial[driver]=max(0.01,trial[driver]+delta); trial=_normalize(trial)
-            opts=[score_option(k,v,trial) for k,v in OPTIONS.items()]
+            opts=[score_option(k,v,trial,base_def) for k,v in options_def.items()]
             rec=min(opts,key=lambda x:x["decision_loss"])
             rows.append({
                 "driver":driver,
@@ -167,7 +212,9 @@ def _pareto_frontier(options: list[dict]) -> list[str]:
 
 def run_simulation(db: Session, conflict: Conflict, user: User, weights: dict | None = None):
     weights = _normalize(weights)
-    options = [score_option(k, v, weights) for k, v in OPTIONS.items()]
+    profile = SCENARIO_PROFILES.get(conflict.rule_key, SCENARIO_PROFILES["income_document_rule"])
+    options_def, base_def = profile["options"], profile["base"]
+    options = [score_option(k, v, weights, base_def) for k, v in options_def.items()]
     recommended = min(options, key=lambda x: x["decision_loss"])
 
     # Seed Monte Carlo from the exact scenario so repeated finals runs are stable while still being
@@ -178,7 +225,7 @@ def run_simulation(db: Session, conflict: Conflict, user: User, weights: dict | 
     for o in options:
         o["uncertainty"] = _uncertainty_for_option(o, weights, rng)
 
-    sensitivity = _sensitivity(weights)
+    sensitivity = _sensitivity(weights, options_def, base_def)
     changed = sum(1 for row in sensitivity if row["recommendation_changed"])
     robustness = round(100 * (1 - changed/max(1,len(sensitivity))), 1)
     margin = sorted([o["decision_fit"] for o in options], reverse=True)
@@ -197,8 +244,12 @@ def run_simulation(db: Session, conflict: Conflict, user: User, weights: dict | 
         "status":"ROBUST" if recommended["key"] in pareto and robustness>=80 and recommended_worst_fit>=70 else "REVIEW",
     }
     payload = {
-        "engine":"JurisTwin White-Box Scenario Engine v3",
-        "method":"transparent weighted operational model + deterministic Monte Carlo stress test + Pareto robustness certificate",
+        "engine":"JurisTwin White-Box Scenario Engine v4",
+        "method":"conflict-specific transparent operational model + deterministic Monte Carlo stress test + Pareto robustness certificate",
+        "scenario_profile": conflict.rule_key,
+        "scenario_label": profile["label"],
+        "recommended_title": profile["recommended_title"],
+        "recommended_actions": profile["actions"],
         "scenario_count":sum(o["uncertainty"]["samples"] for o in options),
         "robustness_score":robustness,
         "sensitivity":sensitivity,

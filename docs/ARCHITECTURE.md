@@ -1,65 +1,94 @@
-# JurisTwin Sentinel — Championship v5 Architecture
+# JurisTwin Sentinel — Championship v5.4 Architecture
 
 ```text
-External evidence / signed webhook / judge file
-                     │
-                     ▼
-             Integration Adapters
-                     │
-                     ▼
-            Governed Evidence Store
-                     │
-          ┌──────────┴──────────┐
-          ▼                     ▼
-  Policy Atom Reasoner      RBAC / DLP
-          │
-          ▼
-   Conflict Intelligence
- authority + modality collision
-          │
-          ▼
+Enterprise systems / judge input / signed webhook
+                       │
+                       ▼
+               Integration Adapters
+                       │
+                       ▼
+              Governed Evidence Store
+                       │
+            ┌──────────┴──────────┐
+            ▼                     ▼
+     Role-aware Memory        RBAC / DLP
+            │
+            ├──── plain-language question
+            │              ↓
+            │       Learned NLP router
+            │              ↓
+            │       Evidence-bound answer
+            │
+            ▼
+     Learned Policy AI
+ domain + stance probabilities
+            │
+            ▼
+    Policy Atom Reasoner
+ modality / numeric / temporal collision
+            │
+            ▼
+ Authority-Weighted Hybrid Consensus
+            │
+            ▼
+     Conflict Intelligence
+            │
+            ▼
  Explainable Blast-Radius Graph
  BFS over live case dependencies
-          │
-          ▼
+            │
+            ▼
       Decision Digital Twin
  Monte Carlo + sensitivity + Pareto
-          │
-          ▼
+            │
+            ▼
        Governance Gate
-          │
-      ┌───┴───────────┐
-      ▼               ▼
-Decision Contract   Progressive Rollout
-      │               │
-      └───────┬───────┘
-              ▼
-      SHA-256 Decision Ledger
-              │
-              ▼
-       Assurance / Bodyguard
+            │
+        ┌───┴─────────────┐
+        ▼                 ▼
+ Human approval     Progressive rollout
+        │                 │
+        └────────┬────────┘
+                 ▼
+        Decision Contract
+                 │
+                 ▼
+       SHA-256 Decision Ledger
+                 │
+         ┌───────┴────────┐
+         ▼                ▼
+   AI Bodyguard      Decision Replay
+         │                │
+         └───────┬────────┘
+                 ▼
+       HMAC-signed Proof Pack
 ```
 
-## Finals frontend
+## Hybrid AI safety model
 
-Championship v5 ships a responsive, zero-build single-page application served by FastAPI. The runtime does not require Node.js, npm, a CDN, external fonts, or internet access.
+JurisTwin does not let a learned model decide organisational truth. The learned classifier provides generalisation to unseen wording; the symbolic reasoner and authority rules provide inspectability; uncertainty/disagreement can abstain; only the Governance Gate plus an authorised human can publish.
 
-The judge-facing information architecture is intentionally limited to five destinations:
+## Frontend
 
-1. **Overview** — problem, exposure and the next action.
-2. **Conflict Map** — one bounded, draggable dependency graph with contextual inspection.
-3. **Digital Twin** — decision alternatives and robustness, without forcing judges through raw simulation detail.
-4. **Assurance** — governance readiness, proof and adversarial controls.
-5. **Evidence** — live judge challenge / file drop and immediate reasoning result.
+The finals UI is a responsive, zero-build SPA served by FastAPI. It requires no Node runtime or internet on the presentation laptop.
 
-Deeper technical detail is progressively disclosed through a single reusable side sheet rather than permanent dashboard panels.
+Judge-facing destinations remain intentionally limited to:
 
-## Why this is finals-safe
+1. Overview
+2. Conflict Map
+3. Digital Twin
+4. Assurance
+5. Evidence Lab
 
-- SQLite is the offline default; PostgreSQL remains supported through the same SQLAlchemy models.
-- The finals SPA and API operate on the same persisted state.
-- No frontend build tool is needed on the presentation laptop.
-- Mutating demo actions are resettable or idempotent.
-- `/api/demo/reset` returns the system to a deterministic starting state.
-- Native View Transitions are used when supported, with a CSS fallback and reduced-motion support.
-- Graph coordinates are maintained in SVG viewBox space and clamped to node dimensions, so nodes cannot be dragged outside the visible workspace.
+Deeper capabilities live behind Platform / Final Flow panels so technical depth does not become visual clutter.
+
+## Finals-safe engineering
+
+- SQLite offline default; PostgreSQL support through the same SQLAlchemy models.
+- Local ML retraining from a bundled corpus; no external AI dependency.
+- First-time setup generates random local cryptographic secrets.
+- Mutating demo actions are resettable/idempotent.
+- All three seeded conflicts are independently executable end-to-end.
+- `/api/demo/reset` returns a deterministic starting state.
+- Graph coordinates live in SVG viewBox space and remain bounded.
+- Native View Transitions are progressive enhancement only; reduced-motion is supported.

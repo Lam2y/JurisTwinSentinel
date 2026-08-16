@@ -21,7 +21,8 @@ All authenticated endpoints use `Authorization: Bearer <JWT>`.
 | POST | `/api/approvals/simulation/{sim_ref}/submit` | Submit selected future |
 | POST | `/api/approvals/{ref}/approve` | Publish + propagate governed decision |
 | POST | `/api/approvals/{ref}/reject` | Reject proposal |
-| POST | `/api/memory/search` | Permission-aware semantic retrieval |
+| POST | `/api/memory/search` | Permission-aware explainable retrieval |
+| POST | `/api/memory/answer` | Evidence-bound plain-language governed answer |
 | POST | `/api/memory/ingest` | Ingest new governed evidence |
 | GET | `/api/memory/sources` | Evidence source list |
 | GET | `/api/ledger/decisions` | Decision Contracts |
@@ -61,3 +62,12 @@ Returns recent hash-ledger entries plus full-chain verification. Used to prove l
 - `POST /api/live/webhook` — HMAC-SHA256 authenticated real machine-to-machine HTTP evidence ingress with replay protection. Signature material: `event_id + "|" + body`. Header: `X-JurisTwin-Signature`.
 
 The standard `/api/live/challenge` response now includes `analysis.policy_atoms` and `analysis.impact_graph` so the verdict and affected-case count are independently explainable.
+
+
+## v5.4 Hybrid AI endpoints
+
+- `GET /api/live/ai-model` — measured local model card, tasks, held-out development metrics, abstention and governance boundary.
+- `POST /api/memory/answer` — plain-language question → learned policy-domain routing → approved evidence / Decision Contract answer with role-aware citations and conflict warning. Unknown questions safely return `NEEDS_REVIEW`.
+- `POST /api/assurance/verify-proof` — verifies the exact emitted Proof Pack `bundle_digest` + HMAC signature. Legacy `digest` is also accepted.
+
+All three seeded conflicts are valid `{ref}` values for graph, simulation, governance, approval, replay and Proof Pack flows.

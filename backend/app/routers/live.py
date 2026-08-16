@@ -9,6 +9,7 @@ from ..schemas import LiveChallengeRequest, EvidenceDropRequest, SignedWebhookRe
 from ..services.live_challenge import run_live_challenge, serialize_challenge
 from ..services.impact_graph import build_impact_graph
 from ..services.red_team import run_red_team
+from ..services.policy_ml import get_policy_ai
 from ..core.config import get_settings
 
 router = APIRouter(prefix="/live", tags=["live-challenge"])
@@ -79,6 +80,12 @@ def challenge_impact(
     if not c:
         raise HTTPException(404, "Live challenge not found")
     return build_impact_graph(db, c.inferred_rule_key, c.conflict_ref)
+
+@router.get("/ai-model")
+def ai_model(user: User = Depends(current_user)):
+    """Expose the learned component and its honest development benchmark to judges."""
+    return get_policy_ai().model_card()
+
 
 @router.post("/red-team")
 def red_team(

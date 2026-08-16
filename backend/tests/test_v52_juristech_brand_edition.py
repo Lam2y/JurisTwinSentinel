@@ -7,7 +7,7 @@ STATIC = ROOT / "app" / "static"
 def test_v52_brand_hierarchy_and_large_type_are_shipped():
     css=(STATIC/"sentinel.css").read_text(encoding="utf-8")
     html=(STATIC/"finals.html").read_text(encoding="utf-8")
-    assert "v=5.3.0" in html
+    assert "v=5.4.0" in html
     assert "--jt-red:#ef2334" in css
     assert "font-size:clamp(46px,4.3vw,70px)" in css
     assert "font-size:17px;line-height:1.6" in css

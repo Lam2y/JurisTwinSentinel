@@ -1,19 +1,31 @@
-# JurisTwin Finals Frontend — v5.3
+# JurisTwin Finals Frontend — v5.4
 
-The Grand Finals interface is a **zero-build responsive single-page application** designed for deterministic stage use. It deliberately has no npm/runtime dependency: `run_finals.bat` starts FastAPI and serves the tested frontend from `backend/app/static`.
+The frontend is a zero-build responsive SPA served by FastAPI. `frontend/src/` is the readable source mirror; deployed files live under `backend/app/static/`.
 
-## v5.3 design direction
+## Judge-facing information architecture
 
-- JurisTech-inspired white / black / red visual hierarchy.
-- Large projector-safe typography.
-- Native document scrolling with sticky application chrome.
-- Selective dark analytical canvases instead of an all-dark dashboard.
-- Native View Transitions API when supported.
-- Pointer-captured SVG graph dragging with viewport bounds.
-- One reusable side-sheet primitive for secondary proof and every close path.
-- `Platform` progressive-disclosure drawer preserving all pitch-deck capabilities.
-- Presentation Mode (`Alt + P`) for additional projector readability.
-- One non-stacking status capsule instead of toast clutter.
-- All API writes remain handled by the existing FastAPI governance layer.
+- Overview
+- Conflict Map
+- Digital Twin
+- Assurance
+- Evidence Lab
 
-`frontend/src` is the readable source mirror. The deployable copies live in `backend/app/static` so one Python command serves the complete product.
+Everything else is progressive disclosure through Platform / Final Flow.
+
+## v5.4 UX additions
+
+- Secure Enterprise Memory includes a large **Verified Answer** interaction for plain-language Track 2 access.
+- Answers expose status (`CONFLICT_PRESENT`, `VERIFIED`, `RESTRICTED`, `NEEDS_REVIEW`), authority, version and evidence lineage.
+- Hybrid AI Policy Reasoner exposes learned prediction, symbolic collision, dual-control arbitration and Authority-Weighted Hybrid Consensus.
+- All three conflicts are selectable and fully executable; flagship-only endpoint hardcoding has been removed.
+- Proof Pack includes a live **Verify this proof** action.
+- Presentation Mode remains available through `Alt+P`.
+
+## Interaction rules
+
+- Native document scrolling; sticky application chrome.
+- One reusable side-sheet model; close via X, Escape or backdrop.
+- Graph nodes remain clamped to visible SVG bounds.
+- Non-stacking status capsule.
+- View Transitions are progressive enhancement only.
+- `prefers-reduced-motion` is respected.

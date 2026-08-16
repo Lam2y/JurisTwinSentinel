@@ -18,9 +18,9 @@ if not exist "%BACKEND%\app\main.py" (
 )
 
 cd /d "%BACKEND%"
-echo [1/5] Working directory: %CD%
+echo [1/6] Working directory: %CD%
 
-echo [2/5] Finding a full Python installation...
+echo [2/6] Finding a full Python installation...
 
 rem Prefer the official Windows Python Launcher. pgAdmin ships its own
 rem private Python runtime, which intentionally may not contain venv.
@@ -70,14 +70,14 @@ echo Selected Python command: %PYTHON_CMD%
 if errorlevel 1 goto :fail
 
 if not exist ".venv\Scripts\python.exe" (
-    echo [3/5] Creating virtual environment...
+    echo [3/6] Creating virtual environment...
     %PYTHON_CMD% -m venv .venv
     if errorlevel 1 (
         echo [ERROR] Failed to create backend\.venv
         goto :fail
     )
 ) else (
-    echo [3/5] Virtual environment already exists.
+    echo [3/6] Virtual environment already exists.
 )
 
 call ".venv\Scripts\activate.bat"
@@ -86,14 +86,18 @@ if errorlevel 1 (
     goto :fail
 )
 
-echo [4/5] Installing backend dependencies...
+echo [4/6] Installing backend dependencies...
 python -m pip install --upgrade pip
 if errorlevel 1 goto :fail
 python -m pip install -r requirements.txt
 if errorlevel 1 goto :fail
 
 set "PYTHONPATH=%CD%"
-echo [5/5] Verifying JurisTwin backend import...
+echo [5/6] Generating local security secrets if needed...
+python "%ROOT%tools\bootstrap_env.py"
+if errorlevel 1 goto :fail
+
+echo [6/6] Verifying JurisTwin backend import...
 python -c "import os,sys; print('Venv Python:', sys.executable); print('Working directory:', os.getcwd()); from app.main import app; print('JurisTwin backend import OK')"
 if errorlevel 1 goto :fail
 
