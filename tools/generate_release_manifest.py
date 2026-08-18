@@ -40,7 +40,7 @@ def main():
         'file_count':len(files),
         'files':files,
         'verification':{
-            'backend_tests':'55/55 passed',
+            'backend_tests':'57/57 passed',
             'industry_preflight':'32/32 passed',
             'adversarial_harness':'16/16 hardened',
             'finals_javascript':'sentinel.js syntax verified; v5.7 Track-2-first + judge-clarity + adversarial Windows hardening contracts passed; graph/scroll/sheet mechanics retain the browser-validated responsive shell',

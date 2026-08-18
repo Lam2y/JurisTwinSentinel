@@ -2,7 +2,7 @@
 
 ## Automated regression
 
-Release baseline: **55/55 tests PASS**.
+Release baseline: **57/57 tests PASS**.
 
 The suite covers original application workflows plus:
 

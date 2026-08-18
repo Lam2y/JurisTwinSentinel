@@ -13,7 +13,7 @@ This release closes the remaining demo-machine and credibility risks identified 
 
 ## Release gate
 
-- 55/55 automated tests
+- 57/57 automated tests
 - 32/32 championship preflight controls
 - 16/16 Attack Sentinel controls
 - fresh Uvicorn HTTP smoke: READY 100 after approval

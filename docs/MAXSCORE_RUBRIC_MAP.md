@@ -62,7 +62,7 @@ This is a judge-preparation document, not a claim that human scoring is guarante
 
 **Release evidence:**
 
-- 55/55 automated tests;
+- 57/57 automated tests;
 - 32/32 championship preflight controls;
 - 16/16 Attack Sentinel controls;
 - structured 401/403/404/422 handling;

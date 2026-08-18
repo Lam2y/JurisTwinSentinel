@@ -156,7 +156,7 @@ On Windows, the easiest option is simply `run_preflight.bat`. Never depend on a 
 
 Expected v5.7 release baseline:
 
-- **55/55 automated tests**
+- **57/57 automated tests**
 - **32/32 championship preflight controls**
 - **16/16 adversarial controls**
 - post-approval readiness **READY · 100%**

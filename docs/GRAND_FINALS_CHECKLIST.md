@@ -4,7 +4,7 @@
 
 - Run `setup_windows.bat` while internet is available.
 - Confirm a local `.env` was generated; do not share it.
-- Run `backend\.venv\Scripts\python.exe -m pytest -q` → **55/55 PASS**.
+- Run `backend\.venv\Scripts\python.exe -m pytest -q` → **57/57 PASS**.
 - Run `backend\.venv\Scripts\python.exe backend\scripts\industry_preflight.py` → **32/32 PASS · 100%**.
 - Launch `run_finals.bat` and perform one complete flagship demo. Confirm the browser uses the port printed by the launcher; port 8000 automatically fails over if occupied.
 - Approve JT-084 and confirm **Readiness stays READY · 100%**.

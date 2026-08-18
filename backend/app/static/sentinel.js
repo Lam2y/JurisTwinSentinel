@@ -668,11 +668,44 @@
   }
 
   function nodeClass(n){ if(n.type==='rule') return 'root'; return n.relation||n.status||'default'; }
-  function nodeDims(n){ return n.type==='rule'?{w:208,h:70}:{w:184,h:62}; }
+
+  function graphTitleLines(value,maxChars=31){
+    const text=String(value||'').trim();
+    if(text.length<=maxChars)return [text];
+    const words=text.split(/\s+/),lines=[''];
+    for(const word of words){
+      const current=lines[lines.length-1];
+      const next=current?`${current} ${word}`:word;
+      if(next.length<=maxChars||lines.length===2){ lines[lines.length-1]=next; }
+      else lines.push(word);
+    }
+    if(lines.length>2) lines.splice(1,lines.length-1,lines.slice(1).join(' '));
+    if(lines[1]&&lines[1].length>maxChars+5)lines[1]=`${lines[1].slice(0,maxChars+2)}…`;
+    return lines.slice(0,2);
+  }
+
+  function nodeDims(n){
+    const title=String(nodeTitle(n));
+    const meta=n?.source?`${n.source}${n.version?` · ${n.version}`:''}`:(n?.type==='rule'?'Canonical rule':'Evidence');
+    const lines=graphTitleLines(title);
+    const longest=Math.max(...lines.map(x=>x.length),Math.min(meta.length,34));
+    // Give labels enough room instead of truncating important governed evidence names.
+    const estimated=longest*(lines.length>1?7.6:8.05)+52;
+    const w=clamp(Math.round(estimated),n?.type==='rule'?238:204,n?.type==='rule'?300:284);
+    const h=lines.length>1?(n?.type==='rule'?84:80):(n?.type==='rule'?72:66);
+    return {w,h,lines};
+  }
 
   function graphNodeSvg(n,p){
-    const {w,h}=nodeDims(n); const title=String(nodeTitle(n)); const display=title.length>25?`${title.slice(0,23)}…`:title; const meta=n.source?`${n.source}${n.version?` · ${n.version}`:''}`:(n.type==='rule'?'Canonical rule':'Evidence');
-    return `<g class="graph-node ${esc(nodeClass(n))}" data-node-id="${esc(n.id)}" transform="translate(${p.x},${p.y})" tabindex="0"><rect class="graph-node-bg" x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="12"/><circle class="graph-node-dot" cx="${-w/2+15}" cy="${-h/2+16}"/><text class="graph-node-title" x="${-w/2+27}" y="-2">${esc(display)}</text><text class="graph-node-meta" x="${-w/2+15}" y="17">${esc(meta.length>32?`${meta.slice(0,30)}…`:meta)}</text></g>`;
+    const {w,h,lines}=nodeDims(n);
+    const title=String(nodeTitle(n));
+    const meta=n.source?`${n.source}${n.version?` · ${n.version}`:''}`:(n.type==='rule'?'Canonical rule':'Evidence');
+    const titleX=-w/2+28;
+    const titleY=lines.length>1?-8:-3;
+    const titleMarkup=lines.map((line,i)=>`<tspan x="${titleX}" dy="${i===0?0:18}">${esc(line)}</tspan>`).join('');
+    const metaY=lines.length>1?29:19;
+    const metaDisplay=meta.length>36?`${meta.slice(0,34)}…`:meta;
+    return `<g class="graph-node ${esc(nodeClass(n))}" data-node-id="${esc(n.id)}" transform="translate(${p.x},${p.y})" tabindex="0" aria-label="${esc(title)}"><title>${esc(title)} — ${esc(meta)}</title><rect class="graph-node-bg" x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="13"/><circle class="graph-node-dot" cx="${-w/2+16}" cy="${-h/2+17}"/><text class="graph-node-title" x="${titleX}" y="${titleY}">${titleMarkup}</text><text class="graph-node-meta" x="${-w/2+16}" y="${metaY}">${esc(metaDisplay)}</text></g>`;
   }
 
   function drawGraph(reset=false){
@@ -697,7 +730,7 @@
     el.addEventListener('pointermove',moveGraphDrag);
     el.addEventListener('pointerup',endGraphDrag,{once:true});
     el.addEventListener('pointercancel',endGraphDrag,{once:true});
-    selectGraphNode(id,false);
+    selectGraphNode(id,true);
   }
 
   function graphPoint(e){

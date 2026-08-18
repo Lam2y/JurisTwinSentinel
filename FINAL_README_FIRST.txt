@@ -75,7 +75,7 @@ backend\.venv\Scripts\python.exe -X utf8 -m pytest -q
 backend\.venv\Scripts\python.exe -X utf8 backend\scripts\industry_preflight.py
 
 EXPECTED v5.7
-55/55 tests PASS
+57/57 tests PASS
 32/32 preflight PASS
 16/16 Attack Sentinel HARDENED
 Readiness READY 100%

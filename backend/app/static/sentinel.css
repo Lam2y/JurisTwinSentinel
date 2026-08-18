@@ -1263,3 +1263,51 @@ body{overflow-x:hidden;overflow-y:auto;background:linear-gradient(180deg,#f8f8f7
 .answer-proof-row .btn{flex:0 0 auto}
 @media(max-width:760px){.answer-proof-row{align-items:flex-start;flex-direction:column}}
 .presentation-mode .answer-proof-row{font-size:14px}
+
+/* ========================================================================== 
+   v5.7.1 — laptop / projector UI regression hotfix
+   Fixes native-select overflow in Evidence Lab and prevents graph labels from
+   looking clipped on common 1366–1600px presentation screens.
+   ========================================================================== */
+.evidence-workspace{
+  grid-template-columns:minmax(440px,.9fr) minmax(0,1.1fr);
+  align-items:stretch;
+}
+.form-row{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  width:100%;
+  min-width:0;
+}
+.form-row>*{min-width:0;max-width:100%}
+.form-control{
+  width:100%;
+  min-width:0;
+  max-width:100%;
+}
+select.form-control{
+  padding-right:36px;
+  text-overflow:ellipsis;
+}
+.compose-actions{min-width:0}
+.compose-actions .muted{min-width:0;line-height:1.4}
+.compose-actions .btn{flex:0 0 auto}
+
+.graph-node-title{
+  letter-spacing:-.012em;
+}
+.graph-node-meta{
+  letter-spacing:.002em;
+}
+
+@media(max-width:1080px){
+  .evidence-workspace{grid-template-columns:minmax(410px,.92fr) minmax(0,1.08fr)}
+}
+@media(max-width:940px){
+  .evidence-workspace{grid-template-columns:1fr}
+}
+@media(max-width:520px){
+  .form-row{grid-template-columns:1fr}
+  .compose-actions{align-items:stretch;flex-direction:column}
+  .compose-actions .btn{width:100%}
+}
+
