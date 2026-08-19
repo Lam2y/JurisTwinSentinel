@@ -29,6 +29,12 @@ class MemoryIngestRequest(BaseModel):
     approved: bool = False
     metadata: dict[str, Any] = {}
 
+
+
+class CustomerExportRequest(BaseModel):
+    mode: str = Field(default="masked", pattern="^(masked|full)$")
+    reason: str = Field(min_length=8, max_length=300)
+
 class SimulationRequest(BaseModel):
     weights: dict[str, float] | None = None
 

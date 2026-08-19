@@ -1,34 +1,30 @@
 {
-  "status": "PASS_WITH_BROWSER_BASELINE",
-  "version": "5.4.0",
-  "release": "JurisTwin Championship MaxScore v5.4",
+  "status": "PASS_AUTOMATED_WITH_VISUAL_REHEARSAL_RECOMMENDED",
+  "version": "5.9-manager-ux",
+  "release": "JurisTwin Sentinel v5.9 Manager-First UX",
   "current_release_validation": {
-    "javascript_syntax": "PASS",
-    "static_ui_contracts": "PASS",
-    "api_e2e_regression": "39/39 PASS",
-    "industry_preflight": "20/20 PASS",
+    "javascript_syntax_frontend": "PASS",
+    "javascript_syntax_served_static": "PASS",
+    "automated_test_suite": "57/57 PASS",
+    "industry_preflight": "32/32 PASS",
     "adversarial_harness": "16/16 HARDENED",
-    "post_approval_readiness": "READY 100%",
-    "track2_verified_answer": "PASS",
-    "all_three_conflicts_end_to_end": "PASS",
-    "live_proof_verification": "PASS",
-    "pitch_flow": "CONNECT → EXPOSE → SIMULATE → RECOMMEND → APPROVE → PROTECT",
-    "operating_impact": {
-      "applications_affected": 27,
-      "rejected_cases_flagged": 1,
-      "qa_tests_updated": 8,
-      "documents_superseded": 3,
-      "officers_notified": 4
-    }
+    "source_governance_and_privacy": "PASS",
+    "role_based_customer_export": "PASS",
+    "audit_logging": "PASS",
+    "governance_gate": "PASS after required simulation state is established",
+    "proof_verification": "PASS",
+    "frontend_static_sync": "PASS",
+    "cache_busting": "v5.9.0 asset query applied"
   },
-  "browser_baseline": {
-    "viewports": ["1024x768", "1440x900", "1920x1080"],
-    "native_document_scroll": true,
-    "horizontal_overflow": false,
-    "graph_nodes_draggable": "8/8 flagship baseline",
-    "graph_nodes_in_bounds": true,
-    "sheet_close_paths": ["X", "Escape", "backdrop"],
-    "console_errors": 0
+  "manager_ux_checks": {
+    "plain_language_navigation": "PASS",
+    "persistent_security_trust_strip": "PASS",
+    "answer_first_source_explanation": "PASS",
+    "privacy_and_security_manager_summary": "PASS",
+    "role_access_summary": "PASS",
+    "publish_block_reason_visible": "PASS",
+    "technical_details_progressively_disclosed": "PASS",
+    "audit_log_manager_labels": "PASS"
   },
-  "browser_note": "The responsive graph/scroll/sheet foundation was browser-validated in the v5 line. v5.4 changes are additionally covered by JavaScript syntax, frontend contract tests and API/E2E tests. Perform one final visual rehearsal on the actual competition laptop."
+  "browser_note": "A fresh headless Chromium validation was attempted in the build environment, but localhost navigation was blocked by the container administrator policy. The existing responsive v5 CSS foundation remains covered by regression tests. Perform one final visual rehearsal on the actual Windows demo laptop at 100% browser zoom and Presentation Mode if using a projector."
 }

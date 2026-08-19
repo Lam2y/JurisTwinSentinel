@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 from ..db.models import Evidence, User, RolePolicy, SecurityShield, Conflict, ConflictEvidence, DecisionContract
 from .common import loads, iso
 from .policy_ml import get_policy_ai
+from .source_governance import evidence_scope, resolve_by_authority_then_majority
 
 TOKEN_RE = re.compile(r"[a-z0-9]+")
 SENSITIVITY_LEVEL = {"public": 0, "internal": 1, "confidential": 2, "restricted": 3}
@@ -120,7 +121,7 @@ def search_memory(db:Session,user:User,query:str,limit:int=10,filters:dict|None=
     evidence, source authority and recency. The score components are returned so the ranking is
     explainable rather than a black-box vector-search claim.
     """
-    rows=[e for e in db.execute(select(Evidence).order_by(Evidence.created_at.desc())).scalars().all() if _matches(e,filters)]
+    rows=[e for e in db.execute(select(Evidence).order_by(Evidence.created_at.desc())).scalars().all() if _matches(e,filters) and evidence_scope(db,e).get("retrieval_eligible")]
     query_tokens=tokenize(query); qv=Counter(query_tokens)
 
     if not query_tokens:
@@ -173,7 +174,7 @@ def search_memory(db:Session,user:User,query:str,limit:int=10,filters:dict|None=
 
 
 def _source_mix(db: Session, user: User, conflict: Conflict | None, rule_key: str, limit: int = 5) -> list[dict]:
-    """Return a role-safe, explainable cross-source view for Track 2."""
+    """Return only source-scope-eligible evidence for the management answer."""
     relation_by_id: dict[int, str] = {}
     if conflict:
         links = db.execute(select(ConflictEvidence).where(ConflictEvidence.conflict_id == conflict.id)).scalars().all()
@@ -184,6 +185,9 @@ def _source_mix(db: Session, user: User, conflict: Conflict | None, rule_key: st
     ).scalars().all()
     out=[]
     for e in rows:
+        scope=evidence_scope(db,e)
+        if not scope.get('retrieval_eligible'):
+            continue
         item=serialize_evidence(db,e,user)
         rel=relation_by_id.get(e.id)
         if not rel:
@@ -193,13 +197,15 @@ def _source_mix(db: Session, user: User, conflict: Conflict | None, rule_key: st
         body=item.get('body') or item.get('claim') or ''
         out.append({
             'evidence_ref':item.get('evidence_ref'),'source':item.get('source'),'title':item.get('title'),
-            'message':body[:360],'authority':item.get('authority'),'authority_level':item.get('authority_level'),
-            'version':item.get('version'),'status':item.get('status'),'sensitivity':item.get('sensitivity'),
-            'relation':rel,'redacted':str(body).startswith('[REDACTED'),
+            'message':body,'claim':item.get('claim'),'authority':item.get('authority'),
+            'authority_level':item.get('authority_level'),'version':item.get('version'),'relation':rel,
+            'approved':item.get('approved'),'superseded':item.get('superseded'),'sensitivity':item.get('sensitivity'),
+            'redacted':str(item.get('body') or '').startswith('[REDACTED'),
+            'scope':scope,
         })
-        if len(out)>=limit: break
-    return out
-
+    # Management view: the most authoritative/relevant sources first, without flooding the answer.
+    out.sort(key=lambda x:(1 if x.get('approved') else 0, int(x.get('authority_level') or 0), 0 if x.get('relation')=='context' else 1),reverse=True)
+    return out[:limit]
 
 def _source_synthesis(source_mix: list[dict], conflict: Conflict | None, contract: DecisionContract | None) -> dict:
     visible=[x for x in source_mix if not x.get('redacted')]
@@ -223,148 +229,152 @@ def _source_synthesis(source_mix: list[dict], conflict: Conflict | None, contrac
 
 
 def governed_answer(db: Session, user: User, question: str) -> dict:
-    """Return a short, evidence-bound answer from governed enterprise memory.
+    """Return a definite, evidence-bound management answer with governed source lineage.
 
-    This closes the Track-2 trust gap without introducing a free-form hallucination surface. The
-    learned classifier is used only to route the question to a policy domain. The answer itself is
-    copied/summarised from the highest-authority approved evidence or active Decision Contract and
-    is never invented by a generative model.
+    Resolution policy:
+    1. Active Decision Contract wins.
+    2. Otherwise an approved, source-scope-eligible authority wins.
+    3. Only when no approved canonical source exists, majority may break a conflict *within the same
+       highest authority tier*. Casual mail or private DMs cannot outvote a governed source.
     """
     model = get_policy_ai().predict(question)
     domain = model.get("domain", {})
     rule_key = None if domain.get("abstain") else domain.get("label")
     confidence = float(domain.get("confidence") or 0)
+    now=datetime.now(timezone.utc)
 
     if not rule_key or rule_key == "general_policy_rule":
         return {
             "status": "NEEDS_REVIEW",
+            "management_status":"REVIEW_REQUIRED",
             "answer": "JurisTwin cannot bind this question to a governed policy domain with enough confidence. Please narrow the question or escalate to an authorised reviewer.",
-            "question": question,
-            "role": user.role,
-            "rule_key": rule_key or "unknown",
+            "question": question, "role": user.role, "rule_key": rule_key or "unknown",
             "model": {"engine": model.get("engine"), "domain_confidence": round(confidence, 4), "abstained": True},
-            "citations": [],
+            "citations": [], "sources_used": [],
+            "resolution":{"mode":"ABSTAIN","explanation":"No policy domain passed the routing confidence threshold."},
+            "freshness":{"evaluated_at":iso(now),"answer_recomputed":True},
             "guardrail": "Evidence-bound answering only; Sentinel does not invent policy facts when authority is uncertain.",
         }
 
-    conflict = db.execute(
-        select(Conflict).where(Conflict.rule_key == rule_key).order_by(Conflict.id.desc())
-    ).scalars().first()
+    conflict = db.execute(select(Conflict).where(Conflict.rule_key == rule_key).order_by(Conflict.id.desc())).scalars().first()
     open_conflict = bool(conflict and conflict.status in {"unresolved", "quarantined"})
-
     contract = db.execute(
         select(DecisionContract).where(DecisionContract.rule_key == rule_key, DecisionContract.status == "active")
         .order_by(DecisionContract.id.desc())
     ).scalars().first()
 
-    evidence = db.execute(
-        select(Evidence).where(
-            Evidence.rule_key == rule_key,
-            Evidence.approved.is_(True),
-            Evidence.superseded.is_(False),
-        ).order_by(Evidence.authority_level.desc(), Evidence.id.desc())
-    ).scalars().first()
-
-    source_mix = _source_mix(db, user, conflict, rule_key, limit=5)
+    resolution=resolve_by_authority_then_majority(db,rule_key)
+    evidence=resolution.get('winner')
+    source_mix = _source_mix(db, user, conflict, rule_key, limit=4)
     synthesis = _source_synthesis(source_mix, conflict, contract)
 
     if not contract and not evidence:
+        mode=resolution.get('mode')
+        explanation = (
+            'Equally authoritative eligible sources are tied, so Sentinel refuses to invent a winner.'
+            if mode=='MAJORITY_TIE_REVIEW' else
+            'No source inside the administrator-approved scope is eligible to define this policy.'
+        )
         return {
-            "status": "NEEDS_REVIEW",
-            "answer": "No active governed evidence is available for this policy domain. JurisTwin will not fabricate an answer.",
-            "question": question,
-            "role": user.role,
-            "rule_key": rule_key,
-            "model": {"engine": model.get("engine"), "domain_confidence": round(confidence, 4), "abstained": False},
-            "citations": [],
-            "source_mix": source_mix,
-            "synthesis": synthesis,
-            "guardrail": "Evidence-bound answering only; no generated facts beyond governed evidence.",
+            "status":"NEEDS_REVIEW","management_status":"REVIEW_REQUIRED",
+            "answer":"No definite governed answer can be issued yet. An authorised reviewer must resolve the top-tier evidence.",
+            "question":question,"role":user.role,"rule_key":rule_key,
+            "conflict_ref": conflict.conflict_ref if conflict else None,
+            "model":{"engine":model.get('engine'),"domain_confidence":round(confidence,4),"abstained":False},
+            "citations":[],"sources_used":[],"source_mix":source_mix,"synthesis":synthesis,
+            "resolution":{"mode":mode,"explanation":explanation,"authority_level":resolution.get('authority_level'),"majority":resolution.get('majority'),"eligible_count":resolution.get('eligible_count',0),"excluded_count":len(resolution.get('excluded',[])),"excluded":resolution.get('excluded',[])[:4]},
+            "freshness":{"evaluated_at":iso(now),"answer_recomputed":True},
+            "guardrail":"Authority first; majority only inside one equal authority tier; excluded private/casual sources cannot vote.",
         }
 
     citation = serialize_evidence(db, evidence, user) if evidence else None
     redacted = bool(citation and str(citation.get("body") or "").startswith("[REDACTED"))
-
-    # A lower-authority role may learn that a governed answer exists, but not its restricted text.
     if redacted and not contract:
         return {
-            "status": "RESTRICTED",
-            "answer": "A governed answer exists, but the supporting evidence is restricted for this role. Escalate to an authorised reviewer.",
-            "question": question,
-            "role": user.role,
-            "rule_key": rule_key,
-            "conflict_ref": conflict.conflict_ref if conflict else None,
-            "model": {"engine": model.get("engine"), "domain_confidence": round(confidence, 4), "abstained": False},
-            "citations": [citation],
-            "source_mix": source_mix,
-            "synthesis": synthesis,
-            "guardrail": "Role-aware answer: restricted evidence is never revealed through the answer layer.",
+            "status":"RESTRICTED","management_status":"ACCESS_RESTRICTED",
+            "answer":"A governed answer exists, but the supporting evidence is restricted for this role. Escalate to an authorised reviewer.",
+            "question":question,"role":user.role,"rule_key":rule_key,"conflict_ref":conflict.conflict_ref if conflict else None,
+            "model":{"engine":model.get('engine'),"domain_confidence":round(confidence,4),"abstained":False},
+            "citations":[citation],"sources_used":[citation],"source_mix":source_mix,"synthesis":synthesis,
+            "resolution":{"mode":resolution.get('mode'),"explanation":"A winning governed source exists, but its content is hidden by role-based access control.","excluded_count":len(resolution.get('excluded',[]))},
+            "freshness":{"evaluated_at":iso(now),"answer_recomputed":True},
+            "guardrail":"Restricted evidence is never revealed through the answer layer.",
         }
 
     if contract:
-        answer = contract.approved_rule
-        authority = contract.approved_by
-        version = contract.version
-        decision_ref = contract.decision_ref
-        source = "Decision Ledger"
+        answer=contract.approved_rule; authority=contract.approved_by; version=contract.version; decision_ref=contract.decision_ref; source='Decision Ledger'
+        resolution_mode='DECISION_CONTRACT'
+        primary_source={
+            'evidence_ref':contract.decision_ref,'source':'Decision Ledger','title':f'Governed decision {contract.decision_ref}',
+            'body':contract.approved_rule,'authority':contract.approved_by,'authority_level':6,'version':contract.version,
+            'approved':True,'superseded':False,'created_at':iso(contract.created_at),
+            'metadata':{'access':'governed_decision_contract'},
+        }
+        sources_used=[primary_source]
     else:
-        answer = evidence.body
-        authority = evidence.authority
-        version = evidence.version
-        decision_ref = None
-        source = evidence.source
+        answer=evidence.body; authority=evidence.authority; version=evidence.version; decision_ref=None; source=evidence.source
+        resolution_mode=resolution.get('mode')
+        # Cite only the source(s) that actually won the resolution, not unrelated search hits.
+        support=resolution.get('support') or [evidence]
+        sources_used=[]
+        for e in support[:3]:
+            item=serialize_evidence(db,e,user)
+            item['scope']=evidence_scope(db,e)
+            sources_used.append(item)
+        primary_source=sources_used[0] if sources_used else citation
 
-    # When a conflict is still open, JurisTwin gives the current highest-authority answer but makes
-    # the disagreement impossible to miss. It never silently flattens unresolved organisational truth.
-    status = "CONFLICT_PRESENT" if open_conflict else "VERIFIED"
-    warning = None
+    # Keep the raw conflict state for technical users, but give management a clean answer-first status.
+    status='CONFLICT_PRESENT' if open_conflict else 'VERIFIED'
+    management_status='GOVERNED_ANSWER'
+    warning=None
     if open_conflict:
-        warning = f"A live contradiction remains open under {conflict.conflict_ref}; follow the governed source while the conflict is reviewed."
+        warning=(f"Other eligible evidence still disagrees under {conflict.conflict_ref}. "
+                 "The answer above follows the governed resolution rule; lower-authority evidence cannot override it.")
 
-    citations = []
-    if citation:
-        citations.append(citation)
-    # Add at most two explainable retrieval hits as supporting lineage, still role-filtered.
-    for row in search_memory(db, user, question, limit=4, filters={}):
-        if row.get("evidence_ref") not in {c.get("evidence_ref") for c in citations}:
-            citations.append(row)
-        if len(citations) >= 3:
-            break
+    excluded=resolution.get('excluded',[])
+    majority=resolution.get('majority') or {'needed':False}
+    if resolution_mode=='SAME_TIER_MAJORITY':
+        resolution_explanation=(f"No approved canonical source existed, so Sentinel used the majority among the same highest authority tier "
+                                f"({majority.get('votes',0)}/{majority.get('population',0)} matching sources).")
+    elif resolution_mode=='DECISION_CONTRACT':
+        resolution_explanation='An active human-approved Decision Contract is the single governing source.'
+    elif resolution_mode=='APPROVED_AUTHORITY':
+        resolution_explanation='The highest-authority approved source is canonical; lower-authority disagreement is visible but cannot change the answer.'
+    else:
+        resolution_explanation='The highest source-scope-eligible authority determines the answer.'
 
-    card = get_policy_ai().model_card()
-    bench = card.get("held_out_development_benchmark", {})
-    ai_verification = {
-        "learned_component": True,
-        "architecture": card.get("architecture"),
-        "domain_macro_f1": bench.get("domain_macro_f1"),
-        "stance_macro_f1": bench.get("stance_macro_f1"),
-        "symbolic_verifier": "Policy Atom Reasoner",
-        "publication_authority": 0,
-        "internet_required": False,
-        "decision_rule": "Learned model routes; symbolic reasoning verifies; human authority publishes.",
+    card=get_policy_ai().model_card(); bench=card.get('held_out_development_benchmark',{})
+    ai_verification={
+        'learned_component':True,'architecture':card.get('architecture'),
+        'domain_macro_f1':bench.get('domain_macro_f1'),'stance_macro_f1':bench.get('stance_macro_f1'),
+        'symbolic_verifier':'Policy Atom Reasoner','publication_authority':0,'internet_required':False,
+        'decision_rule':'Keyword/hybrid retrieval finds relevant evidence; source scope filters it; authority resolves it; same-tier majority is fallback only; human governance publishes.',
+        'client_data_training':False,
     }
 
+    latest_times=[]
+    for e in (resolution.get('support') or ([] if evidence is None else [evidence])):
+        if e.created_at: latest_times.append(e.created_at if e.created_at.tzinfo else e.created_at.replace(tzinfo=timezone.utc))
+    snapshot=max(latest_times) if latest_times else now
     return {
-        "status": status,
-        "answer": answer,
-        "warning": warning,
-        "question": question,
-        "role": user.role,
-        "rule_key": rule_key,
-        "decision_ref": decision_ref,
-        "conflict_ref": conflict.conflict_ref if conflict else None,
-        "authority": authority,
-        "version": version,
-        "source": source,
-        "model": {
-            "engine": model.get("engine"),
-            "domain_confidence": round(confidence, 4),
-            "abstained": False,
-            "publication_authority": 0,
+        'status':status,'management_status':management_status,'answer':answer,'warning':warning,
+        'question':question,'role':user.role,'rule_key':rule_key,'decision_ref':decision_ref,
+        'conflict_ref':conflict.conflict_ref if conflict else None,'authority':authority,'version':version,'source':source,
+        'model':{'engine':model.get('engine'),'domain_confidence':round(confidence,4),'abstained':False,'publication_authority':0},
+        'citations':sources_used,'sources_used':sources_used,'primary_source':primary_source,
+        'source_mix':source_mix,'synthesis':synthesis,
+        'resolution':{
+            'mode':resolution_mode,'explanation':resolution_explanation,'authority_level':resolution.get('authority_level',6 if contract else None),
+            'majority':majority,'eligible_count':resolution.get('eligible_count',len(sources_used)),
+            'excluded_count':len(excluded),'excluded':excluded[:6],
+            'privacy_rule':'Personal Teams DMs and casual/unapproved mail are excluded before policy resolution.',
+            'training_rule':'Client evidence is indexed for governed retrieval only; it is not used to train the local classifier or any external model.',
         },
-        "citations": citations,
-        "source_mix": source_mix,
-        "synthesis": synthesis,
-        "ai_verification": ai_verification,
-        "guardrail": "Answer text is bound to governed evidence/decision contracts; the learned model only routes the question and cannot publish policy.",
+        'freshness':{
+            'evaluated_at':iso(now),'evidence_snapshot_at':iso(snapshot),'answer_recomputed':True,
+            'update_rule':'Every question re-runs retrieval and source governance against the latest allowed evidence. Signed live inputs appear immediately but remain quarantined until authorised.',
+        },
+        'ai_verification':ai_verification,
+        'guardrail':'Answer text is bound to governed evidence/Decision Contracts; private/casual sources are filtered before resolution and client data has zero model-training authority.',
     }
+

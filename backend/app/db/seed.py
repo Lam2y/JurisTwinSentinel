@@ -4,11 +4,59 @@ from sqlalchemy.orm import Session
 from .models import *
 from ..core.config import get_settings
 from ..core.security import hash_password
-from ..services.common import dumps, utcnow
+from ..services.common import dumps, loads, utcnow
 from ..services.ledger import append_entry
 
 DEMO_CASE = "JT-2026-084"
 FLAGSHIP_CONFLICT = "CF-INCOME-001"
+
+
+def _merge_integration_policy(row, updates: dict):
+    current = loads(row.details_json, {})
+    changed = False
+    for k, v in updates.items():
+        if current.get(k) != v:
+            current[k] = v
+            changed = True
+    if changed:
+        row.details_json = dumps(current)
+    return changed
+
+
+def ensure_governance_defaults(db: Session):
+    """Backfill v5.8 privacy/source controls without requiring judges to delete an old DB."""
+    shield_defaults = [
+        ("source_governance", "Source Scope Governance", "Only approved channels/mailboxes can enter governed retrieval; client data never trains the model", True, {"majority_fallback":"same_authority_tier_only","client_training":"disabled","default_deny_unknown_sources":True}),
+        ("customer_export", "Customer Export Control", "Restrict customer-data exports by role, masking mode and explicit audit reason", True, {"masked_roles":["manager","compliance_manager"],"full_roles":["compliance_manager"],"reason_required":True,"intern_officer_export":"forbidden"}),
+        ("transport_security", "Secure Data Transfer", "Connector traffic is authenticated; production deployment terminates TLS and secrets remain server-side", True, {"production_tls":"TLS 1.2+ / 1.3","webhook_auth":"HMAC-SHA256","api_keys":"environment-only","frontend_secrets":False}),
+        ("query_audit", "Query & Access Audit", "Trace who queried governed memory, downloaded evidence, changed source scope or exported customer data", True, {"retention_years":7,"question_capture":"policy-safe excerpt","actor_required":True}),
+        ("realtime_freshness", "Real-Time Freshness Guard", "Re-evaluate every answer against the latest allowed evidence snapshot", True, {"answer_recompute":"every request","signed_ingress":True,"stale_source_warning_minutes":30}),
+    ]
+    for key,name,desc,enabled,value in shield_defaults:
+        row=db.execute(select(SecurityShield).where(SecurityShield.key==key)).scalar_one_or_none()
+        if not row:
+            db.add(SecurityShield(key=key,name=name,description=desc,enabled=enabled,value_json=dumps(value)))
+        else:
+            row.name=name; row.description=desc; row.enabled=True; row.value_json=dumps(value)
+
+    policies = {
+        "teams": {"retrieval_enabled":True,"policy_authority_enabled":True,"scope_label":"Approved group/channel chats only","channel_scope":"group_and_channels_only","personal_dm_allowed":False,"allowed_channels":["Operations Policy","Compliance","Product Governance"],"client_training_allowed":False,"freshness_sla_minutes":5},
+        "outlook": {"retrieval_enabled":True,"policy_authority_enabled":True,"scope_label":"Official management/policy mailboxes only","official_only":True,"allowed_sender_roles":["Product Owner","Compliance Manager","Risk Committee"],"client_training_allowed":False,"freshness_sla_minutes":5},
+        "gmail": {"retrieval_enabled":False,"policy_authority_enabled":False,"scope_label":"Official management mail only when explicitly enabled","official_only":True,"allowed_sender_roles":["Executive Management","Compliance Manager"],"client_training_allowed":False,"freshness_sla_minutes":10},
+        "sharepoint": {"retrieval_enabled":True,"policy_authority_enabled":True,"scope_label":"Approved policy/SOP libraries","allowed_libraries":["Approved Policies","Controlled SOPs"],"client_training_allowed":False,"freshness_sla_minutes":15},
+        "onedrive": {"retrieval_enabled":False,"policy_authority_enabled":False,"scope_label":"Personal drives excluded by default","client_training_allowed":False,"freshness_sla_minutes":30},
+        "clickup": {"retrieval_enabled":True,"policy_authority_enabled":False,"scope_label":"Approved project spaces · context only","client_training_allowed":False,"freshness_sla_minutes":15},
+        "customer_core": {"retrieval_enabled":True,"policy_authority_enabled":False,"scope_label":"Operational impact only · customer records never define policy","client_training_allowed":False,"freshness_sla_minutes":1},
+        "qa": {"retrieval_enabled":True,"policy_authority_enabled":False,"scope_label":"QA evidence · context only unless formally approved","client_training_allowed":False,"freshness_sla_minutes":15},
+        "postgres": {"retrieval_enabled":True,"policy_authority_enabled":True,"scope_label":"Governed decision contracts and audit state","client_training_allowed":False,"freshness_sla_minutes":1},
+        "vector": {"retrieval_enabled":True,"policy_authority_enabled":False,"scope_label":"Index only; never an authority source","client_training_allowed":False,"freshness_sla_minutes":1},
+        "webhook": {"retrieval_enabled":True,"policy_authority_enabled":False,"scope_label":"Signed live ingress; quarantined until governance","client_training_allowed":False,"freshness_sla_minutes":1},
+    }
+    for key, updates in policies.items():
+        row=db.execute(select(Integration).where(Integration.key==key)).scalar_one_or_none()
+        if row:
+            _merge_integration_policy(row, updates)
+    db.flush()
 
 
 def reset_database(db: Session):
@@ -39,6 +87,8 @@ def seed_database(db: Session):
 
     # If operational state already exists, startup is idempotent.
     if db.execute(select(CustomerCase).limit(1)).scalar_one_or_none():
+        ensure_governance_defaults(db)
+        db.commit()
         return
 
     role_policies = [
@@ -57,23 +107,28 @@ def seed_database(db: Session):
         ("dlp", "Active DLP Protection", "Prevent unapproved downloads of restricted evidence", True, {"restricted_downloads":"blocked"}),
         ("ledger_retention", "7-Year Ledger Retention", "Lock audited records into non-mutable DB state", True, {"years":7}),
         ("ooh_guard", "OOH Modification Guard", "Flag approved decision modifications during OOH hours", True, {"start":"19:00","end":"07:00"}),
+        ("source_governance", "Source Scope Governance", "Only approved channels/mailboxes can enter governed retrieval; client data never trains the model", True, {"majority_fallback":"same_authority_tier_only","client_training":"disabled","default_deny_unknown_sources":True}),
+        ("customer_export", "Customer Export Control", "Restrict customer-data exports by role, masking mode and explicit audit reason", True, {"masked_roles":["manager","compliance_manager"],"full_roles":["compliance_manager"],"reason_required":True,"intern_officer_export":"forbidden"}),
+        ("transport_security", "Secure Data Transfer", "Connector traffic is authenticated; production deployment terminates TLS and secrets remain server-side", True, {"production_tls":"TLS 1.2+ / 1.3","webhook_auth":"HMAC-SHA256","api_keys":"environment-only","frontend_secrets":False}),
+        ("query_audit", "Query & Access Audit", "Trace who queried governed memory, downloaded evidence, changed source scope or exported customer data", True, {"retention_years":7,"question_capture":"policy-safe excerpt","actor_required":True}),
+        ("realtime_freshness", "Real-Time Freshness Guard", "Re-evaluate every answer against the latest allowed evidence snapshot", True, {"answer_recompute":"every request","signed_ingress":True,"stale_source_warning_minutes":30}),
     ]
     for key, name, desc, enabled, value in shields:
         db.add(SecurityShield(key=key, name=name, description=desc, enabled=enabled, value_json=dumps(value)))
 
     now = utcnow()
     integrations = [
-        ("outlook", "Outlook Extractor", "mail", "connected", 12410, now-timedelta(minutes=3), {"metric":"mail objects", "errors":0, "adapter_mode":"deterministic_finals_adapter"}),
-        ("teams", "MS Teams Listener", "chat", "connected", 45201, now-timedelta(minutes=1), {"metric":"chat lines", "errors":0, "adapter_mode":"deterministic_finals_adapter"}),
-        ("gmail", "Gmail Connector", "mail", "inactive", 0, None, {"metric":"objects", "errors":0, "note":"Configuration pending", "adapter_mode":"deterministic_finals_adapter"}),
-        ("sharepoint", "SharePoint Indexer", "documents", "connected", 1420, now-timedelta(minutes=12), {"metric":"files indexed", "errors":1, "note":"1 sync warning", "adapter_mode":"deterministic_finals_adapter"}),
-        ("onedrive", "OneDrive Loader", "documents", "connected", 893, now-timedelta(hours=1), {"metric":"files indexed", "errors":0, "adapter_mode":"deterministic_finals_adapter"}),
-        ("clickup", "ClickUp Workspace", "tasks", "connected", 512, now-timedelta(minutes=6), {"metric":"tickets synced", "errors":2, "note":"2 error blocks", "adapter_mode":"deterministic_finals_adapter"}),
-        ("customer_core", "Customer Core API", "customer", "connected", 128, now, {"metric":"customer records", "errors":0, "note":"Consensus validated", "realtime":True}),
-        ("qa", "QA Repository", "qa", "connected", 38, now-timedelta(minutes=15), {"metric":"policies tracked", "errors":0, "adapter_mode":"deterministic_finals_adapter"}),
-        ("postgres", "PostgreSQL DB", "database", "connected", 1426, now, {"metric":"records mirrored", "errors":0, "note":"Mirror transactional", "realtime":True}),
-        ("vector", "Local Semantic Retrieval Index", "semantic", "connected", 142400, now, {"metric":"indexed evidence terms", "errors":0, "engine":"BM25 + cosine", "pilot_target":"ChromaDB", "adapter_mode":"local_runtime", "note":"Finals runtime uses explainable local retrieval; ChromaDB is a pilot-target adapter."}),
-        ("webhook", "Signed Webhook Gateway", "ingress", "connected", 0, now, {"metric":"authenticated live events", "errors":0, "adapter_mode":"live_http_ingress", "auth":"HMAC-SHA256", "replay_protection":True, "realtime":True, "note":"Genuine external HTTP ingress; use send_live_webhook.py from a second terminal."}),
+        ("outlook", "Outlook Extractor", "mail", "connected", 12410, now-timedelta(minutes=3), {"metric":"mail objects", "errors":0, "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":True, "scope_label":"Official management/policy mailboxes only", "official_only":True, "allowed_sender_roles":["Product Owner","Compliance Manager","Risk Committee"], "client_training_allowed":False, "freshness_sla_minutes":5}),
+        ("teams", "MS Teams Listener", "chat", "connected", 45201, now-timedelta(minutes=1), {"metric":"chat lines", "errors":0, "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":True, "scope_label":"Approved group/channel chats only", "channel_scope":"group_and_channels_only", "personal_dm_allowed":False, "allowed_channels":["Operations Policy","Compliance","Product Governance"], "client_training_allowed":False, "freshness_sla_minutes":5}),
+        ("gmail", "Gmail Connector", "mail", "inactive", 0, None, {"metric":"objects", "errors":0, "note":"Paused · official management mail only when enabled", "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":False, "policy_authority_enabled":False, "scope_label":"Official management mail only when explicitly enabled", "official_only":True, "allowed_sender_roles":["Executive Management","Compliance Manager"], "client_training_allowed":False, "freshness_sla_minutes":10}),
+        ("sharepoint", "SharePoint Indexer", "documents", "connected", 1420, now-timedelta(minutes=12), {"metric":"files indexed", "errors":1, "note":"1 sync warning", "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":True, "scope_label":"Approved policy/SOP libraries", "allowed_libraries":["Approved Policies","Controlled SOPs"], "client_training_allowed":False, "freshness_sla_minutes":15}),
+        ("onedrive", "OneDrive Loader", "documents", "connected", 893, now-timedelta(hours=1), {"metric":"files indexed", "errors":0, "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":False, "policy_authority_enabled":False, "scope_label":"Personal drives excluded by default", "client_training_allowed":False, "freshness_sla_minutes":30}),
+        ("clickup", "ClickUp Workspace", "tasks", "connected", 512, now-timedelta(minutes=6), {"metric":"tickets synced", "errors":2, "note":"2 error blocks", "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":False, "scope_label":"Approved project spaces · context only", "client_training_allowed":False, "freshness_sla_minutes":15}),
+        ("customer_core", "Customer Core API", "customer", "connected", 128, now, {"metric":"customer records", "errors":0, "note":"Operational impact only", "realtime":True, "retrieval_enabled":True, "policy_authority_enabled":False, "scope_label":"Operational impact only · customer records never define policy", "client_training_allowed":False, "freshness_sla_minutes":1}),
+        ("qa", "QA Repository", "qa", "connected", 38, now-timedelta(minutes=15), {"metric":"policies tracked", "errors":0, "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":False, "scope_label":"QA evidence · context only unless formally approved", "client_training_allowed":False, "freshness_sla_minutes":15}),
+        ("postgres", "PostgreSQL DB", "database", "connected", 1426, now, {"metric":"records mirrored", "errors":0, "note":"Mirror transactional", "realtime":True, "retrieval_enabled":True, "policy_authority_enabled":True, "scope_label":"Governed decision contracts and audit state", "client_training_allowed":False, "freshness_sla_minutes":1}),
+        ("vector", "Local Semantic Retrieval Index", "semantic", "connected", 142400, now, {"metric":"indexed evidence terms", "errors":0, "engine":"BM25 + cosine", "pilot_target":"ChromaDB", "adapter_mode":"local_runtime", "note":"Finals runtime uses explainable local retrieval; ChromaDB is a pilot-target adapter.", "retrieval_enabled":True, "policy_authority_enabled":False, "scope_label":"Index only; never an authority source", "client_training_allowed":False, "freshness_sla_minutes":1}),
+        ("webhook", "Signed Webhook Gateway", "ingress", "connected", 0, now, {"metric":"authenticated live events", "errors":0, "adapter_mode":"live_http_ingress", "auth":"HMAC-SHA256", "replay_protection":True, "realtime":True, "note":"Genuine external HTTP ingress; use send_live_webhook.py from a second terminal.", "retrieval_enabled":True, "policy_authority_enabled":False, "scope_label":"Signed live ingress; quarantined until governance", "client_training_allowed":False, "freshness_sla_minutes":1}),
     ]
     for key, name, kind, status, count, last_sync, details in integrations:
         db.add(Integration(key=key, name=name, kind=kind, status=status, object_count=count, last_sync_at=last_sync, details_json=dumps(details)))
@@ -145,7 +200,21 @@ def seed_database(db: Session):
         project = "Sentinel" if row[4] == "income_document_rule" else ("Credit Operations" if row[4] == "loan_restructure_rule" else ("Compliance Operations" if row[4] == "notification_deadline" else "Governance Core"))
         customer = "Aina Rahman" if row[11] == DEMO_CASE else ("System Audit" if not row[11] else row[11])
         tier = 3 if row[7] >= 5 else (2 if row[7] >= 3 else 1)
-        e = Evidence(evidence_ref=row[0], source=row[1], title=row[2], body=row[3], rule_key=row[4], claim=row[5], authority=row[6], authority_level=row[7], version=row[8], status=row[9], sensitivity=row[10], case_ref=row[11], approved=row[12], superseded=row[13], metadata_json=dumps({"project": project, "customer": customer, "decision_tier": tier}))
+        meta={"project": project, "customer": customer, "decision_tier": tier, "client_training_allowed": False}
+        source_lower=row[1].lower()
+        if "teams" in source_lower:
+            meta.update({"channel_type":"group_chat", "conversation_scope":"Operations Policy group", "personal_dm":False, "governance_use":"context_only"})
+        elif "outlook" in source_lower:
+            meta.update({"mail_classification":"policy_approval", "official_sender":True, "sender_role":row[6]})
+        elif "gmail" in source_lower:
+            meta.update({"mail_classification":"customer_message", "official_sender":False, "sender_role":row[6], "governance_use":"context_only"})
+        elif "customer core" in source_lower or "document vault" in source_lower:
+            meta.update({"governance_use":"context_only", "data_class":"customer_operational"})
+        elif "qa repository" in source_lower:
+            meta.update({"governance_use":"context_only"})
+        elif "sharepoint" in source_lower or row[1]=="FSD":
+            meta.update({"library":"Approved Policies" if row[12] else "Controlled SOPs"})
+        e = Evidence(evidence_ref=row[0], source=row[1], title=row[2], body=row[3], rule_key=row[4], claim=row[5], authority=row[6], authority_level=row[7], version=row[8], status=row[9], sensitivity=row[10], case_ref=row[11], approved=row[12], superseded=row[13], metadata_json=dumps(meta))
         db.add(e); db.flush(); evidences[e.evidence_ref] = e
 
     conflicts = [
@@ -181,4 +250,5 @@ def seed_database(db: Session):
     # Pre-seed a small immutable audit history (not the final decision contract).
     append_entry(db, "EVIDENCE_INGESTED", "outlook-extractor", {"evidence_ref": "EV-OUTLOOK-001", "authority": "Product Owner"})
     append_entry(db, "CONFLICT_DETECTED", "conflict-engine", {"conflict_ref": FLAGSHIP_CONFLICT, "affected_customers": 27})
+    ensure_governance_defaults(db)
     db.commit()

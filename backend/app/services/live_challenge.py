@@ -23,6 +23,7 @@ from .ledger import append_entry
 from .policy_reasoner import extract_policy_atoms, compare_policy_atoms
 from .impact_graph import build_impact_graph
 from .policy_ml import get_policy_ai
+from .source_governance import evidence_scope
 
 TOKEN_RE = re.compile(r"[a-z0-9]+")
 
@@ -257,6 +258,7 @@ def _canonical_for(db: Session, rule_key: str) -> Evidence | None:
             Evidence.superseded.is_(False),
         )
     ).scalars().all()
+    rows=[e for e in rows if evidence_scope(db,e).get("policy_authority_eligible")]
     if not rows:
         return None
     rows.sort(key=lambda e: (e.authority_level or 0, e.created_at), reverse=True)

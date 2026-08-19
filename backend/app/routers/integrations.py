@@ -76,3 +76,25 @@ def connect(key:str,body:IntegrationConfigRequest,db:Session=Depends(get_db),use
 @router.post("/{key}/pause")
 def pause(key:str,db:Session=Depends(get_db),user:User=Depends(require_roles("manager","compliance_manager","product_owner"))):
     i=_get(db,key);i.status="inactive";d=loads(i.details_json,{});d["note"]="Paused by administrator";i.details_json=dumps(d);append_entry(db,"INTEGRATION_PAUSED",user.email,{"integration":key});db.commit();db.refresh(i);return ser(i)
+
+
+_POLICY_FIELDS={
+    "retrieval_enabled","policy_authority_enabled","scope_label","channel_scope","personal_dm_allowed",
+    "official_only","allowed_channels","allowed_sender_roles","allowed_libraries","freshness_sla_minutes"
+}
+
+@router.patch("/{key}/policy")
+def update_source_policy(key:str,body:IntegrationConfigRequest,db:Session=Depends(get_db),user:User=Depends(require_roles("manager","compliance_manager"))):
+    i=_get(db,key); d=loads(i.details_json,{})
+    changes={}
+    for k,v in (body.config or {}).items():
+        if k not in _POLICY_FIELDS:
+            continue
+        # Client data training is intentionally not configurable from the UI; it stays disabled.
+        d[k]=v; changes[k]=v
+    d["client_training_allowed"]=False
+    i.details_json=dumps(d)
+    append_entry(db,"SOURCE_SCOPE_UPDATED",user.email,{"integration":key,"changes":changes,"client_training_allowed":False})
+    db.commit();db.refresh(i)
+    out=ser(i); out["policy_update"]={"changed":changes,"training_boundary":"Client evidence is not used for model training"}
+    return out

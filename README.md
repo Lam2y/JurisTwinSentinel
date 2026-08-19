@@ -1,5 +1,9 @@
 # JurisTwin Sentinel — Championship Adversarial MaxScore Edition v5.7
 
+> **v5.9 Manager-First UX build:** keeps all v5.8 privacy, source-governance, export and audit controls, but presents them in plain business language with a persistent security trust strip, simpler navigation, obvious role-based data protections and technical detail moved behind optional panels. See `docs/MANAGER_UX_V59.md`.
+
+> **v5.8 Lecturer Recommendations build:** adds governed source selection, privacy-aware retrieval scope, authority-first/majority-fallback resolution, customer export RBAC, transfer-security controls, actor-level audit logging, and real-time source freshness. See `docs/LECTURER_FEEDBACK_V58.md`.
+
 JurisTwin Sentinel is a **hybrid-AI decision-integrity control plane** for regulated enterprises. It connects fragmented evidence, gives permission-safe plain-language answers, detects contradictory policy, traces downstream exposure, stress-tests response options, enforces human governance, propagates approved decisions and preserves replayable cryptographic proof.
 
 v5.7 is the finals build designed around the exact operating story:

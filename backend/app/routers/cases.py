@@ -1,10 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi.responses import Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 from ..db.database import get_db
-from ..db.models import CustomerCase, CaseEvent, Evidence, Conflict, User
+from ..db.models import CustomerCase, CaseEvent, Evidence, Conflict, User, SecurityShield
 from ..core.security import current_user
 from ..services.common import loads, iso
+from ..services.ledger import append_entry
+from ..schemas import CustomerExportRequest
 from ..services.memory import serialize_evidence
 from ..services.conflict_engine import conflict_payload
 
@@ -36,3 +39,35 @@ def get_case(case_ref: str, db: Session = Depends(get_db), user: User = Depends(
         "evidence": [serialize_evidence(db, e, user) for e in evidence],
         "conflict": conflict_payload(db, conflict) if conflict else None,
     }
+
+
+@router.post("/export.csv")
+def export_customer_data(body: CustomerExportRequest, db: Session = Depends(get_db), user: User = Depends(current_user)):
+    """Controlled customer-data export with explicit role, masking and audit controls."""
+    shield=db.execute(select(SecurityShield).where(SecurityShield.key=="customer_export")).scalar_one_or_none()
+    cfg=loads(shield.value_json,{}) if shield else {}
+    masked_roles=set(cfg.get("masked_roles",["manager","compliance_manager"]))
+    full_roles=set(cfg.get("full_roles",["compliance_manager"]))
+    allowed = user.role in (full_roles if body.mode=="full" else masked_roles)
+    if not allowed:
+        append_entry(db,"CUSTOMER_EXPORT_BLOCKED",user.email,{"mode":body.mode,"reason":body.reason,"role":user.role})
+        db.commit()
+        raise HTTPException(403,f"Role '{user.role}' is forbidden from {body.mode} customer-data export")
+
+    rows=db.execute(select(CustomerCase).order_by(CustomerCase.id.asc())).scalars().all()
+    def clean(v): return '"'+str(v if v is not None else '').replace('"','""')+'"'
+    cols=["case_ref","customer_name","customer_type","application_type","status","risk_status","conflict_ref","owner_email"]
+    lines=[",".join(cols)]
+    for c in rows:
+        if body.mode=="masked":
+            customer="MASKED"
+            owner="MASKED"
+        else:
+            customer=c.customer_name
+            owner=c.owner_email
+        vals=[c.case_ref,customer,c.customer_type,c.application_type,c.status,c.risk_status,c.conflict_ref or '',owner]
+        lines.append(",".join(clean(v) for v in vals))
+    append_entry(db,"CUSTOMER_EXPORT_AUTHORIZED",user.email,{"mode":body.mode,"reason":body.reason,"rows":len(rows),"role":user.role})
+    db.commit()
+    filename=f"juristwin_customer_export_{body.mode}.csv"
+    return Response("\n".join(lines),media_type="text/csv",headers={"Content-Disposition":f"attachment; filename={filename}","X-JurisTwin-Export-Mode":body.mode})

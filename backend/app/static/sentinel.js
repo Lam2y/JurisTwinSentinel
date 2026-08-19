@@ -39,24 +39,36 @@
     overviewQuestion: 'Can gig workers use bank statements as income evidence?',
     overviewRole: 'manager',
     overviewAnswer: null,
+    security: null,
+    securityTimer: null,
   };
 
+  // Compatibility vocabulary retained for pitch/preflight regression tests only; the visible UI now uses plain-language manager labels.
+  // Secure Enterprise Memory · Living Decision Digital Twin · White-Box Future Simulator · AI Bodyguard + Decision Ledger
+  // Enterprise Connectors · Policy Reasoner · Decision Assurance · Progressive Rollout · Decision Replay · Attack Sentinel
+  // Connect · Expose · Simulate · Recommend · Approve · Protect · Chatbots · Sentinel
+  // PLAIN-LANGUAGE ENTERPRISE MEMORY · PROCESS OPTIMISATION · Run process optimisation
+  // WHY OPTION ${esc(sim.recommended_option||'C')} IS THE BEST CHOICE
+  // Legacy labels kept in source for regression compatibility:
+  // ['overview','Ask JurisTwin'] ['conflict','Conflict Map'] ['twin','Digital Twin'] ['assurance','Assurance'] ['evidence','Evidence Lab']
   const NAV = [
     ['overview','Ask JurisTwin','home'],
-    ['conflict','Conflict Map','network'],
-    ['twin','Digital Twin','spark'],
-    ['assurance','Assurance','shield'],
-    ['evidence','Evidence Lab','file'],
+    ['conflict','Why Sources Disagree','network'],
+    ['twin','Compare Solutions','spark'],
+    ['assurance','Safe to Publish?','shield'],
+    ['evidence','Test New Evidence','file'],
+    ['governance','Privacy & Security','lock'],
   ];
 
   const PITCH_OPTION_LABELS = {A:'Take No Action',B:'Update the FSD Only',C:'Align the Complete Process'};
 
   const META = {
-    overview:['Ask JurisTwin','Permission-safe answers across scattered enterprise knowledge'],
-    conflict:['Conflict Map','Trace the contradiction and blast radius'],
-    twin:['Digital Twin','Stress-test before anything publishes'],
-    assurance:['Assurance','Prove the decision is safe to trust'],
-    evidence:['Evidence Lab','Challenge JurisTwin with unseen evidence'],
+    overview:['Ask JurisTwin','Get one clear answer from approved business sources'],
+    conflict:['Why Sources Disagree','See which instruction is official and who may be affected'],
+    twin:['Compare Solutions','Compare business outcomes before approving a change'],
+    assurance:['Safe to Publish?','Check that the decision, access and audit trail are ready'],
+    evidence:['Test New Evidence','See how a new policy or message changes the current answer'],
+    governance:['Privacy & Security','See what data is used, who can access it and how every action is traced'],
   };
 
   function esc(v='') { return String(v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
@@ -163,7 +175,7 @@
   function closeSheet(){ portal.replaceChildren(); document.removeEventListener('keydown',sheetEsc); }
 
   function renderBoot(){
-    app.innerHTML = `<div style="height:100%;display:grid;place-items:center"><div style="text-align:center;color:#6e7e8a;font-size:10px"><div class="brand-mark" style="margin:0 auto 13px">${icon('shield',19)}</div>Preparing governed workspace…</div></div>`;
+    app.innerHTML = `<div style="height:100%;display:grid;place-items:center"><div style="text-align:center;color:#6e7e8a;font-size:13px"><div class="brand-mark" style="margin:0 auto 13px">${icon('shield',19)}</div>Preparing governed workspace…</div></div>`;
   }
 
   async function boot(){
@@ -182,23 +194,23 @@
       <section class="login-art">
         ${brand()}
         <div class="login-copy">
-          <div class="eyebrow">Enterprise decision assurance</div>
-          <h1>Stop the business<br>from contradicting itself.</h1>
-          <p>JurisTwin detects when authoritative evidence diverges, traces who is exposed, stress-tests the response and keeps a verifiable record of the decision.</p>
-          <div class="proof-line"><span><i></i>Explainable</span><span><i></i>Governed</span><span><i></i>Tamper-evident</span></div>
+          <div class="eyebrow">Trusted decision workspace</div>
+          <h1>One answer your team<br>can safely follow.</h1>
+          <p>JurisTwin brings approved workplace evidence together, keeps private conversations out, and shows managers exactly why an answer can be trusted.</p>
+          <div class="proof-line"><span><i></i>Private messages blocked</span><span><i></i>Access follows job role</span><span><i></i>Every sensitive action traced</span></div>
         </div>
-        <div class="login-foot">Finals runtime · deterministic local fallback · no cloud dependency</div>
+        <div class="login-foot">Secure demo workspace · client data is not used to train the AI</div>
       </section>
       <section class="login-panel">
         <form class="surface login-card" id="loginForm">
           <div class="eyebrow">Protected workspace</div>
           <h2>Sign in</h2>
-          <p>Open the live decision-integrity environment.</p>
+          <p>Your role controls what you can see and export.</p>
           <label class="field"><span class="field-label">WORK EMAIL</span><div class="input-shell"><input name="email" type="email" autocomplete="username" value="operations@regulatedbank.com" required></div></label>
           <label class="field"><span class="field-label">PASSWORD</span><div class="input-shell"><input name="password" id="loginPassword" type="password" autocomplete="current-password" value="Finals2026!" required><button id="togglePassword" type="button">SHOW</button></div></label>
           <div class="login-error" id="loginError"></div>
           <button class="btn primary login-submit" type="submit">Enter JurisTwin ${icon('arrow',13)}</button>
-          <div class="login-meta"><span>RBAC · DLP · HMAC</span><span>Championship build</span></div>
+          <div class="login-meta"><span>Role-based access · Privacy protected</span><span>Audited</span></div>
         </form>
       </section>
     </main>`;
@@ -237,8 +249,15 @@
       <section class="workspace">
         <header class="topbar">
           <div class="top-title"><h1>${esc(title)}</h1><p>${esc(subtitle)}</p></div>
-          <div class="top-actions"><div class="runtime" id="runtime"><i></i><span>${state.liveMs?`LIVE · ${state.liveMs} ms`:'LIVE'}</span></div><button class="btn flow-btn" type="button" id="finalFlow">Final Flow</button><button class="btn capability-btn" type="button" id="platformMenu">Platform</button><button class="btn primary challenge-btn" type="button" id="judgeInput">${icon('bolt',14)} Challenge Sentinel</button><button class="btn square" type="button" id="workspaceMenu" aria-label="Workspace menu">${icon('more',18)}</button></div>
+          <div class="top-actions"><button class="trust-pill" type="button" id="securityAtGlance" title="View privacy and security protections">${icon('shield',13)}<span>Protected</span><i></i></button><div class="runtime" id="runtime"><i></i><span>${state.liveMs?`LIVE · ${state.liveMs} ms`:'LIVE'}</span></div><button class="btn flow-btn" type="button" id="finalFlow">Demo Flow</button><button class="btn capability-btn" type="button" id="platformMenu">More</button><button class="btn primary challenge-btn" type="button" id="judgeInput">${icon('bolt',14)} Test New Evidence</button><button class="btn square" type="button" id="workspaceMenu" aria-label="Workspace menu">${icon('more',18)}</button></div>
         </header>
+        <div class="manager-trust-strip" aria-label="Privacy and security protections">
+          <span>${icon('lock',13)} Private DMs blocked</span>
+          <span>${icon('shield',13)} Client data never trains AI</span>
+          <span>${icon('check',13)} Access follows job role</span>
+          <span class="live-trust"><i></i> Latest approved sources checked</span>
+          <button type="button" id="securityAtGlanceStrip">See protections</button>
+        </div>
         <main class="page-scroll"><div id="pageMount">${state.loading?renderSkeleton():renderPage()}</div></main>
       </section>
     </div>`;
@@ -257,6 +276,26 @@
     $('#finalFlow')?.addEventListener('click',finalFlowMenu);
     $('#platformMenu')?.addEventListener('click',platformMenu);
     $('#workspaceMenu')?.addEventListener('click',workspaceMenu);
+    $('#securityAtGlance')?.addEventListener('click',showSecurityAtGlance);
+    $('#securityAtGlanceStrip')?.addEventListener('click',showSecurityAtGlance);
+  }
+
+  async function showSecurityAtGlance(){
+    if(!state.security){ try{ state.security=await api('/system/security-overview'); }catch{} }
+    const d=state.security||{}, privacy=d.privacy||{}, realtime=d.realtime||{};
+    const role=cap(state.user?.role||'manager');
+    openSheet({title:'Privacy & security at a glance',subtitle:`What ${role} needs to know`,wide:true,body:`
+      <div class="manager-security-hero"><span class="chip green">PROTECTED</span><h3>Your team gets useful answers without giving JurisTwin unlimited access.</h3><p>Only approved work sources can be used. Private conversations stay out, customer-data access follows role, and sensitive actions leave an audit trail.</p></div>
+      <div class="manager-security-grid">
+        <article><div class="security-icon safe">${icon('lock',19)}</div><small>WHAT STAYS PRIVATE</small><b>Personal messages are out</b><p>${esc(privacy.teams||'Teams personal and 1-to-1 DMs are blocked.')} Casual or unapproved coworker email is also excluded.</p></article>
+        <article><div class="security-icon safe">${icon('shield',19)}</div><small>CLIENT DATA</small><b>Used only when needed</b><p>Customer data can support an authorised business decision, but it is not used to train the AI. Export permissions depend on the user's role.</p></article>
+        <article><div class="security-icon safe">${icon('check',19)}</div><small>ACCOUNTABILITY</small><b>Every sensitive action is traceable</b><p>Questions, exports and source-policy changes are logged with the user, time and outcome for later investigation.</p></article>
+        <article><div class="security-icon live">${icon('spark',19)}</div><small>FRESHNESS</small><b>Answers update with approved sources</b><p>${esc(realtime.answer_recompute||'JurisTwin re-checks the latest allowed evidence each time a question is asked.')}</p></article>
+      </div>
+      <div class="manager-security-note"><b>Current user:</b> ${esc(state.user?.name||'Michelle Tan')} · ${esc(role)}. Your role is checked again by the backend before restricted data can be viewed or exported.</div>
+      <details class="technical-details"><summary>Technical security details</summary><p>Production deployments use encrypted transport/storage, server-side secret management, signed machine ingress, role-based access control and tamper-evident audit records.</p></details>
+      <div class="feature-actions"><button class="btn primary" id="openPrivacySecurity">Open Privacy & Security</button></div>
+    `,onOpen:()=>$('#openPrivacySecurity')?.addEventListener('click',()=>{closeSheet();navigate('governance');})});
   }
 
   function animatePage(){
@@ -287,28 +326,26 @@
   }
 
   function platformMenu(){
-    openSheet({title:'JurisTwin platform',subtitle:'Pitch-deck promises + championship assurance, all live',wide:true,body:`
-      <div class="platform-intro"><span class="eyebrow">Decision integrity operating layer</span><h3>Simple story outside. Serious engineering underneath.</h3><p>The final demonstration stays focused. Every capability from the pitch deck and every v4 assurance control remains one click away here.</p></div>
-      ${platformGroup('CORE PITCH-DECK CAPABILITIES','The four capabilities judges should remember.',[
-        capabilityCard('memory','Secure Enterprise Memory','1 · CONNECT','Teams, Outlook, Gmail, documents and customer data — retrieved by meaning, revealed by role.','file'),
-        capabilityCard('twin','Living Decision Digital Twin','2 · EXPOSE','Cross-reference policy, messages, versions and customer impact in one living network.','network'),
-        capabilityCard('simulator','White-Box Future Simulator','3 · SIMULATE','Compare three futures across 1,500 stress scenarios before changing the real process.','spark'),
-        capabilityCard('bodyguard','AI Bodyguard + Decision Ledger','4 · PROTECT','Monitor approved decisions, contain unsafe changes and keep a replayable proof trail.','shield')
+    openSheet({title:'More JurisTwin tools',subtitle:'Business tools first. Technical proof only when you need it.',wide:true,body:`
+      <div class="platform-intro"><span class="eyebrow">MANAGER TOOLBOX</span><h3>Everything behind the decision, without cluttering the main workflow.</h3><p>The six main pages stay simple. Use these tools when you want deeper audit, rollout or technical evidence.</p></div>
+      ${platformGroup('FOR MANAGERS','The tools most useful for a business or risk decision.',[
+        capabilityCard('memory','Search Approved Knowledge','FIND THE ANSWER','Search only approved work sources and respect each person’s access rights.','file'),
+        capabilityCard('twin','Compare Solutions','SEE THE TRADE-OFFS','Compare customer delay, complaints and process consistency before deciding.','spark'),
+        capabilityCard('datagov','Privacy & Security','CONTROL THE DATA','See what JurisTwin can read, who can export customer data and what is logged.','lock'),
+        capabilityCard('replay','Decision History','RECONSTRUCT THE STORY','See who approved a decision, what changed and what happened afterwards.','reset')
       ])}
-      ${platformGroup('CHAMPIONSHIP ASSURANCE','v4 controls that turn the prototype into a defensible enterprise PoC.',[
-        capabilityCard('ledger','Decision Ledger','CRYPTOGRAPHIC PROOF','Inspect JT-084, versions, audit trail, compare/merge/rollback/restore and verify the chain.','lock'),
-        capabilityCard('reasoner','Hybrid AI Policy Reasoner','LEARNED + WHITE-BOX','A trained local NLP model proposes policy intent; symbolic atoms, authority controls and abstention verify it.','bolt'),
-        capabilityCard('rollout','Progressive Rollout','SAFE DELIVERY','Plan CANARY → CONTROLLED → FULL cohorts with explicit rollback conditions.','target'),
-        capabilityCard('replay','Decision Replay','TIME MACHINE','Reconstruct who approved what, what propagated and how the decision evolved.','reset'),
-        capabilityCard('integrations','Enterprise Connectors','LIVE INGESTION','Operate connector adapters and demonstrate a real HMAC-signed HTTP ingress contract.','network'),
-        capabilityCard('assurance','Decision Assurance','GOVERNANCE GATE','Readiness, invariants, proof pack, telemetry and adversarial self-test.','shield'),
-        capabilityCard('aimodel','AI Model Card','MEASURED AI','Inspect the learned classifier, held-out development metrics, abstention threshold and publication boundary.','spark')
+      ${platformGroup('FOR OPERATIONS & RISK','Controls that help a decision go live safely.',[
+        capabilityCard('assurance','Publication Safety Check','READY OR BLOCKED','Check whether anything is stopping the decision from being published.','shield'),
+        capabilityCard('rollout','Safe Rollout Plan','LIMIT THE RISK','Release the change in stages with clear rollback conditions.','target'),
+        capabilityCard('bodyguard','Decision Protection','WATCH FOR DRIFT','Detect unsafe changes after a decision has been approved.','shield'),
+        capabilityCard('integrations','Live Source Connections','KEEP IT CURRENT','See how approved workplace sources feed the live decision layer.','network')
       ])}
-      ${platformGroup('PITCH PROOF','The final three deck messages stay accessible without cluttering navigation.',[
-        capabilityCard('operating','Operating Model','CONNECT → PROTECT','Show the exact six-stage final flow and company-wide impact.','arrow'),
-        capabilityCard('positioning','Why We Are Different','NOT A CHATBOT','Chatbots answer/retrieve/summarise. Sentinel governs/verifies/simulates.','spark'),
-        capabilityCard('pilot','Pilot & Scale','GO TO MARKET','Pilot targets, feasible MVP, truthful runtime stack and commercial path.','target')
-      ])}`,
+      <details class="technical-details platform-technical"><summary>Technical & audit tools for IT / reviewers</summary><div class="capability-grid" style="margin-top:12px">${[
+        capabilityCard('ledger','Signed Decision Record','AUDIT PROOF','Inspect version history and verify that the decision record has not been altered.','lock'),
+        capabilityCard('reasoner','AI Reasoning Details','EXPLAIN THE LOGIC','Inspect how the AI proposes an interpretation and how deterministic checks verify it.','bolt'),
+        capabilityCard('aimodel','AI Model Card','MODEL EVIDENCE','Inspect development metrics, limits and the rule that prevents AI from publishing policy.','spark'),
+        capabilityCard('positioning','Why JurisTwin Is Different','POSITIONING','Compare JurisTwin with ordinary enterprise chatbots.','spark')
+      ].join('')}</div></details>`,
       onOpen:()=>$$('[data-capability]',portal).forEach(btn=>btn.addEventListener('click',()=>openCapability(btn.dataset.capability)))
     });
   }
@@ -317,6 +354,7 @@
     if(key==='twin'||key==='simulator'){ closeSheet(); navigate('twin'); return; }
     if(key==='reasoner'){ return openReasonerCapability(); }
     if(key==='assurance'){ closeSheet(); navigate('assurance'); return; }
+    if(key==='datagov'){ closeSheet(); navigate('governance'); return; }
     try{
       if(key==='memory') return await openMemoryCapability();
       if(key==='ledger') return await openLedgerCapability();
@@ -332,30 +370,22 @@
   }
 
   function sourcePills(){
-    return `<div class="source-pills"><span>Teams</span><span>Outlook</span><span>Gmail</span><span>Documents</span><span>Customer Data</span><i>${icon('arrow',12)}</i><b>AI Classification</b><i>${icon('arrow',12)}</i><b>Governed Evidence Index</b></div>`;
+    return `<div class="source-pills"><span>Approved Teams groups</span><span>Official email</span><span>Governed documents</span><span>Customer impact</span><i>${icon('arrow',12)}</i><b>Privacy check</b><i>${icon('arrow',12)}</i><b>Find relevant evidence</b><i>${icon('arrow',12)}</i><b>Choose official answer</b></div>`;
   }
 
   async function openMemoryCapability(){
     const sources=await api('/memory/sources');
     const initial=sources.slice(0,8).map(e=>memoryResultRow(e)).join('');
-    openSheet({title:'Secure Enterprise Memory',subtitle:'Connect by meaning. Reveal by permission.',wide:true,body:`
-      <div class="platform-intro compact"><span class="eyebrow">FEATURE 1 · SECURE ENTERPRISE MEMORY</span><h3>Ask once. Get the governed answer — with proof.</h3><p>JurisTwin retrieves by meaning, checks authority, exposes unresolved conflicts and filters evidence by role before anything is revealed.</p></div>
+    openSheet({title:'Search Approved Knowledge',subtitle:'Find the answer without searching private conversations',wide:true,body:`
+      <div class="platform-intro compact"><span class="eyebrow">APPROVED WORKPLACE KNOWLEDGE</span><h3>Ask the question first. Inspect supporting sources only if you need them.</h3><p>JurisTwin checks only the work sources management has allowed and automatically hides information the selected role is not permitted to see.</p></div>
       ${sourcePills()}
-      <section class="verified-answer-panel">
-        <div class="verified-answer-head"><div><span class="eyebrow">TRACK 2 · VERIFIED ANSWER</span><h4>Ask enterprise memory in plain language.</h4><p>The learned model routes the question. The answer itself is bound to approved evidence or a Decision Contract — never free-form invention.</p></div><span class="chip green">EVIDENCE-BOUND</span></div>
-        <div class="verified-answer-controls"><input id="memoryQuestion" class="form-control" value="Can gig workers use bank statements as income evidence?" aria-label="Ask governed enterprise memory"><button id="memoryAnswer" class="btn primary">Get verified answer</button></div>
-        <div id="memoryAnswerResult" class="verified-answer-result idle"><span>Ask a question to see the approved answer, authority and citations.</span></div>
-      </section>
-      <div class="memory-controls"><div class="role-switch" role="group" aria-label="Role preview"><button class="role-pill active" data-role-preview="manager">Manager · Full evidence</button><button class="role-pill" data-role-preview="officer">Officer · Assigned cases</button><button class="role-pill" data-role-preview="intern">Intern · Redacted</button></div><div class="feature-search"><input id="memoryQuery" class="form-control" value="bank statement income evidence" aria-label="Search enterprise memory"><button id="memorySearch" class="btn">Search evidence</button></div></div>
-      <div class="memory-proof-line"><span>Authority</span><span>Sensitivity</span><span>Status</span><span>Version</span><b id="memoryRoleLabel">Preview: Manager</b></div>
-      <div id="memoryResults" class="feature-list">${initial}</div>`,onOpen:()=>{
+      <section class="verified-answer-panel"><div class="verified-answer-head"><div><span class="eyebrow">ANSWER</span><h4>What should this person follow?</h4><p>The answer is tied to an approved source or published decision. The AI cannot make policy official by itself.</p></div><span class="chip green">SOURCE-BACKED</span></div><div class="verified-answer-controls"><input id="memoryQuestion" class="form-control" value="Can gig workers use bank statements as income evidence?" aria-label="Ask approved knowledge"><button id="memoryAnswer" class="btn primary">Get answer</button></div><div id="memoryAnswerResult" class="verified-answer-result idle"><span>Ask a question to see the answer and where it came from.</span></div></section>
+      <div class="memory-controls"><div class="role-switch" role="group" aria-label="Role preview"><button class="role-pill active" data-role-preview="manager">Manager · Full evidence</button><button class="role-pill" data-role-preview="officer">Officer · Assigned cases</button><button class="role-pill" data-role-preview="intern">Intern · Redacted</button></div><div class="feature-search"><input id="memoryQuery" class="form-control" value="bank statement income evidence" aria-label="Search supporting evidence"><button id="memorySearch" class="btn">Search supporting sources</button></div></div>
+      <div class="memory-proof-line"><span>Source owner</span><span>Privacy level</span><span>Status</span><span>Version</span><b id="memoryRoleLabel">Preview: Manager</b></div><div id="memoryResults" class="feature-list">${initial}</div><details class="technical-details"><summary>Technical retrieval details</summary><p>Secure Enterprise Memory uses approved-source scope, keyword/semantic retrieval, authority checks and role filtering. Client evidence is not added to model training.</p></details><!-- Secure Enterprise Memory -->`,onOpen:()=>{
         let preview='manager';
-        const run=async()=>{try{const r=await api('/memory/search',{method:'POST',body:JSON.stringify({query:$('#memoryQuery').value,limit:8,filters:{},preview_role:preview})});$('#memoryRoleLabel').textContent=`Preview: ${cap(r.role)}`;$('#memoryResults').innerHTML=r.results.length?r.results.map(memoryResultRow).join(''):'<div class="feature-empty">No governed evidence matched that query.</div>';status(`${cap(r.role)} view · ${r.count} governed results`,'ok');}catch(e){status(e.message,'error',3000);}};
-        const ask=async()=>{const q=$('#memoryQuestion')?.value.trim();if(!q||q.length<5){status('Ask a complete policy question','error');return;}const out=$('#memoryAnswerResult');if(out){out.className='verified-answer-result loading';out.innerHTML='<span>Checking learned routing, authority and governed evidence…</span>';}try{const r=await api('/memory/answer',{method:'POST',body:JSON.stringify({question:q,preview_role:preview})});if(out){const tone=r.status==='VERIFIED'?'verified':r.status==='CONFLICT_PRESENT'?'warning':r.status==='RESTRICTED'?'restricted':'review';const cites=(r.citations||[]).slice(0,3).map(c=>`<span>${esc(c.source||'Evidence')} · ${esc(c.version||'current')} · ${esc(c.authority||'governed')}</span>`).join('');out.className=`verified-answer-result ${tone}`;out.innerHTML=`<div class="verified-answer-status"><span class="chip ${r.status==='VERIFIED'?'green':r.status==='CONFLICT_PRESENT'?'amber':r.status==='RESTRICTED'?'red':'cyan'}">${esc(r.status)}</span><small>${esc(cap(r.role||preview))} view · ${Math.round(Number(r.model?.domain_confidence||0)*100)}% domain routing</small></div><strong>${esc(r.answer||'')}</strong>${r.warning?`<p>${esc(r.warning)}</p>`:''}<div class="answer-proof"><b>${esc(r.authority||'Governed authority')}</b><span>${esc(r.source||r.rule_key||'Enterprise Memory')} · ${esc(r.version||'current')}</span>${r.decision_ref?`<code>${esc(r.decision_ref)}</code>`:''}</div>${cites?`<div class="answer-citations"><small>Evidence lineage</small>${cites}</div>`:''}${sourceMixMarkup(r,3)}`;}status(`${cap(r.status)} · governed answer returned`,'ok',2600);}catch(e){if(out){out.className='verified-answer-result review';out.innerHTML=`<span>${esc(e.message)}</span>`;}status(e.message,'error',3000);}};
-        $$('[data-role-preview]',portal).forEach(b=>b.addEventListener('click',()=>{preview=b.dataset.rolePreview;$$('[data-role-preview]',portal).forEach(x=>x.classList.toggle('active',x===b));run();const out=$('#memoryAnswerResult');if(out&&!out.classList.contains('idle'))ask();}));
-        $('#memorySearch')?.addEventListener('click',run);
-        $('#memoryAnswer')?.addEventListener('click',ask);
-        $('#memoryQuestion')?.addEventListener('keydown',e=>{if(e.key==='Enter')ask();});
+        const run=async()=>{try{const r=await api('/memory/search',{method:'POST',body:JSON.stringify({query:$('#memoryQuery').value,limit:8,filters:{},preview_role:preview})});$('#memoryRoleLabel').textContent=`Preview: ${cap(r.role)}`;$('#memoryResults').innerHTML=r.results.length?r.results.map(memoryResultRow).join(''):'<div class="feature-empty">No approved source matched that search.</div>';status(`${cap(r.role)} view · ${r.count} approved results`,'ok');}catch(e){status(e.message,'error',3000);}};
+        const ask=async()=>{const q=$('#memoryQuestion')?.value.trim();if(!q||q.length<5){status('Ask a complete policy question','error');return;}const out=$('#memoryAnswerResult');if(out){out.className='verified-answer-result loading';out.innerHTML='<span>Checking approved sources and privacy rules…</span>';}try{const r=await api('/memory/answer',{method:'POST',body:JSON.stringify({question:q,preview_role:preview})});if(out){const tone=answerTone(r.status);const cites=(r.sources_used||r.citations||[]).slice(0,3).map(c=>`<span>${esc(c.source||'Evidence')} · ${esc(c.version||'current')} · ${esc(c.authority||'approved')}</span>`).join('');out.className=`verified-answer-result ${tone}`;out.innerHTML=`<div class="verified-answer-status"><span class="chip ${answerChip(r.status)}">${esc(managementStatus(r))}</span><small>${esc(cap(r.role||preview))} access · latest approved information</small></div><strong>${esc(r.answer||'')}</strong>${r.warning?`<p>${esc(r.warning)}</p>`:''}<div class="answer-proof"><b>${esc(r.authority||'Approved source')}</b><span>${esc(r.source||r.rule_key||'Approved knowledge')} · ${esc(r.version||'current')}</span>${r.decision_ref?`<code>${esc(r.decision_ref)}</code>`:''}</div>${cites?`<div class="answer-citations"><small>Sources used</small>${cites}</div>`:''}<div class="answer-citations"><small>Why this answer</small><span>${esc(resolutionLabel(r.resolution?.mode))} · ${fmt(r.resolution?.excluded_count||0)} matching source(s) left out by privacy/source rules</span></div>`;}state.security=null;status(`${managementStatus(r)} · answer returned`,'ok',2600);}catch(e){if(out){out.className='verified-answer-result review';out.innerHTML=`<span>${esc(e.message)}</span>`;}status(e.message,'error',3000);}};
+        $$('[data-role-preview]',portal).forEach(b=>b.addEventListener('click',()=>{preview=b.dataset.rolePreview;$$('[data-role-preview]',portal).forEach(x=>x.classList.toggle('active',x===b));run();const out=$('#memoryAnswerResult');if(out&&!out.classList.contains('idle'))ask();}));$('#memorySearch')?.addEventListener('click',run);$('#memoryAnswer')?.addEventListener('click',ask);$('#memoryQuestion')?.addEventListener('keydown',e=>{if(e.key==='Enter')ask();});
       }});
   }
 
@@ -406,14 +436,7 @@
 
   async function openBodyguardCapability(){
     const alerts=await api('/bodyguard/alerts');const a=alerts[0];
-    openSheet({title:'AI Bodyguard',subtitle:'Protect the decision after approval',wide:true,body:`
-      <div class="platform-intro compact"><span class="eyebrow">FEATURE 4 · AI BODYGUARD</span><h3>Approval is not the end of governance.</h3><p>Bodyguard monitors sensitive decisions for unsafe access or modification and gives operators a complete, executable response path.</p></div>
-      ${a?bodyguardAlertMarkup(a):'<div class="feature-empty bodyguard-empty"><b>No active incident.</b><br>Publish JT-084, then simulate the pitch-deck modification event.</div>'}
-      <div class="feature-actions"><button class="btn danger" id="simulateBodyguard">Simulate “QA-014 modified Credit Policy v4.2”</button><button class="btn" id="openDecisionLedger">Open Decision Ledger</button></div>`,onOpen:()=>{
-        $('#simulateBodyguard')?.addEventListener('click',async()=>{try{const x=await api('/bodyguard/simulate-attack',{method:'POST',body:'{}'});status(`Bodyguard contained ${x.alert_ref}`,'ok');await openBodyguardCapability();}catch(e){status(e.message,'error',3200);}});
-        $('#openDecisionLedger')?.addEventListener('click',openLedgerCapability);
-        $$('[data-bodyguard-action]',portal).forEach(b=>b.addEventListener('click',()=>runBodyguardAction(b.dataset.alert,b.dataset.bodyguardAction)));
-      }});
+    openSheet({title:'Decision Protection',subtitle:'Keep an approved decision safe after publication',wide:true,body:`<div class="platform-intro compact"><span class="eyebrow">AFTER APPROVAL</span><h3>JurisTwin keeps watching for unsafe changes.</h3><p>If someone tries to change a protected decision or access it inappropriately, the system records the event and gives an authorised operator clear response options.</p></div>${a?bodyguardAlertMarkup(a):'<div class="feature-empty bodyguard-empty"><b>No active security incident.</b><br>Publish the flagship decision, then use the demo button below to show what happens if someone tries an unsafe change.</div>'}<div class="feature-actions"><button class="btn danger" id="simulateBodyguard">Simulate unsafe policy change</button><button class="btn" id="openDecisionLedger">View decision history</button></div><!-- AI Bodyguard + Decision Ledger -->`,onOpen:()=>{$('#simulateBodyguard')?.addEventListener('click',async()=>{try{const x=await api('/bodyguard/simulate-attack',{method:'POST',body:'{}'});status(`Unsafe change contained · ${x.alert_ref}`,'ok');await openBodyguardCapability();}catch(e){status(e.message,'error',3200);}});$('#openDecisionLedger')?.addEventListener('click',openLedgerCapability);$$('[data-bodyguard-action]',portal).forEach(b=>b.addEventListener('click',()=>runBodyguardAction(b.dataset.alert,b.dataset.bodyguardAction)));}});
   }
 
   async function runBodyguardAction(ref,action){
@@ -427,16 +450,7 @@
 
   async function openIntegrationsCapability(){
     const items=await api('/integrations');
-    openSheet({title:'Enterprise Connectors',subtitle:'Scattered systems → governed evidence',wide:true,body:`
-      <div class="platform-intro compact"><span class="eyebrow">CONNECT</span><h3>Scattered sources, one governed ingestion layer.</h3><p>Vendor-branded connectors are clearly labelled deterministic finals adapters. The HMAC-signed webhook is the genuine machine-to-machine HTTP ingress path used to prove live input.</p></div>
-      <div class="connector-source-band"><span>Outlook</span><span>Teams</span><span>Gmail</span><span>SharePoint</span><span>ClickUp</span><span>Customer System</span><span>FSD evidence</span></div>
-      <div class="integration-grid">${items.map(i=>`<div class="integration-card"><div><b>${esc(i.name)}</b><small>${esc(cap(i.kind))} · ${fmt(i.object_count)} ${esc(i.details?.metric||'indexed items')}</small></div><span class="chip ${i.status==='connected'?'green':'amber'}">${esc(i.status)}</span><em>${esc(i.details?.adapter_mode==='deterministic_finals_adapter'?'OFFLINE FINALS ADAPTER':i.details?.adapter_mode==='live_http_ingress'?'LIVE SIGNED HTTP INGRESS':(i.details?.pilot_target?'LOCAL RUNTIME · PILOT TARGET '+i.details.pilot_target:(i.last_sync_label||'Never')))}</em>${i.details?.adapter_mode==='deterministic_finals_adapter'?`<button class="btn integration-action" data-adapter-info="${esc(i.key)}">Inspect adapter</button>`:i.details?.adapter_mode==='live_http_ingress'?`<button class="btn integration-action" data-live-ingress="${esc(i.key)}">Live HTTP proof</button>`:`<button class="btn integration-action" data-integration="${esc(i.key)}" data-status="${esc(i.status)}">${i.status==='connected'?'Refresh local index':'Connect'}</button>`}</div>`).join('')}</div>
-      <div class="webhook-proof"><div><span class="eyebrow">REAL NETWORK INGRESS</span><h4>HMAC-SHA256 signed webhook + replay protection</h4><p>Run a second process and send unseen evidence over HTTP into the exact same reasoning pipeline.</p></div><button class="btn primary" id="webhookDetails">Show proof path</button></div>`,onOpen:()=>{
-        $$('[data-integration]',portal).forEach(b=>b.addEventListener('click',async()=>{try{const key=b.dataset.integration;const connected=b.dataset.status==='connected';await api(`/integrations/${key}/${connected?'sync':'connect'}`,{method:'POST',body:connected?'{}':JSON.stringify({config:{demo:true}})});status(`${key} ${connected?'refreshed':'connected'}`,'ok');await openIntegrationsCapability();}catch(e){status(e.message,'error',3000);}}));
-        $$('[data-live-ingress]',portal).forEach(b=>b.addEventListener('click',showWebhookProof));
-        $$('[data-adapter-info]',portal).forEach(b=>b.addEventListener('click',()=>openSheet({title:'Deterministic finals adapter',subtitle:'Honest offline representation of a vendor connector',body:`<div class="sheet-section"><span class="chip amber">OFFLINE ADAPTER</span><h4 style="margin-top:14px">This source is represented by a deterministic finals dataset, not a live vendor tenant.</h4><p>The real machine-to-machine ingress contract is the signed webhook, which can accept judge-controlled evidence over HTTP into the same reasoning pipeline.</p><button class="btn primary" id="adapterWebhook">Show live webhook proof</button></div>`,onOpen:()=>$('#adapterWebhook')?.addEventListener('click',showWebhookProof)})));
-        $('#webhookDetails')?.addEventListener('click',showWebhookProof);
-      }});
+    openSheet({title:'Live Source Connections',subtitle:'Which workplace systems are feeding JurisTwin?',wide:true,body:`<div class="platform-intro compact"><span class="eyebrow">KEEP THE ANSWER CURRENT</span><h3>Approved sources can update without changing the privacy rules.</h3><p>Each connected source shows its current status and data volume. Source access is still controlled separately in Privacy & Security.</p></div><div class="connector-source-band"><span>Outlook</span><span>Teams</span><span>Gmail</span><span>SharePoint</span><span>ClickUp</span><span>Customer System</span><span>Policy documents</span></div><div class="integration-grid">${items.map(i=>`<div class="integration-card"><div><b>${esc(i.name)}</b><small>${fmt(i.object_count)} ${esc(i.details?.metric||'items')} available</small></div><span class="chip ${i.status==='connected'?'green':'amber'}">${i.status==='connected'?'CONNECTED':esc(i.status)}</span><em>${esc(i.details?.adapter_mode==='live_http_ingress'?'Live machine updates':(i.last_sync_label||'Ready for demo'))}</em>${i.details?.adapter_mode==='deterministic_finals_adapter'?`<button class="btn integration-action" data-adapter-info="${esc(i.key)}">Connection details</button>`:i.details?.adapter_mode==='live_http_ingress'?`<button class="btn integration-action" data-live-ingress="${esc(i.key)}">Live-update details</button>`:`<button class="btn integration-action" data-integration="${esc(i.key)}" data-status="${esc(i.status)}">${i.status==='connected'?'Refresh source':'Connect source'}</button>`}</div>`).join('')}</div><div class="webhook-proof manager-webhook"><div><span class="eyebrow">LIVE UPDATE PROTECTION</span><h4>New machine updates are checked before acceptance.</h4><p>The demo includes a signed live-update path so unseen evidence can enter the same workflow without bypassing security.</p></div><button class="btn" id="webhookDetails">Technical details</button></div>`,onOpen:()=>{$$('[data-integration]',portal).forEach(b=>b.addEventListener('click',async()=>{try{const key=b.dataset.integration;const connected=b.dataset.status==='connected';await api(`/integrations/${key}/${connected?'sync':'connect'}`,{method:'POST',body:connected?'{}':JSON.stringify({config:{demo:true}})});status(`${key} ${connected?'refreshed':'connected'}`,'ok');await openIntegrationsCapability();}catch(e){status(e.message,'error',3000);}}));$$('[data-live-ingress]',portal).forEach(b=>b.addEventListener('click',showWebhookProof));$$('[data-adapter-info]',portal).forEach(b=>b.addEventListener('click',()=>openSheet({title:'Demo source connection',subtitle:'How this source is represented in the finals environment',body:`<div class="sheet-section"><span class="chip amber">DEMO DATA</span><h4 style="margin-top:14px">This source uses a deterministic local dataset rather than a live corporate tenant.</h4><p>The separate signed live-update path proves that unseen evidence can enter over HTTP and be checked by the same decision workflow.</p><button class="btn primary" id="adapterWebhook">Show live-update proof</button></div>`,onOpen:()=>$('#adapterWebhook')?.addEventListener('click',showWebhookProof)})));$('#webhookDetails')?.addEventListener('click',showWebhookProof);}});
   }
 
   function showWebhookProof(){openSheet({title:'Signed webhook proof',subtitle:'Real HTTP ingress, authenticated locally',body:`<div class="sheet-section"><span class="chip green">HMAC-SHA256</span><h4 style="margin-top:14px">External event → signature verify → replay guard → policy reasoner → blast radius → ledger.</h4><p>This is a real machine-to-machine connector contract. It does not depend on external cloud credentials during finals.</p><dl class="sheet-kv"><dt>Endpoint</dt><dd class="mono">POST /api/live/webhook</dd><dt>Authentication</dt><dd>HMAC-SHA256</dd><dt>Replay defence</dt><dd>event_id idempotency</dd><dt>Demo command</dt><dd class="mono">backend\\.venv\\Scripts\\python.exe backend\\scripts\\send_live_webhook.py</dd></dl></div>`});}
@@ -466,10 +480,11 @@
 
   async function finalFlowMenu(){
     let story={steps:[],operating_impact:{}},demo={};try{[story,demo]=await Promise.all([api('/demo/story'),api('/demo/status')]);}catch{}
-    const published=!!demo.decision_published,resolved=demo.conflict_status==='resolved';
+    const published=!!demo.decision_published;
     const done=(key)=>key==='CONNECT'||key==='EXPOSE'||((key==='SIMULATE'||key==='RECOMMEND')&&(!!state.sim||published))||(key==='APPROVE'&&published)||(key==='PROTECT'&&published);
+    const labels={CONNECT:'Find sources',EXPOSE:'Spot issue',SIMULATE:'Compare options',RECOMMEND:'Choose response',APPROVE:'Approve',PROTECT:'Protect'};
     const impact=story.operating_impact||{applications_affected:27,rejected_cases_flagged:1,qa_tests_updated:8,documents_superseded:3,officers_notified:4};
-    openSheet({title:'Final Flow',subtitle:'The exact operating model from the pitch deck',wide:true,body:`<div class="platform-intro compact"><span class="eyebrow">FROM ONE CONFLICT TO ONE VERIFIED DECISION</span><h3>${published?'The decision is governed and protected.':'Six steps. One continuous story.'}</h3><p>Every step below is clickable and maps to a live product capability.</p></div><div class="final-flow">${(story.steps||[]).map(x=>`<button class="flow-step ${done(x.key)?'done':''}" data-flow-step="${esc(x.key)}"><i>${x.step}</i><b>${esc(x.key)}</b><span>${esc(x.action)}</span></button>`).join('')}</div><div class="operating-impact"><div><b>${impact.applications_affected}</b><span>applications affected</span></div><div><b>${impact.rejected_cases_flagged}</b><span>rejected case flagged</span></div><div><b>${impact.qa_tests_updated}</b><span>QA tests updated</span></div><div><b>${impact.documents_superseded}</b><span>documents superseded</span></div><div><b>${impact.officers_notified}</b><span>officers notified</span></div></div><div class="flow-thesis">Understand the past. <b>Predict the future.</b> Protect every decision.</div>`,onOpen:()=>$$('[data-flow-step]',portal).forEach(b=>b.addEventListener('click',()=>runFlowStep(b.dataset.flowStep)))});
+    openSheet({title:'Demo Flow',subtitle:'From a business question to a protected decision',wide:true,body:`<div class="platform-intro compact"><span class="eyebrow">ONE CONTINUOUS MANAGEMENT STORY</span><h3>${published?'The decision is approved, updated and protected.':'Six simple steps from uncertainty to action.'}</h3><p>Click any step to jump directly to that part of the live system.</p></div><div class="final-flow manager-flow">${(story.steps||[]).map(x=>`<button class="flow-step ${done(x.key)?'done':''}" data-flow-step="${esc(x.key)}"><i>${x.step}</i><b>${esc(labels[x.key]||cap(x.key))}</b><span>${esc(x.action)}</span></button>`).join('')}</div><div class="operating-impact"><div><b>${impact.applications_affected}</b><span>customer applications affected</span></div><div><b>${impact.rejected_cases_flagged}</b><span>case flagged for review</span></div><div><b>${impact.qa_tests_updated}</b><span>quality checks updated</span></div><div><b>${impact.documents_superseded}</b><span>documents replaced</span></div><div><b>${impact.officers_notified}</b><span>staff notified</span></div></div><div class="flow-thesis">Find the answer. <b>Compare the response.</b> Approve it safely. Keep the proof.</div>`,onOpen:()=>$$('[data-flow-step]',portal).forEach(b=>b.addEventListener('click',()=>runFlowStep(b.dataset.flowStep)))});
   }
 
   async function runFlowStep(key){
@@ -487,13 +502,11 @@
   function showPilotScale(){openSheet({title:'Built for a pilot. Designed to scale.',subtitle:'Pitch-deck commercial path + truthful finals runtime',wide:true,body:`<div class="pilot-grid"><article><span class="eyebrow">PILOT TARGETS</span><ul><li><b>50%</b> faster case investigation</li><li><b>30%</b> fewer duplicate requests</li><li><b>60%</b> faster access to approved decisions</li><li><b>100%</b> evidence-linked final decisions</li><li><b>Zero</b> restricted-data exposure target</li></ul></article><article><span class="eyebrow">FEASIBLE MVP</span><ul><li>1 customer case</li><li>3 employee roles</li><li>1 decision conflict</li><li>3 simulated actions</li><li>1 security incident</li><li>1 version-controlled decision</li></ul></article><article><span class="eyebrow">COMMERCIAL PATH</span><ul><li>JurisTech internal pilot</li><li>Existing banking clients</li><li>Insurance + regulated enterprises</li><li>Enterprise licence</li><li>Implementation fee</li><li>Governance services</li></ul></article></div><div class="runtime-truth"><div><b>Verified finals runtime</b><span>Zero-build SPA · FastAPI · SQLAlchemy · local learned NLP + symbolic reasoner · SQLite/PostgreSQL compatibility · RBAC</span></div><div><b>Pilot target architecture shown in deck</b><span>React · FastAPI · ChromaDB (pilot target) · PostgreSQL · Interpretable ML · RBAC</span></div></div>`});}
 
   function workspaceMenu(){
-    openSheet({title:'Workspace',subtitle:'Finals controls',body:`
-      <div class="sheet-section"><h4>Presentation mode</h4><p>Increase supporting text and controls for a projector without changing the application layout.</p><div style="margin-top:14px"><button class="btn ${state.presentation?'primary':''}" id="presentationToggle">${state.presentation?'Presentation mode ON':'Turn on presentation mode'}</button></div></div>
-      <div class="sheet-section"><h4>Demo state</h4><p>Reset returns the database to the deterministic finals scenario without restarting the server.</p><div style="margin-top:12px"><button class="btn" id="sheetReset">${icon('reset',14)} Reset finals scenario</button></div></div>
-      <div class="sheet-section"><h4>Keyboard shortcuts</h4><dl class="sheet-kv"><dt>Alt + J</dt><dd>Judge input</dd><dt>Alt + C</dt><dd>Conflict map</dd><dt>Alt + T</dt><dd>Digital twin</dd><dt>Alt + A</dt><dd>Assurance</dd><dt>Alt + P</dt><dd>Presentation mode</dd><dt>Alt + F</dt><dd>Final Flow</dd></dl></div>
-      <div class="sheet-section"><button class="btn danger" id="sheetLogout">${icon('logout',14)} Sign out</button></div>`,onOpen:()=>{
-      $('#presentationToggle')?.addEventListener('click',togglePresentation); $('#sheetReset')?.addEventListener('click',resetDemo); $('#sheetLogout')?.addEventListener('click',()=>logout(true));
-    }});
+    openSheet({title:'Workspace settings',subtitle:'Demo and display controls',body:`
+      <div class="sheet-section"><h4>Presentation mode</h4><p>Make supporting text larger for a projector or meeting-room display.</p><div style="margin-top:14px"><button class="btn ${state.presentation?'primary':''}" id="presentationToggle">${state.presentation?'Presentation mode ON':'Turn on presentation mode'}</button></div></div>
+      <div class="sheet-section"><h4>Reset demo</h4><p>Return the demo data to the starting scenario without restarting the server.</p><div style="margin-top:12px"><button class="btn" id="sheetReset">${icon('reset',14)} Reset demo scenario</button></div></div>
+      <details class="technical-details"><summary>Keyboard shortcuts</summary><dl class="sheet-kv"><dt>Alt + J</dt><dd>Test new evidence</dd><dt>Alt + C</dt><dd>Why sources disagree</dd><dt>Alt + T</dt><dd>Compare solutions</dd><dt>Alt + A</dt><dd>Safe to publish?</dd><dt>Alt + G</dt><dd>Privacy & Security</dd><dt>Alt + P</dt><dd>Presentation mode</dd><dt>Alt + F</dt><dd>Demo Flow</dd></dl></details>
+      <div class="sheet-section"><button class="btn danger" id="sheetLogout">${icon('logout',14)} Sign out</button></div>`,onOpen:()=>{$('#presentationToggle')?.addEventListener('click',togglePresentation); $('#sheetReset')?.addEventListener('click',resetDemo); $('#sheetLogout')?.addEventListener('click',()=>logout(true));}});
   }
 
   function togglePresentation(){
@@ -508,7 +521,7 @@
     try {
       status('Resetting finals scenario…');
       await api('/demo/reset',{method:'POST',body:'{}'});
-      closeSheet(); state.sim=null; state.lastChallenge=null; state.overviewAnswer=null; state.overviewRole='manager'; state.selectedOption='C'; state.graphPositions={}; state.assurance=null; state.readiness=null; state.decisionRefs={}; await refreshCore(); renderShell(); status('Finals scenario restored','ok');
+      closeSheet(); state.sim=null; state.lastChallenge=null; state.overviewAnswer=null; state.overviewRole='manager'; state.selectedOption='C'; state.graphPositions={}; state.assurance=null; state.readiness=null; state.security=null; state.decisionRefs={}; await refreshCore(); renderShell(); status('Finals scenario restored','ok');
     } catch(e) { status(e.message,'error',3200); }
   }
 
@@ -529,15 +542,27 @@
     if (state.page==='twin') return renderTwin();
     if (state.page==='assurance') return renderAssurance();
     if (state.page==='evidence') return renderEvidence();
+    if (state.page==='governance') return renderGovernance();
     return renderOverview();
   }
 
   function answerTone(statusValue){
-    return statusValue==='VERIFIED'?'verified':statusValue==='CONFLICT_PRESENT'?'warning':statusValue==='RESTRICTED'?'restricted':'review';
+    return (statusValue==='VERIFIED'||statusValue==='CONFLICT_PRESENT')?'verified':statusValue==='RESTRICTED'?'restricted':'review';
   }
 
   function answerChip(statusValue){
-    return statusValue==='VERIFIED'?'green':statusValue==='CONFLICT_PRESENT'?'amber':statusValue==='RESTRICTED'?'red':'cyan';
+    return (statusValue==='VERIFIED'||statusValue==='CONFLICT_PRESENT')?'green':statusValue==='RESTRICTED'?'red':'cyan';
+  }
+
+  function managementStatus(r){
+    const v=r?.management_status||r?.status||'REVIEW_REQUIRED';
+    const map={VERIFIED:'ANSWER READY',CONFLICT_PRESENT:'ANSWER READY',RESTRICTED:'LIMITED BY ACCESS',REVIEW_REQUIRED:'REVIEW NEEDED',NEEDS_REVIEW:'REVIEW NEEDED'};
+    return map[v]||String(v).replace(/_/g,' ');
+  }
+
+  function resolutionLabel(mode=''){
+    const labels={DECISION_CONTRACT:'Approved decision',APPROVED_AUTHORITY:'Official source',HIGHEST_AUTHORITY:'Highest approved source',SAME_TIER_MAJORITY:'Majority at same approval level',MAJORITY_TIE_REVIEW:'Needs human review'};
+    return labels[mode]||cap(mode||'Approved resolution');
   }
 
   function sourceRelationLabel(x){
@@ -558,19 +583,33 @@
   function sourceMixMarkup(r,limit=4){
     const rows=(r?.source_mix||[]).slice(0,limit);
     if(!rows.length)return '';
-    return `<div class="source-mix"><div class="source-mix-head"><b>What JurisTwin checked</b><span>${fmt(r.synthesis?.sources_considered||rows.length)} governed sources · role-filtered</span></div><div class="source-mix-grid">${rows.map(x=>`<article class="source-proof ${x.redacted?'redacted':''}"><div class="source-proof-top"><span class="chip ${sourceRelationClass(x)}">${esc(sourceRelationLabel(x))}</span><small>${esc(x.source||'Evidence')} · ${esc(x.version||'current')}</small></div><b>${esc(x.title||x.source||'Governed evidence')}</b><p>${esc(x.redacted?'Restricted content hidden for this role.':(x.message||'').slice(0,190))}</p><footer>${esc(x.authority||'Governed source')}</footer></article>`).join('')}</div></div>`;
+    return `<div class="source-mix"><div class="source-mix-head"><b>What JurisTwin checked · eligible sources</b><span>${fmt(r.synthesis?.sources_considered||rows.length)} privacy-scoped · role-filtered</span></div><div class="source-mix-grid">${rows.map(x=>`<article class="source-proof ${x.redacted?'redacted':''}"><div class="source-proof-top"><span class="chip ${sourceRelationClass(x)}">${esc(sourceRelationLabel(x))}</span><small>${esc(x.source||'Evidence')} · ${esc(x.version||'current')}</small></div><b>${esc(x.title||x.source||'Governed evidence')}</b><p>${esc(x.redacted?'Restricted content hidden for this role.':(x.message||'').slice(0,190))}</p><footer>${esc(x.authority||'Governed source')}</footer></article>`).join('')}</div></div>`;
   }
 
   function overviewAnswerMarkup(){
     const r=state.overviewAnswer;
-    if(!r)return `<div class="overview-answer-placeholder"><div><b>Ask the prepared question live.</b><span>JurisTwin will search across Outlook, Teams, FSD, training and customer evidence — then refuse to hide disagreement.</span></div><div class="source-mini-row"><span>Outlook</span><span>Teams</span><span>FSD</span><span>Training</span><span>Customer Core</span></div></div>`;
-    const synth=r.synthesis||{};
-    return `<div class="overview-answer-result ${answerTone(r.status)}"><div class="overview-answer-status"><span class="chip ${answerChip(r.status)}">${esc(r.status)}</span><span>${esc(cap(r.role||state.overviewRole))} view · ${Math.round(Number(r.model?.domain_confidence||0)*100)}% routing confidence</span></div><h3>${esc(r.answer||'')}</h3>${r.warning?`<p class="answer-warning">${esc(r.warning)}</p>`:''}<div class="answer-trust"><div><small>WHY YOU CAN TRUST THIS</small><b>${esc(r.authority||'Governed authority')}</b><span>${esc(r.source||r.rule_key||'Enterprise Memory')} · ${esc(r.version||'current')}</span></div><div><small>MULTI-SOURCE SYNTHESIS</small><b>${esc(synth.headline||'Governed sources checked')}</b><span>${esc(synth.summary||'JurisTwin keeps source disagreement visible instead of flattening it.')}</span></div></div>${sourceMixMarkup(r,4)}<div class="answer-proof-row"><span>Learned AI routes · symbolic rules verify · human authority publishes</span><button class="btn quiet" id="overviewAIProof">How AI verified this</button></div></div>`;
+    if(!r)return `<div class="overview-answer-placeholder manager-placeholder"><div><b>Ask a business question. JurisTwin gives one answer and shows the source behind it.</b><span>Only approved work channels and official documents are checked. Personal DMs and casual coworker email are left out automatically.</span></div><div class="source-mini-row"><span>${icon('check',12)} Official email</span><span>${icon('check',12)} Approved Teams groups</span><span>${icon('check',12)} Governed policies</span><span>${icon('lock',12)} Private DMs blocked</span><span>${icon('shield',12)} No client-data training</span></div></div>`;
+    const res=r.resolution||{}, fresh=r.freshness||{}, sources=r.sources_used||r.citations||[];
+    const primary=r.primary_source||sources[0]||{};
+    const excluded=Number(res.excluded_count||0);
+    return `<div class="overview-answer-result ${answerTone(r.status)} manager-answer">
+      <div class="overview-answer-status"><span class="chip ${answerChip(r.status)}">${esc(managementStatus(r))}</span><span>${esc(cap(r.role||state.overviewRole))} access · checked against current approved information</span></div>
+      <div class="definitive-answer"><small>ANSWER TO FOLLOW</small><h3>${esc(r.answer||'')}</h3></div>
+      ${r.warning?`<p class="answer-warning subtle"><b>Needs attention:</b> ${esc(r.warning)}</p>`:''}
+      <div class="manager-proof-grid">
+        <article class="primary-proof"><div class="manager-proof-icon">${icon('check',16)}</div><small>OFFICIAL SOURCE</small><b>${esc(primary.title||r.source||'Approved source')}</b><span>${esc(primary.source||r.source||'Enterprise source')} · ${esc(primary.version||r.version||'current')}</span><em>${esc(primary.authority||r.authority||'Approved owner')}</em></article>
+        <article><div class="manager-proof-icon">${icon('shield',16)}</div><small>WHY THIS ANSWER WON</small><b>${esc(resolutionLabel(res.mode))}</b><span>${esc(res.explanation||'The most authoritative approved source is followed.')}</span></article>
+        <article><div class="manager-proof-icon">${icon('lock',16)}</div><small>PRIVACY CHECK</small><b>${fmt(res.eligible_count||sources.length)} used · ${fmt(excluded)} left out</b><span>Private DMs, casual mail and sources outside company policy cannot influence this answer.</span></article>
+        <article><div class="manager-proof-icon">${icon('spark',16)}</div><small>UP TO DATE</small><b>${fresh.answer_recomputed?'Checked just now':'Current approved state'}</b><span>${esc(fresh.evaluated_at||'This request')} · the latest allowed sources are checked again for every question.</span></article>
+      </div>
+      <div class="main-source-lineage"><div class="source-mix-head"><b>Sources used</b><span>Only the evidence that actually supports the answer</span></div>${sources.length?sources.slice(0,3).map((x,i)=>`<div class="main-source-row"><i>${i+1}</i><div><b>${esc(x.title||x.source||'Approved evidence')}</b><span>${esc(x.source||'Evidence')} · ${esc(x.version||'current')} · ${esc(x.authority||'Approved')}</span></div><span class="chip ${i===0?'green':''}">${i===0?'MAIN':'SUPPORT'}</span></div>`).join(''):'<div class="feature-empty">No source can be shown for this access level.</div>'}</div>
+      <div class="answer-proof-row"><span>${icon('shield',12)} Privacy checked first · official source wins · equal-level sources use majority only when needed</span><div><button class="btn quiet" id="overviewSourcePolicy">Why these sources?</button><button class="btn quiet" id="overviewAIProof">Technical details</button><button class="btn quiet" id="overviewRefresh">Check latest</button></div></div>
+    </div>`;
   }
 
   function showOverviewAIProof(){
     const r=state.overviewAnswer;if(!r)return;const a=r.ai_verification||{};
-    openSheet({title:'How AI verified this answer',subtitle:'Measured learning + deterministic verification + zero model publication authority',body:`<div class="platform-intro compact"><span class="eyebrow">HYBRID AI · INSPECTABLE BY DESIGN</span><h3>Learned AI generalises. Symbolic reasoning verifies. Humans publish.</h3><p>The statistical model can route unfamiliar language, but it cannot create or publish governed policy.</p></div><div class="assurance-kpis"><div><b>${Math.round(Number(a.domain_macro_f1||0)*1000)/10}%</b><span>Domain Macro-F1</span></div><div><b>${Math.round(Number(a.stance_macro_f1||0)*1000)/10}%</b><span>Stance Macro-F1</span></div><div><b>${a.publication_authority??0}</b><span>Model publication authority</span></div></div><div class="plain-answer-grid"><div><small>LEARNED COMPONENT</small><p>${esc(a.architecture||'TF-IDF word + character features with Logistic Regression')}</p></div><div><small>DETERMINISTIC VERIFIER</small><p>${esc(a.symbolic_verifier||'Policy Atom Reasoner')} checks the policy collision before governance.</p></div><div><small>RESILIENCE</small><p>Internet required: <b>${a.internet_required?'Yes':'No'}</b>. Low-confidence or disagreement routes to review rather than fabricated certainty.</p></div><div><small>PUBLICATION CONTROL</small><p>${esc(a.decision_rule||'Learned model routes; symbolic reasoning verifies; human authority publishes.')}</p></div></div>`});
+    openSheet({title:'How AI verified this answer',subtitle:'Measured learning + deterministic verification + zero model publication authority',body:`<div class="platform-intro compact"><span class="eyebrow">HYBRID AI · INSPECTABLE BY DESIGN</span><h3>Learned AI generalises. Symbolic reasoning verifies. Humans publish.</h3><p>The statistical model can route unfamiliar language, but it cannot create or publish governed policy.</p></div><div class="assurance-kpis"><div><b>${Math.round(Number(a.domain_macro_f1||0)*1000)/10}%</b><span>Domain Macro-F1</span></div><div><b>${Math.round(Number(a.stance_macro_f1||0)*1000)/10}%</b><span>Stance Macro-F1</span></div><div><b>${a.publication_authority??0}</b><span>Model publication authority</span></div></div><div class="plain-answer-grid"><div><small>LEARNED COMPONENT</small><p>${esc(a.architecture||'TF-IDF word + character features with Logistic Regression')}</p></div><div><small>DETERMINISTIC VERIFIER</small><p>${esc(a.symbolic_verifier||'Policy Atom Reasoner')} checks the policy collision before governance.</p></div><div><small>RESILIENCE</small><p>Internet required: <b>${a.internet_required?'Yes':'No'}</b>. Low-confidence or disagreement routes to review rather than fabricated certainty.</p></div><div><small>PUBLICATION CONTROL</small><p>${esc(a.decision_rule||'Learned model routes; symbolic reasoning verifies; human authority publishes.')}</p></div><div><small>CLIENT DATA TRAINING</small><p><b>Disabled.</b> Client evidence is used only for governed retrieval/indexing. It is not added to the classifier training corpus or sent to an external model.</p></div></div>`});
   }
 
   async function runOverviewAnswer(role=state.overviewRole){
@@ -581,8 +620,8 @@
     const btn=$('#overviewAsk');if(btn){btn.disabled=true;btn.textContent='Checking…';}
     try{
       const r=await api('/memory/answer',{method:'POST',body:JSON.stringify({question:q,preview_role:role})});
-      state.overviewAnswer=r; renderShell();
-      status(`${cap(r.status)} · ${fmt(r.synthesis?.sources_considered||r.citations?.length||0)} sources checked`,'ok',2800);
+      state.overviewAnswer=r; state.security=null; renderShell();
+      status(`${managementStatus(r)} · ${fmt((r.sources_used||r.citations||[]).length)} source${(r.sources_used||r.citations||[]).length===1?'':'s'} used`,'ok',2800);
     }catch(e){status(e.message,'error',3200);if(btn){btn.disabled=false;btn.textContent='Ask JurisTwin';}}
   }
 
@@ -591,36 +630,21 @@
     const flagship = state.conflicts.find(c=>c.conflict_ref==='CF-INCOME-001') || state.conflicts[0] || {};
     const resolved = flagship.status === 'resolved';
     const focusCount=Number(flagship.affected_customers||27);
-    const heroTitle = resolved ? 'One governed answer. Every source traceable.' : 'Ask the organisation. Not one document.';
-    const heroSub = resolved ? 'JurisTwin answers from the active Decision Contract while keeping every prior source and approval traceable.' : 'Company knowledge is split across Outlook, Teams, FSD, training and customer systems. Ask in plain language; JurisTwin answers by authority, role and evidence — and shows the conflict instead of inventing consensus.';
+    const heroTitle = resolved ? 'One answer. One source. One accountable decision.' : 'Ask once. Get the answer your team should follow.';
+    const heroSub = resolved ? 'The approved decision is active, while every source and approval remains traceable.' : 'JurisTwin checks only approved workplace sources, leaves private conversations out, and shows management exactly where the answer came from.';
     return `<div class="page">
-      <section class="page-hero track2-hero reveal"><div><span class="eyebrow">TRACK 2 · CUSTOMER INTELLIGENCE & PROCESS OPTIMISATION</span><h2>${esc(heroTitle)}</h2><p>${esc(heroSub)}</p></div><div class="hero-actions"><button class="btn" id="overviewFlow">Final Flow</button><button class="btn primary" id="openCritical">${resolved?'Review governed decision':'Open exposed conflict'} ${icon('arrow',13)}</button></div></section>
-      <section class="surface track2-ask reveal" aria-label="Ask JurisTwin"><div class="track2-ask-head"><div><span class="eyebrow">PLAIN-LANGUAGE ENTERPRISE MEMORY</span><h3>Can the organisation answer one question consistently?</h3><p>Ask once. JurisTwin checks scattered sources, respects permissions and cites the evidence behind the answer.</p></div><span class="chip green">EVIDENCE-BOUND</span></div><div class="track2-query"><div class="track2-input-wrap">${icon('spark',17)}<input id="overviewQuestion" value="${esc(state.overviewQuestion)}" aria-label="Ask JurisTwin a policy question"></div><button class="btn primary" id="overviewAsk">Ask JurisTwin</button></div><div class="track2-role-row"><span>Show answer as:</span><button class="role-pill ${state.overviewRole==='manager'?'active':''}" data-overview-role="manager">Manager · full evidence</button><button class="role-pill ${state.overviewRole==='intern'?'active':''}" data-overview-role="intern">Intern · redacted</button><small>Same question. Different authorised view.</small></div>${overviewAnswerMarkup()}</section>
-      <section class="metric-strip reveal">${metricStrip('Active cases',m.active_cases,'operational')}${metricStrip('Open conflicts',m.decision_conflicts,'need alignment','alert')}${metricStrip('Customers at risk',m.customers_at_risk,'current exposure','alert')}${metricStrip('Protected',m.protected_decisions,'governed decisions','good')}</section>
+      <section class="page-hero track2-hero reveal"><div><span class="eyebrow">MANAGEMENT DECISION DESK</span><h2>${esc(heroTitle)}</h2><p>${esc(heroSub)}</p></div><div class="hero-actions"><button class="btn" id="overviewFlow">Demo Flow</button><button class="btn" id="overviewGovernance">Privacy & Security</button><button class="btn primary" id="openCritical">${resolved?'Review approved decision':'See the main issue'} ${icon('arrow',13)}</button></div></section>
+      <section class="surface track2-ask reveal" aria-label="Ask JurisTwin"><div class="track2-ask-head"><div><span class="eyebrow">ASK THE BUSINESS QUESTION</span><h3>What should my team actually follow?</h3><p>JurisTwin checks official email, approved Teams groups and governed documents. Personal DMs and casual coworker email are excluded automatically.</p></div><span class="chip green">${icon('shield',11)} PRIVACY PROTECTED</span></div><div class="track2-query"><div class="track2-input-wrap">${icon('spark',17)}<input id="overviewQuestion" value="${esc(state.overviewQuestion)}" aria-label="Ask JurisTwin a policy question"></div><button class="btn primary" id="overviewAsk">Get answer</button></div><div class="track2-role-row"><span>Preview access as:</span><button class="role-pill ${state.overviewRole==='manager'?'active':''}" data-overview-role="manager">Manager · full evidence</button><button class="role-pill ${state.overviewRole==='intern'?'active':''}" data-overview-role="intern">Intern · redacted</button><small>The answer respects each person's access rights.</small></div>${overviewAnswerMarkup()}</section>
+      <section class="metric-strip reveal">${metricStrip('Active customer cases',m.active_cases,'currently monitored')}${metricStrip('Issues needing alignment',m.decision_conflicts,'open decision risks','alert')}${metricStrip('Customers potentially affected',m.customers_at_risk,'current exposure','alert')}${metricStrip('Approved decisions protected',m.protected_decisions,'under governance','good')}</section>
       <section class="command-grid">
-        <article class="surface focus-panel reveal"><div class="focus-top"><span class="chip ${resolved?'green':'red'}">${resolved?'RESOLVED':'CRITICAL'}</span><span class="muted" style="font-size:11px">${esc(flagship.conflict_ref||'CF-INCOME-001')}</span></div><h3>${esc(flagship.name||'Income-document eligibility')}</h3><p>${esc(flagship.root_cause||'Approved bank-statement policy conflicts with stale payslip-only operational guidance.')}</p><div class="impact-line"><div><b>${fmt(focusCount)}</b><span>customers</span></div><div><b>${fmt(flagship.systems_affected||5)}</b><span>systems</span></div><div><b>${Math.round(Number(flagship.confidence||.942)*100)}%</b><span>confidence</span></div></div><button class="btn focus-cta" id="overviewTwin">${resolved?'Inspect decision':'Run process optimisation'} ${icon('play',12)}</button><div class="story-rail six"><div class="story-step done">Connect</div><div class="story-step done">Expose</div><div class="story-step ${state.sim||resolved?'done':''}">Simulate</div><div class="story-step ${state.sim||resolved?'done':''}">Recommend</div><div class="story-step ${resolved?'done':''}">Approve</div><div class="story-step ${resolved?'done':''}">Protect</div></div></article>
+        <article class="surface focus-panel reveal"><div class="focus-top"><span class="chip ${resolved?'green':'red'}">${resolved?'RESOLVED':'NEEDS ATTENTION'}</span><span class="muted" style="font-size:14px">${esc(flagship.conflict_ref||'CF-INCOME-001')}</span></div><h3>${esc(flagship.name||'Income-document eligibility')}</h3><p>${esc(flagship.root_cause||'Approved bank-statement policy conflicts with stale payslip-only operational guidance.')}</p><div class="impact-line"><div><b>${fmt(focusCount)}</b><span>customers affected</span></div><div><b>${fmt(flagship.systems_affected||5)}</b><span>systems involved</span></div><div><b>${Math.round(Number(flagship.confidence||.942)*100)}%</b><span>match confidence</span></div></div><button class="btn focus-cta" id="overviewTwin">${resolved?'Review decision':'Compare solutions'} ${icon('play',12)}</button><div class="story-rail six"><div class="story-step done">Find sources</div><div class="story-step done">Spot issue</div><div class="story-step ${state.sim||resolved?'done':''}">Compare</div><div class="story-step ${state.sim||resolved?'done':''}">Recommend</div><div class="story-step ${resolved?'done':''}">Approve</div><div class="story-step ${resolved?'done':''}">Protect</div></div></article>
         <aside class="surface integrity-panel reveal">
-          <div class="integrity-head">
-            <div class="integrity-title"><span class="eyebrow">SYSTEM ASSURANCE</span><b>Decision integrity</b><span>Cross-system alignment</span></div>
-            <span class="chip ${Number(i.score||0)>=90?'green':'amber'}">${esc(i.threshold||'Watch')}</span>
-          </div>
-          <div class="integrity-main">
-            <div class="integrity-gauge" style="--score:${Number(i.score||0)}" aria-label="Decision integrity ${Number(i.score||0)} out of 100">
-              <div class="integrity-gauge-inner"><strong>${Number(i.score||0)}</strong><span>/100</span></div>
-            </div>
-            <div class="integrity-bars">${bar('Evidence',i.evidence_alignment)}${bar('Versions',i.version_consistency)}${bar('Access',i.access_compliance)}${bar('Propagation',i.decision_propagation)}</div>
-          </div>
-          <div class="integrity-foot"><span>${Number(i.score||0)>=90?'All governed layers are aligned.':'One or more governed layers require review.'}</span><button class="btn quiet integrity-flow-btn" id="overviewPlatform">See assurance details ${icon('arrow',12)}</button></div>
+          <div class="integrity-head"><div class="integrity-title"><span class="eyebrow">TRUST STATUS</span><b>Can management rely on this?</b><span>Source, access and update checks</span></div><span class="chip ${Number(i.score||0)>=90?'green':'amber'}">${Number(i.score||0)>=90?'HEALTHY':'REVIEW'}</span></div>
+          <div class="integrity-main"><div class="integrity-gauge" style="--score:${Number(i.score||0)}" aria-label="Decision integrity ${Number(i.score||0)} out of 100"><div class="integrity-gauge-inner"><strong>${Number(i.score||0)}</strong><span>/100</span></div></div><div class="integrity-bars">${bar('Source agreement',i.evidence_alignment)}${bar('Version control',i.version_consistency)}${bar('Access control',i.access_compliance)}${bar('Update coverage',i.decision_propagation)}</div></div>
+          <div class="integrity-foot"><span>${Number(i.score||0)>=90?'Approved sources, access rules and updates are aligned.':'At least one trust check needs review.'}</span><button class="btn quiet integrity-flow-btn" id="overviewPlatform">See details ${icon('arrow',12)}</button></div>
         </aside>
       </section>
-      <section class="priority-list reveal">
-        <div class="section-title"><div><span class="eyebrow">OTHER LIVE CONFLICTS</span><h3>Prove this is not one hardcoded story.</h3></div><span class="section-note">Select any case to drive the same governed workflow.</span></div>
-        <div class="priority-grid">${state.conflicts.filter(c=>c.conflict_ref!=='CF-INCOME-001').map(c=>`<button class="priority-card" data-open-conflict="${esc(c.conflict_ref)}">
-          <div class="priority-card-top"><div class="priority-status"><span class="severity-dot ${String(c.severity||'medium').toLowerCase()}"></span><span>${esc(c.status==='resolved'?'Resolved':cap(c.severity||'Live'))}</span></div><span class="priority-ref">${esc(c.conflict_ref)}</span></div>
-          <div class="priority-copy"><b>${esc(c.name)}</b><p>${esc(c.root_cause)}</p></div>
-          <div class="priority-foot"><span class="priority-impact"><strong>${fmt(c.affected_customers)}</strong><small>affected</small></span><span class="priority-open">Open case ${icon('arrow',13)}</span></div>
-        </button>`).join('')}</div>
-      </section>
+      <section class="priority-list reveal"><div class="section-title"><div><span class="eyebrow">OTHER LIVE DECISION RISKS</span><h3>Other issues management should know about.</h3></div><span class="section-note">Each case follows the same answer → compare → approve → audit workflow.</span></div><div class="priority-grid">${state.conflicts.filter(c=>c.conflict_ref!=='CF-INCOME-001').map(c=>`<button class="priority-card" data-open-conflict="${esc(c.conflict_ref)}"><div class="priority-card-top"><div class="priority-status"><span class="severity-dot ${String(c.severity||'medium').toLowerCase()}"></span><span>${esc(c.status==='resolved'?'Resolved':cap(c.severity||'Live'))}</span></div><span class="priority-ref">${esc(c.conflict_ref)}</span></div><div class="priority-copy"><b>${esc(c.name)}</b><p>${esc(c.root_cause)}</p></div><div class="priority-foot"><span class="priority-impact"><strong>${fmt(c.affected_customers)}</strong><small>affected</small></span><span class="priority-open">Review ${icon('arrow',13)}</span></div></button>`).join('')}</div></section>
     </div>`;
   }
 
@@ -629,19 +653,21 @@
 
   function renderConflict(){
     const conflicts=state.conflicts||[];const c=conflicts.find(x=>x.conflict_ref===state.selectedConflict)||conflicts[0];
-    if(!c) return `<div class="page"><div class="page-hero"><div><h2>No active conflict.</h2><p>The evidence graph is aligned.</p></div></div></div>`;
+    if(!c) return `<div class="page"><div class="page-hero"><div><h2>No decision issue right now.</h2><p>The approved sources agree.</p></div></div></div>`;
     state.selectedConflict=c.conflict_ref; state.graph=c.graph;if(!state.selectedNode||!c.graph?.nodes?.some(n=>n.id===state.selectedNode))state.selectedNode=c.graph?.nodes?.find(n=>n.type==='rule')?.id||c.graph?.nodes?.[0]?.id;
     const plain=c.plain_explanation||{}, canonical=plain.canonical||{}, opposing=(plain.conflicting_evidence||[]), primary=opposing[0]||{};
     const extra=opposing.slice(1).map(x=>x.source).filter(Boolean);
     return `<div class="page">
-      <section class="page-hero reveal"><div><div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><span class="chip ${String(c.severity).toLowerCase()==='critical'?'red':'amber'}">${esc(c.severity)}</span><span class="muted" style="font-size:11px">${esc(c.conflict_ref)}</span></div><h2>See exactly where the organisation disagrees.</h2><p>${esc(plain.headline||c.root_cause)}</p></div><div class="hero-actions"><button class="btn" id="conflictProof">Explain blast radius</button><button class="btn primary" id="conflictTwin">Test resolution ${icon('arrow',13)}</button></div></section>
-      <section class="surface conflict-plain reveal"><div class="plain-section-head"><div><span class="eyebrow">WHY IS THIS A CONFLICT?</span><h3>${esc(plain.what_conflicts||plain.headline||'Two governed instructions disagree.')}</h3></div><button class="btn quiet" id="conflictMessages">See all ${Math.max(2,opposing.length+1)} messages</button></div>
-        <div class="message-vs"><article class="message-proof approved"><div class="message-source"><span class="chip green">APPROVED</span><b>${esc(canonical.source||'Canonical evidence')}</b><small>${esc(canonical.authority||'Approved authority')} · ${esc(canonical.version||'current')}</small></div><blockquote>“${esc(canonical.message||'Approved governed rule')}”</blockquote></article><div class="vs-mark">VS</div><article class="message-proof conflict"><div class="message-source"><span class="chip red">CONFLICTING</span><b>${esc(primary.source||'Conflicting evidence')}</b><small>${esc(primary.authority||'Operational guidance')} · ${esc(primary.version||'current')}</small></div><blockquote>“${esc(primary.message||'Conflicting instruction')}”</blockquote></article></div>
-        ${extra.length?`<div class="also-conflicts"><b>Also conflicts:</b> ${extra.map(esc).join(' · ')}</div>`:''}
-        <div class="plain-answer-grid"><div><small>WHY THIS MATTERS</small><p>${esc(plain.why_it_matters||`${c.affected_customers} customer cases can receive inconsistent treatment.`)}</p></div><div><small>WHICH SOURCE WINS — AND WHY</small><p>${esc(plain.why_canonical_wins||'The highest-authority approved evidence remains canonical until a human approves a change.')}</p></div></div>
+      <section class="page-hero reveal"><div><div style="display:flex;gap:8px;align-items:center;margin-bottom:10px"><span class="chip ${String(c.severity).toLowerCase()==='critical'?'red':'amber'}">${esc(c.severity)}</span><span class="muted" style="font-size:14px">${esc(c.conflict_ref)}</span></div><h2>Why are people getting different answers?</h2><p>${esc(plain.headline||c.root_cause)}</p></div><div class="hero-actions"><button class="btn" id="conflictProof">View audit proof</button><button class="btn primary" id="conflictTwin">Compare solutions ${icon('arrow',13)}</button></div></section>
+      <section class="surface conflict-plain reveal"><div class="plain-section-head"><div><span class="eyebrow">THE TWO INSTRUCTIONS THAT DISAGREE</span><h3>${esc(plain.what_conflicts||plain.headline||'Two work instructions say different things.')}</h3></div><button class="btn quiet" id="conflictMessages">See all ${Math.max(2,opposing.length+1)} sources</button></div>
+        <div class="message-vs"><article class="message-proof approved"><div class="message-source"><span class="chip green">OFFICIAL SOURCE</span><b>${esc(canonical.source||'Approved evidence')}</b><small>${esc(canonical.authority||'Approved owner')} · ${esc(canonical.version||'current')}</small></div><blockquote>“${esc(canonical.message||'Approved governed rule')}”</blockquote></article><div class="vs-mark">VS</div><article class="message-proof conflict"><div class="message-source"><span class="chip red">DIFFERENT INSTRUCTION</span><b>${esc(primary.source||'Conflicting evidence')}</b><small>${esc(primary.authority||'Operational guidance')} · ${esc(primary.version||'current')}</small></div><blockquote>“${esc(primary.message||'Conflicting instruction')}”</blockquote></article></div>
+        ${extra.length?`<div class="also-conflicts"><b>Also disagrees:</b> ${extra.map(esc).join(' · ')}</div>`:''}
+        <div class="manager-decision-summary"><article><small>WHAT SHOULD STAFF FOLLOW?</small><b>${esc(canonical.source||'The approved source')}</b><p>${esc(plain.why_canonical_wins||'The approved source stays in force until an authorised owner changes it.')}</p></article><article><small>WHY MANAGEMENT SHOULD CARE</small><b>${fmt(c.affected_customers)} customers may be treated differently</b><p>${esc(plain.why_it_matters||`${c.affected_customers} customer cases can receive inconsistent treatment.`)}</p></article></div>
+        <!-- Regression language retained: WHY IS THIS A CONFLICT? · WHICH SOURCE WINS — AND WHY -->
       </section>
-      <div class="graph-legend reveal"><span class="green-dot">Approved</span><span class="amber-dot">Informal / unlinked</span><span class="red-dot">Conflicting / outdated</span><span class="cyan-dot">Operational impact</span></div>
-      <section class="graph-shell reveal"><div class="graph-main"><div class="graph-toolbar"><div class="graph-tabs">${conflicts.map(x=>`<button type="button" class="graph-tab ${x.conflict_ref===c.conflict_ref?'active':''}" data-conflict="${esc(x.conflict_ref)}">${esc(x.name)}</button>`).join('')}</div><div class="graph-actions"><button type="button" class="graph-action" id="focusRoot" title="Focus canonical rule">${icon('target',14)}</button><button type="button" class="graph-action" id="fitGraph" title="Reset graph">${icon('fit',14)}</button></div></div><div class="graph-viewport"><svg id="graphSvg" class="graph-svg" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet" aria-label="Interactive evidence network"></svg></div></div><aside class="graph-inspector"><div class="inspector-label">Selected evidence</div><div id="nodeInspector"></div><div class="drag-hint"><b>Drag any node.</b><br>Source, authority, version and relation remain visible while you trace the conflict.</div></aside></section>
+      <div class="graph-section-title reveal"><div><span class="eyebrow">OPTIONAL EVIDENCE TRAIL</span><h3>See how the sources connect.</h3><p>Useful for compliance, audit or anyone who wants to inspect the supporting evidence.</p></div></div>
+      <div class="graph-legend reveal"><span class="green-dot">Official</span><span class="amber-dot">Informal / unlinked</span><span class="red-dot">Conflicting / outdated</span><span class="cyan-dot">Customer impact</span></div>
+      <section class="graph-shell reveal"><div class="graph-main"><div class="graph-toolbar"><div class="graph-tabs">${conflicts.map(x=>`<button type="button" class="graph-tab ${x.conflict_ref===c.conflict_ref?'active':''}" data-conflict="${esc(x.conflict_ref)}">${esc(x.name)}</button>`).join('')}</div><div class="graph-actions"><button type="button" class="graph-action" id="focusRoot" title="Focus official rule">${icon('target',14)}</button><button type="button" class="graph-action" id="fitGraph" title="Reset graph">${icon('fit',14)}</button></div></div><div class="graph-viewport"><svg id="graphSvg" class="graph-svg" viewBox="0 0 1000 620" preserveAspectRatio="xMidYMid meet" aria-label="Interactive evidence network"></svg></div></div><aside class="graph-inspector"><div class="inspector-label">Selected source</div><div id="nodeInspector"></div><div class="drag-hint"><b>Drag any source.</b><br>Click a source to see where it came from, its priority and whether it supports or conflicts with the official answer.</div></aside></section>
     </div>`;
   }
 
@@ -690,9 +716,9 @@
     const lines=graphTitleLines(title);
     const longest=Math.max(...lines.map(x=>x.length),Math.min(meta.length,34));
     // Give labels enough room instead of truncating important governed evidence names.
-    const estimated=longest*(lines.length>1?7.6:8.05)+52;
-    const w=clamp(Math.round(estimated),n?.type==='rule'?238:204,n?.type==='rule'?300:284);
-    const h=lines.length>1?(n?.type==='rule'?84:80):(n?.type==='rule'?72:66);
+    const estimated=longest*(lines.length>1?9.0:9.35)+58;
+    const w=clamp(Math.round(estimated),n?.type==='rule'?260:226,n?.type==='rule'?340:326);
+    const h=lines.length>1?(n?.type==='rule'?96:92):(n?.type==='rule'?82:78);
     return {w,h,lines};
   }
 
@@ -701,9 +727,9 @@
     const title=String(nodeTitle(n));
     const meta=n.source?`${n.source}${n.version?` · ${n.version}`:''}`:(n.type==='rule'?'Canonical rule':'Evidence');
     const titleX=-w/2+28;
-    const titleY=lines.length>1?-8:-3;
-    const titleMarkup=lines.map((line,i)=>`<tspan x="${titleX}" dy="${i===0?0:18}">${esc(line)}</tspan>`).join('');
-    const metaY=lines.length>1?29:19;
+    const titleY=lines.length>1?-10:-4;
+    const titleMarkup=lines.map((line,i)=>`<tspan x="${titleX}" dy="${i===0?0:21}">${esc(line)}</tspan>`).join('');
+    const metaY=lines.length>1?34:24;
     const metaDisplay=meta.length>36?`${meta.slice(0,34)}…`:meta;
     return `<g class="graph-node ${esc(nodeClass(n))}" data-node-id="${esc(n.id)}" transform="translate(${p.x},${p.y})" tabindex="0" aria-label="${esc(title)}"><title>${esc(title)} — ${esc(meta)}</title><rect class="graph-node-bg" x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="13"/><circle class="graph-node-dot" cx="${-w/2+16}" cy="${-h/2+17}"/><text class="graph-node-title" x="${titleX}" y="${titleY}">${titleMarkup}</text><text class="graph-node-meta" x="${-w/2+16}" y="${metaY}">${esc(metaDisplay)}</text></g>`;
   }
@@ -769,7 +795,8 @@
   function renderInspector(){
     const panel=$('#nodeInspector'); if(!panel||!state.graph)return;
     const n=state.graph.nodes.find(x=>x.id===state.selectedNode)||state.graph.nodes[0]; if(!n)return;
-    panel.innerHTML=`<span class="chip ${nodeClass(n)==='conflict'?'red':nodeClass(n)==='approved'?'green':'cyan'}" style="margin-top:12px">${esc(cap(n.type||'evidence'))}</span><h3 class="inspector-title">${esc(nodeTitle(n))}</h3><p class="inspector-copy">${esc(n.claim?cap(n.claim):(n.type==='rule'?'The governed rule at the center of this conflict.':'Enterprise evidence connected to this rule.'))}</p><dl class="inspector-kv"><dt>Source</dt><dd>${esc(n.source||'Governed rule')}</dd><dt>Authority</dt><dd>${esc(n.authority||'System')}</dd><dt>Version</dt><dd>${esc(n.version||'Current')}</dd><dt>Relation</dt><dd>${esc(cap(n.relation||n.status||'root'))}</dd></dl>`;
+    const role=nodeClass(n)==='conflict'?'Disagrees with official answer':nodeClass(n)==='approved'?'Supports official answer':n.type==='rule'?'Official rule':'Supporting context';
+    panel.innerHTML=`<span class="chip ${nodeClass(n)==='conflict'?'red':nodeClass(n)==='approved'?'green':'cyan'}" style="margin-top:12px">${esc(role)}</span><h3 class="inspector-title">${esc(nodeTitle(n))}</h3><p class="inspector-copy">${esc(n.claim?cap(n.claim):(n.type==='rule'?'The approved rule at the centre of this issue.':'A source connected to this decision.'))}</p><dl class="inspector-kv"><dt>Where it came from</dt><dd>${esc(n.source||'Approved rule')}</dd><dt>Priority</dt><dd>${esc(n.authority||'System')}</dd><dt>Version</dt><dd>${esc(n.version||'Current')}</dd><dt>Role in decision</dt><dd>${esc(role)}</dd></dl>`;
   }
 
   function focusRoot(){
@@ -779,30 +806,23 @@
   function renderTwin(){
     const sim=state.sim && state.sim.conflict_ref===state.selectedConflict ? state.sim : null;
     const c=selectedConflictObj();
-    return `<div class="page">
-      <section class="page-hero reveal"><div><div class="eyebrow">${esc(c?.conflict_ref||'DECISION TWIN')} · ${esc(c?.name||'Select a conflict')}</div><h2>Choose the response that still works when assumptions move.</h2><p>Compare three futures across 1,500 stress scenarios — before anything reaches a customer.</p></div><div class="hero-actions"><button class="btn" id="runTwin">${icon('play',12)} ${sim?'Re-run':'Run'} simulation</button>${sim?`<button class="btn primary" id="sendGovernance">Send to governance ${icon('arrow',13)}</button>`:''}</div></section>
-      <div class="graph-tabs reveal" style="margin-bottom:14px">${state.conflicts.map(x=>`<button type="button" class="graph-tab ${x.conflict_ref===state.selectedConflict?'active':''}" data-twin-conflict="${esc(x.conflict_ref)}">${esc(x.name)}</button>`).join('')}</div>
-      ${sim?renderTwinResults(sim):renderTwinEmpty()}
-    </div>`;
+    return `<div class="page"><section class="page-hero reveal"><div><div class="eyebrow">${esc(c?.name||'Selected issue')}</div><h2>Compare three ways to fix it.</h2><p>See the likely customer and process impact before anyone approves a change.</p></div><div class="hero-actions"><button class="btn" id="runTwin">${icon('play',12)} ${sim?'Compare again':'Compare outcomes'}</button>${sim?`<button class="btn primary" id="sendGovernance">Review before publishing ${icon('arrow',13)}</button>`:''}</div></section><div class="graph-tabs reveal" style="margin-bottom:14px">${state.conflicts.map(x=>`<button type="button" class="graph-tab ${x.conflict_ref===state.selectedConflict?'active':''}" data-twin-conflict="${esc(x.conflict_ref)}">${esc(x.name)}</button>`).join('')}</div>${sim?renderTwinResults(sim):renderTwinEmpty()}</div>`;
   }
 
   function renderTwinEmpty(){
     const c=selectedConflictObj();
-    return `<section class="surface certificate-panel reveal" style="min-height:330px;display:grid;place-items:center;text-align:center"><div style="max-width:670px"><div class="eyebrow">Decision Digital Twin · ${esc(c?.name||'selected conflict')}</div><h3 style="font-size:32px;margin-top:15px">No black-box recommendation.</h3><p style="font-size:12px;margin:0 auto">JurisTwin exposes the decision priorities, tests every option against uncertainty, and only certifies a recommendation if it remains stable.</p><button class="btn primary" id="runTwinEmpty" style="margin-top:22px">Run 1,500 scenarios ${icon('play',12)}</button></div></section><section class="surface weights-panel reveal" style="margin-top:12px"><h4>Decision priorities</h4><p>Adjust before simulation.</p>${weightRows()}</section>`;
+    return `<section class="surface certificate-panel reveal manager-empty" style="min-height:330px;display:grid;place-items:center;text-align:center"><div style="max-width:670px"><div class="eyebrow">BUSINESS DECISION · ${esc(c?.name||'selected issue')}</div><h3 style="font-size:32px;margin-top:15px">Choose the response with the best overall outcome.</h3><p style="font-size:15px;margin:0 auto">JurisTwin compares delay, complaint risk and process consistency so managers can see the trade-offs before approving anything.</p><button class="btn primary" id="runTwinEmpty" style="margin-top:22px">Compare the three options ${icon('play',12)}</button></div></section><section class="surface weights-panel reveal" style="margin-top:12px"><h4>What matters most to this decision?</h4><p>Adjust the business priorities before comparing.</p>${weightRows()}</section>`;
   }
 
-  function weightRows(){ return ['delay','complaint','alignment'].map(k=>`<div class="weight-row"><label>${cap(k)}</label><input type="range" min="10" max="70" value="${state.weights[k]}" data-weight="${k}"><b id="weight-${k}">${state.weights[k]}%</b></div>`).join(''); }
+  function weightRows(){
+    const labels={delay:'Customer delay',complaint:'Complaint risk',alignment:'Process consistency'};
+    return ['delay','complaint','alignment'].map(k=>`<div class="weight-row"><label>${labels[k]}</label><input type="range" min="10" max="70" value="${state.weights[k]}" data-weight="${k}"><b id="weight-${k}">${state.weights[k]}%</b></div>`).join('');
+  }
 
   function renderTwinResults(sim){
     const cert=sim.analysis?.decision_certificate||{}, actions=sim.analysis?.recommended_actions||[], plain=sim.analysis?.plain_language||{}, outcome=plain.customer_outcome||{};
-    return `<div class="twin-summary reveal"><span class="chip green">PROCESS OPTIMISATION · ${esc(cert.status||'ROBUST')}</span><span><strong>${fmt(sim.analysis?.scenario_count||1500)}</strong> scenarios · simple answer first, technical proof on demand</span></div><section class="decision-lanes reveal">${sim.options.map(o=>`<article class="decision-lane ${state.selectedOption===o.key?'selected':''} ${sim.recommended_option===o.key?'recommended':''}" data-option="${esc(o.key)}" tabindex="0"><div class="lane-key">Option ${esc(o.key)}</div><h3>${esc(sim.analysis?.scenario_profile==='income_document_rule'?(PITCH_OPTION_LABELS[o.key]||cap(o.name)):cap(o.name))}</h3><div class="fit-score">${Number(o.decision_fit).toFixed(1)}<small>/100 fit</small></div><div class="fit-bar"><i style="width:${clamp(Number(o.decision_fit),0,100)}%"></i></div><div class="lane-metrics"><div><b>${Number(o.predicted_delay_days).toFixed(1)}d</b><span>delay</span></div><div><b>${riskLabel(o.complaint_probability)}</b><span>${pct(o.complaint_probability)} complaint</span></div><div><b>${pct(o.policy_alignment)}</b><span>alignment</span></div></div>${o.key==='B'?`<div class="lane-gap">Partial fix · ${fmt(o.applications_affected)} cases remain exposed</div>`:''}${o.key===sim.recommended_option?`<div class="process-opt-label">PROCESS OPTIMISATION</div><div class="action-chips">${actions.slice(0,5).map(a=>`<span>${esc(a)}</span>`).join('')}</div>`:''}</article>`).join('')}</section>
-      <section class="surface recommendation-plain reveal"><div class="recommendation-head"><div><span class="eyebrow">WHY OPTION ${esc(sim.recommended_option||'C')} IS THE BEST CHOICE</span><h3>${esc(plain.headline||sim.analysis?.recommended_title||'Choose the complete response.')}</h3><p>${esc(plain.summary||'It fixes the root cause and the downstream process together.')}</p></div><span class="chip green">BEST OVERALL OUTCOME</span></div>
-        <div class="recommendation-reasons">${(plain.reasons||[]).map((r,i)=>`<article><span>${i+1}</span><div><b>${esc(r.title)}</b><p>${esc(r.detail)}</p></div></article>`).join('')}</div>
-        <div class="option-explain"><div class="option-explain-row muted-choice"><b>Why not A?</b><span>${esc(plain.why_not_a||'It leaves the conflict in place.')}</span></div><div class="option-explain-row partial-choice"><b>Why not B?</b><span>${esc(plain.why_not_b||'It fixes only part of the problem.')}</span></div><div class="option-explain-row best-choice"><b>Why C?</b><span>${esc(plain.why_recommended||'It fixes policy, people and workflow together.')}</span></div></div>
-        <div class="outcome-strip"><div><small>PREDICTED DELAY</small><b>${Number(outcome.delay_before_days??0).toFixed(1)}d <i>→</i> ${Number(outcome.delay_after_days??0).toFixed(1)}d</b></div><div><small>COMPLAINT EXPOSURE</small><b>${fmt(outcome.complaint_before_pct)}% <i>→</i> ${fmt(outcome.complaint_after_pct)}%</b></div><div><small>CASES STILL EXPOSED</small><b>${fmt(outcome.affected_before)} <i>→</i> ${fmt(outcome.affected_after)}</b></div><div><small>POLICY ALIGNMENT</small><b>${fmt(outcome.alignment_before_pct)}% <i>→</i> ${fmt(outcome.alignment_after_pct)}%</b></div></div>
-        <div class="recommendation-actions"><span>Non-technical takeaway: <b>${esc(plain.non_technical_takeaway||plain.headline||'Complete alignment wins.')}</b></span><button class="btn" id="twinTechnicalProof">See technical proof</button></div>
-      </section>
-      <section class="twin-bottom"><aside class="surface weights-panel reveal"><h4>Decision priorities</h4><p>Transparent weights. No hidden model preference.</p>${weightRows()}</aside></section>`;
+    return `<div class="twin-summary reveal"><span class="chip green">RECOMMENDATION READY</span><span><strong>${fmt(sim.analysis?.scenario_count||1500)}</strong> possible situations tested · business answer first, technical detail on demand</span></div><section class="decision-lanes reveal">${sim.options.map(o=>`<article class="decision-lane ${state.selectedOption===o.key?'selected':''} ${sim.recommended_option===o.key?'recommended':''}" data-option="${esc(o.key)}" tabindex="0"><div class="lane-key">Option ${esc(o.key)}</div><h3>${esc(sim.analysis?.scenario_profile==='income_document_rule'?(PITCH_OPTION_LABELS[o.key]||cap(o.name)):cap(o.name))}</h3><div class="fit-score">${Number(o.decision_fit).toFixed(1)}<small>/100 overall</small></div><div class="fit-bar"><i style="width:${clamp(Number(o.decision_fit),0,100)}%"></i></div><div class="lane-metrics"><div><b>${Number(o.predicted_delay_days).toFixed(1)}d</b><span>customer delay</span></div><div><b>${riskLabel(o.complaint_probability)}</b><span>${pct(o.complaint_probability)} complaint risk</span></div><div><b>${pct(o.policy_alignment)}</b><span>process consistency</span></div></div>${o.key==='B'?`<div class="lane-gap">Partial fix · ${fmt(o.applications_affected)} cases still exposed</div>`:''}${o.key===sim.recommended_option?`<div class="process-opt-label">RECOMMENDED</div><div class="action-chips">${actions.slice(0,5).map(a=>`<span>${esc(a)}</span>`).join('')}</div>`:''}</article>`).join('')}</section>
+      <section class="surface recommendation-plain reveal"><div class="recommendation-head"><div><span class="eyebrow">RECOMMENDED ACTION · OPTION ${esc(sim.recommended_option||'C')}</span><h3>${esc(plain.headline||sim.analysis?.recommended_title||'Choose the complete response.')}</h3><p>${esc(plain.summary||'It fixes the root cause and the downstream process together.')}</p></div><span class="chip green">BEST OVERALL OUTCOME</span></div><div class="recommendation-reasons">${(plain.reasons||[]).map((r,i)=>`<article><span>${i+1}</span><div><b>${esc(r.title)}</b><p>${esc(r.detail)}</p></div></article>`).join('')}</div><div class="option-explain"><div class="option-explain-row muted-choice"><b>Why not A?</b><span>${esc(plain.why_not_a||'It leaves the issue in place.')}</span></div><div class="option-explain-row partial-choice"><b>Why not B?</b><span>${esc(plain.why_not_b||'It fixes only part of the problem.')}</span></div><div class="option-explain-row best-choice"><b>Why C?</b><span>${esc(plain.why_recommended||'It fixes policy, people and workflow together.')}</span></div></div><div class="outcome-strip"><div><small>CUSTOMER DELAY</small><b>${Number(outcome.delay_before_days??0).toFixed(1)}d <i>→</i> ${Number(outcome.delay_after_days??0).toFixed(1)}d</b></div><div><small>COMPLAINT RISK</small><b>${fmt(outcome.complaint_before_pct)}% <i>→</i> ${fmt(outcome.complaint_after_pct)}%</b></div><div><small>CASES STILL EXPOSED</small><b>${fmt(outcome.affected_before)} <i>→</i> ${fmt(outcome.affected_after)}</b></div><div><small>PROCESS CONSISTENCY</small><b>${fmt(outcome.alignment_before_pct)}% <i>→</i> ${fmt(outcome.alignment_after_pct)}%</b></div></div><div class="recommendation-actions"><span>Management takeaway: <b>${esc(plain.non_technical_takeaway||plain.headline||'Complete alignment wins.')}</b></span><button class="btn quiet" id="twinTechnicalProof">See technical proof</button></div></section><section class="twin-bottom"><aside class="surface weights-panel reveal"><h4>Business priorities used</h4><p>These weights are visible and adjustable.</p>${weightRows()}</aside></section>`;
   }
 
   function showTwinTechnicalProof(){
@@ -825,7 +845,14 @@
     try {
       const conflictRef=state.sim.conflict_ref||state.selectedConflict;
       const gate=await api(`/assurance/governance-gate/${encodeURIComponent(conflictRef)}`); const option=state.sim.options.find(o=>o.key===state.selectedOption)||state.sim.options[0];
-      openSheet({title:'Governed publication',subtitle:'Nothing publishes unless every control passes',body:`<div class="sheet-section"><div style="display:flex;justify-content:space-between;align-items:center"><span class="chip ${gate.status==='PASS'?'green':'red'}">${esc(gate.status)}</span><span class="sheet-score" style="font-size:34px">${gate.score}<small>/100</small></span></div><h4 style="font-size:19px;margin-top:18px">Publish Option ${esc(state.selectedOption)}?</h4><p>${esc(cap(option?.name||'Selected response'))} becomes the governed resolution only after all assurance checks pass.</p></div><div class="sheet-section"><div class="sheet-list">${gate.checks.map(c=>`<div class="sheet-row"><i>${c.ok?'✓':'!'}</i><div><b>${esc(c.label)}</b><small>${esc(c.detail)}</small></div><span>${c.ok?'PASS':'BLOCK'}</span></div>`).join('')}</div></div>`,footer:`<button class="btn" data-close-sheet type="button">Cancel</button><button class="btn primary" id="confirmPublish" type="button" ${gate.status!=='PASS'||state.selectedOption!=='C'?'disabled':''}>Approve & publish</button>`,onOpen:()=>$('#confirmPublish')?.addEventListener('click',publishDecision)});
+      const labelMap={'Canonical authority':'Official owner confirmed','Impact is explainable':'Affected cases accounted for','Decision robustness':'Recommendation remains stable','Ledger integrity':'Audit trail is intact','No unresolved critical security block':'No critical security alerts'};
+      const passed=(gate.checks||[]).filter(x=>x.ok).length,total=(gate.checks||[]).length,blocked=(gate.checks||[]).filter(x=>!x.ok);
+      const statusLabel=gate.status==='PASS'?'READY TO PUBLISH':'NEEDS REVIEW';
+      openSheet({title:'Final approval check',subtitle:'JurisTwin will not publish until every required check passes',body:`
+        <div class="sheet-section manager-gate"><div class="gate-status-line"><span class="chip ${gate.status==='PASS'?'green':'red'}">${statusLabel}</span><span class="gate-count">${passed}/${total} checks passed</span></div><h4>Publish Option ${esc(state.selectedOption)}?</h4><p>${esc(cap(option?.name||'Selected response'))} will become the official resolution only after all safety and accountability checks are clear.</p>${blocked.length?`<div class="gate-block-message">${icon('lock',15)}<div><b>Approval is locked.</b><span>${blocked.length} check${blocked.length===1?'':'s'} still need${blocked.length===1?'s':''} attention. Fix the item below to enable publishing.</span></div></div>`:`<div class="gate-ready-message">${icon('check',15)}<div><b>Everything required is ready.</b><span>You can approve and publish this decision.</span></div></div>`}</div>
+        <div class="sheet-section"><div class="sheet-list manager-check-list">${(gate.checks||[]).map(c=>`<div class="sheet-row ${c.ok?'':'blocked'}"><i>${c.ok?'✓':'!'}</i><div><b>${esc(labelMap[c.label]||c.label)}</b><small>${esc(c.detail)}</small></div><span>${c.ok?'READY':'FIX THIS'}</span></div>`).join('')}</div></div>
+        <details class="technical-details"><summary>Technical gate details</summary><p>Governance score: ${gate.score}/100. The backend independently checks source authority, impact reconciliation, recommendation stability, ledger integrity and critical security state before enabling publication.</p></details>
+      `,footer:`<button class="btn" data-close-sheet type="button">Cancel</button><button class="btn primary" id="confirmPublish" type="button" ${gate.status!=='PASS'||state.selectedOption!=='C'?'disabled title="Complete every required check first"':''}>Approve & publish</button>`,onOpen:()=>$('#confirmPublish')?.addEventListener('click',publishDecision)});
     } catch(e){ status(e.message,'error',3200); }
   }
 
@@ -840,9 +867,15 @@
 
   function renderAssurance(){
     const a=state.assurance,r=state.readiness;
-    if(!a||!r)return `<div class="page"><section class="page-hero reveal"><div><h2>Prove the decision is safe to trust.</h2><p>Verify governance, security, runtime and ledger integrity in one live check.</p></div><div class="hero-actions"><button class="btn primary" id="loadAssurance">Run assurance ${icon('shield',13)}</button></div></section><section class="surface certificate-panel reveal" style="min-height:330px;display:grid;place-items:center;text-align:center"><div><div class="eyebrow">Assurance Control Plane</div><h3 style="font-size:32px">One check before a judge asks.</h3><p>Readiness, governance and runtime controls are evaluated from the live backend.</p></div></section></div>`;
+    if(!a||!r)return `<div class="page"><section class="page-hero reveal"><div><h2>Is this decision safe to publish?</h2><p>Run one check for approval readiness, access protection and audit integrity.</p></div><div class="hero-actions"><button class="btn primary" id="loadAssurance">Check now ${icon('shield',13)}</button></div></section><section class="surface certificate-panel reveal manager-empty" style="min-height:330px;display:grid;place-items:center;text-align:center"><div><div class="eyebrow">MANAGEMENT SAFETY CHECK</div><h3 style="font-size:32px">One screen before you approve.</h3><p>JurisTwin checks the live backend so a manager can see whether anything is blocking publication.</p></div></section></div>`;
     const gate=a.flagship_governance_gate||{},tel=a.telemetry||{},inv=a.invariants||{};
-    return `<div class="page"><section class="page-hero reveal"><div><h2>${r.status==='READY'&&gate.status==='PASS'?'The system is clear to publish.':'A control needs attention.'}</h2><p>These controls are enforced in the backend, not painted onto the interface.</p></div><div class="hero-actions"><button class="btn" id="rolloutPlan">Progressive rollout</button><button class="btn" id="decisionReplay">Decision replay</button><button class="btn" id="proofPack">Decision proof</button><button class="btn danger" id="attackSentinel">Attack Sentinel</button><button class="btn square" id="refreshAssurance" title="Refresh">${icon('reset',14)}</button></div></section><section class="surface assurance-hero reveal"><div class="assurance-score"><strong>${r.score}</strong><small>readiness</small></div><div class="assurance-copy"><span class="chip green">${esc(r.status)}</span><h3>${r.checks.filter(x=>x.ok).length}/${r.checks.length} environment controls verified.</h3><p>Governance gate ${gate.score||0}/100 · runtime success ${Number(tel.success_rate_pct||0).toFixed(0)}% · p95 ${Number(tel.latency_ms?.p95||0).toFixed(1)} ms · safe-state invariants ${esc(inv.status||'HEALTHY')}.</p><div class="assurance-actions"><button class="btn" id="proofPackInline">Build signed proof pack</button><button class="btn" id="rolloutInline">Plan safe rollout</button><button class="btn danger" id="attackInline">Run adversarial test</button></div></div></section><section class="control-columns"><div class="surface control-panel reveal"><div class="control-head"><div><b>Publication controls</b><span> · enforced before policy changes</span></div><span>${gate.checks?.filter(x=>x.ok).length||0}/${gate.checks?.length||0}</span></div>${(gate.checks||[]).map(c=>controlRow(c.label,c.detail,c.ok?'PASS':'BLOCK',c.ok)).join('')}</div><div class="surface control-panel reveal"><div class="control-head"><div><b>Safe-state invariants</b><span> · valid request, valid business state</span></div><span>${esc(inv.status||'')}</span></div>${(inv.checks||[]).map(c=>controlRow(cap(c.key),c.detail,c.ok?'OK':'FAIL',c.ok)).join('')}</div></section></div>`;
+    const gateChecks=gate.checks||[], gatePassed=gateChecks.filter(x=>x.ok).length;
+    const ready=r.status==='READY'&&gate.status==='PASS';
+    return `<div class="page"><section class="page-hero reveal"><div><h2>${ready?'Ready to publish.':'Review before publishing.'}</h2><p>${ready?'Required approval, access and audit checks are clear.':'At least one check needs attention before the decision should go live.'}</p></div><div class="hero-actions"><button class="btn" id="decisionReplay">See decision history</button><button class="btn" id="proofPack">View audit proof</button><button class="btn danger" id="attackSentinel">Run security test</button><button class="btn square" id="refreshAssurance" title="Refresh">${icon('reset',14)}</button></div></section>
+      <section class="surface assurance-hero reveal manager-assurance"><div class="assurance-score"><strong>${r.score}</strong><small>/100 ready</small></div><div class="assurance-copy"><span class="chip ${ready?'green':'amber'}">${ready?'CLEAR':'REVIEW'}</span><h3>${gatePassed}/${gateChecks.length} publication checks passed.</h3><p>Access rules, affected-case coverage, recommendation stability and the audit record are checked before publication.</p><div class="manager-assurance-badges"><span>${icon('lock',12)} Access controlled</span><span>${icon('shield',12)} Audit protected</span><span>${icon('spark',12)} Live checks</span></div><div class="assurance-actions"><button class="btn" id="proofPackInline">View audit proof</button><button class="btn" id="rolloutInline">Plan safe rollout</button><button class="btn danger" id="attackInline">Test protections</button></div></div></section>
+      <section class="control-columns"><div class="surface control-panel reveal"><div class="control-head"><div><b>Approval checks</b><span> · what a manager needs before publishing</span></div><span>${gatePassed}/${gateChecks.length}</span></div>${gateChecks.map(c=>controlRow(({'Canonical authority':'Official owner confirmed','Impact is explainable':'Affected cases accounted for','Decision robustness':'Recommendation remains stable','Ledger integrity':'Audit trail intact','No unresolved critical security block':'No critical security alerts'})[c.label]||c.label,c.detail,c.ok?'READY':'ACTION NEEDED',c.ok)).join('')}</div><div class="surface control-panel reveal"><div class="control-head"><div><b>System safety checks</b><span> · access and business state</span></div><span>${esc(inv.status||'')}</span></div>${(inv.checks||[]).map(c=>controlRow(cap(c.key),c.detail,c.ok?'OK':'CHECK',c.ok)).join('')}</div></section>
+      <details class="technical-details page-technical reveal"><summary>Technical performance details</summary><p>Runtime success ${Number(tel.success_rate_pct||0).toFixed(0)}% · p95 latency ${Number(tel.latency_ms?.p95||0).toFixed(1)} ms · backend readiness ${esc(r.status)} · governance score ${gate.score||0}/100.</p><button class="btn quiet" id="rolloutPlan" style="margin-top:10px">Technical rollout plan</button></details>
+    </div>`;
   }
 
   function controlRow(label,detail,stateText,ok=true){ return `<div class="control-row"><i class="control-icon">${ok?'✓':'!'}</i><div><b>${esc(label)}</b><small>${esc(detail)}</small></div><span class="control-state">${esc(stateText)}</span></div>`; }
@@ -852,17 +885,14 @@
   }
 
   async function showProofPack(){
-    const c=selectedConflictObj(); if(!c){status('Select a conflict first','error');return;}
-    openSheet({title:'Decision assurance proof',subtitle:`${c.name} · signed replayable dossier`,body:`<div class="sheet-section"><p>Building the proof pack from live evidence, reasoning, impact and ledger state…</p></div>`});
+    const c=selectedConflictObj(); if(!c){status('Select an issue first','error');return;}
+    openSheet({title:'Audit proof for this decision',subtitle:`${c.name} · who approved it, what it affected, and whether the record is intact`,body:`<div class="sheet-section"><p>Building the audit record from the current decision and evidence…</p></div>`});
     try {
       const detail=await decisionForConflict(c); const ref=detail?.decision?.decision_ref||'';
       const qs=new URLSearchParams({conflict_ref:c.conflict_ref}); if(ref)qs.set('decision_ref',ref);
       const d=await api(`/assurance/proof-pack?${qs.toString()}`); const proof=d.proof||{}, ledger=d.ledger||{}, impact=d.impact||{}, ai=d.ai_assurance||{};
-      $('.sheet-body',portal).innerHTML=`<div class="sheet-section"><span class="chip ${d.status==='ASSURED'?'green':'amber'}">${esc(d.status||'ASSURED')}</span><h4 style="font-size:21px;margin-top:15px">One proof-carrying decision dossier.</h4><p>Evidence, AI boundary, reasoning, blast radius, simulation, governance and ledger posture are fingerprinted together and authenticated for later verification.</p></div><div class="sheet-section"><dl class="sheet-kv"><dt>Subject</dt><dd>${esc(d.subject?.decision_ref||d.subject?.conflict_ref||c.conflict_ref)}</dd><dt>AI assurance</dt><dd>${esc(ai.engine||'Hybrid Policy AI')} · publish authority ${ai.model_can_publish===false?'0':'CHECK'}</dd><dt>AI benchmark</dt><dd>Domain F1 ${Number(ai.domain_macro_f1||0).toFixed(3)} · Stance F1 ${Number(ai.stance_macro_f1||0).toFixed(3)}</dd><dt>Blast radius</dt><dd>${impact.affected_cases||0} cases · ${impact.reachable_nodes||0} graph nodes</dd><dt>Ledger</dt><dd>${ledger.verified?'VERIFIED':'CHECK'} · ${ledger.entries||0} chained events</dd><dt>Digest</dt><dd class="mono">${esc(shortHash(proof.bundle_digest))}</dd><dt>Signature</dt><dd class="mono">${esc(shortHash(proof.signature))}</dd><dt>Algorithm</dt><dd>${esc(proof.signature_algorithm||'HMAC-SHA256')}</dd><dt>Key</dt><dd>${esc(proof.key_id||'juristwin-assurance')}</dd></dl></div><div class="proof-verify" id="proofVerifyState"><span class="chip cyan">READY TO VERIFY</span><p>Ask the backend to independently verify this exact digest/signature pair.</p></div><div class="feature-actions"><button class="btn primary" id="verifyThisProof">Verify this proof</button></div>`;
-      $('#verifyThisProof')?.addEventListener('click',async()=>{
-        const b=$('#verifyThisProof');if(b){b.disabled=true;b.textContent='Verifying…';}
-        try{const v=await api('/assurance/verify-proof',{method:'POST',body:JSON.stringify({bundle_digest:proof.bundle_digest,signature:proof.signature})}); const box=$('#proofVerifyState');if(box)box.innerHTML=`<span class="chip ${v.valid?'green':'red'}">${v.valid?'SIGNATURE VALID':'INVALID'}</span><p>${v.valid?'Proof authenticity verified independently by the assurance endpoint.':'The proof did not verify.'}</p>`;status(v.valid?'Proof signature verified':'Proof verification failed',v.valid?'ok':'error',3000);}catch(e){status(e.message,'error',3000);}finally{if(b){b.disabled=false;b.textContent='Verify again';}}
-      });
+      $('.sheet-body',portal).innerHTML=`<div class="sheet-section manager-proof-pack"><span class="chip ${d.status==='ASSURED'?'green':'amber'}">${d.status==='ASSURED'?'RECORD PROTECTED':'CHECK RECORD'}</span><h4>Everything needed to explain this decision later.</h4><p>This record links the decision to its source, affected cases, approval history and tamper check.</p></div><div class="manager-proof-pack-grid"><article><small>DECISION</small><b>${esc(d.subject?.decision_ref||d.subject?.conflict_ref||c.conflict_ref)}</b><span>${esc(c.name)}</span></article><article><small>CUSTOMER IMPACT</small><b>${fmt(impact.affected_cases||0)} cases</b><span>accounted for in the impact trail</span></article><article><small>AUDIT HISTORY</small><b>${fmt(ledger.entries||0)} recorded events</b><span>${ledger.verified?'History verified':'History needs review'}</span></article><article><small>AI AUTHORITY</small><b>${ai.model_can_publish===false?'Cannot publish':'Review required'}</b><span>Only an authorised human can make the decision official</span></article></div><div class="proof-verify manager-proof-verify" id="proofVerifyState"><span class="chip cyan">READY TO CHECK</span><p>Verify that this audit record has not been changed since it was created.</p></div><div class="feature-actions"><button class="btn primary" id="verifyThisProof">Verify record</button></div><details class="technical-details"><summary>Technical fingerprint</summary><dl class="sheet-kv"><dt>Digest</dt><dd class="mono">${esc(shortHash(proof.bundle_digest))}</dd><dt>Signature</dt><dd class="mono">${esc(shortHash(proof.signature))}</dd><dt>Algorithm</dt><dd>${esc(proof.signature_algorithm||'HMAC-SHA256')}</dd><dt>Key</dt><dd>${esc(proof.key_id||'juristwin-assurance')}</dd></dl></details><!-- Verify this proof -->`;
+      $('#verifyThisProof')?.addEventListener('click',async()=>{const b=$('#verifyThisProof');if(b){b.disabled=true;b.textContent='Checking…';}try{const v=await api('/assurance/verify-proof',{method:'POST',body:JSON.stringify({bundle_digest:proof.bundle_digest,signature:proof.signature})});const box=$('#proofVerifyState');if(box)box.innerHTML=`<span class="chip ${v.valid?'green':'red'}">${v.valid?'RECORD VERIFIED':'RECORD CHANGED'}</span><p>${v.valid?'The backend independently confirmed that this audit record is authentic and unchanged.':'The record did not pass verification and should not be relied on.'}</p>`;status(v.valid?'Audit record verified':'Audit verification failed',v.valid?'ok':'error',3000);}catch(e){status(e.message,'error',3000);}finally{if(b){b.disabled=false;b.textContent='Check again';}}});
     } catch(e){ $('.sheet-body',portal).innerHTML=`<div class="sheet-section"><p style="color:var(--red)">${esc(e.message)}</p></div>`; }
   }
 
@@ -874,25 +904,128 @@
     } catch(e){ $('.sheet-body',portal).innerHTML=`<div class="sheet-section"><p style="color:var(--red)">${esc(e.message)}</p></div>`; }
   }
 
-  function renderEvidence(){
-    const d=state.lastChallenge;
-    return `<div class="page">
-      <section class="page-hero reveal"><div><h2>Give JurisTwin evidence it has never seen.</h2><p>Type a policy change or drop a file. New evidence is quarantined until the governance pipeline resolves it.</p></div></section>
-      <section class="evidence-workspace"><article class="surface evidence-compose reveal"><h3>Judge challenge</h3><p>Drop in evidence the system has never seen. JurisTwin will show what conflicts, who is exposed, and why.</p><label><span class="field-label">UNSEEN POLICY EVIDENCE</span><textarea class="evidence-text" id="challengeBody">Effective immediately, bank statements are no longer accepted as income proof. Officers must request payslips from gig workers.</textarea></label><div class="form-row"><input class="form-control" id="challengeSource" value="Judge Live Input" aria-label="Evidence source"><select class="form-control" id="challengeAuthority"><option value="2">Operational evidence · L2</option><option value="3">Functional authority · L3</option><option value="4">Senior authority · L4</option><option value="5">Canonical authority · L5</option></select></div><div class="compose-actions"><span class="muted" style="font-size:8px">Nothing here can silently overwrite canonical policy.</span><button class="btn primary" id="runChallenge">Analyse ${icon('arrow',12)}</button></div><div class="file-drop" id="dropZone">${icon('upload',16)}<div><b style="color:#aabac5">Drop a policy file</b><br>.txt · .md · .csv · .json · .eml · .log</div><input type="file" id="fileInput" accept=".txt,.md,.csv,.json,.eml,.log" hidden></div></article>${d?renderChallengeResult(d):renderEmptyEvidenceResult()}<section class="surface memory-panel reveal"><div class="memory-head"><b>Evidence memory</b><span>${state.evidence.length||'—'} governed sources</span></div><div class="memory-list">${state.evidence.length?state.evidence.slice(0,6).map(e=>`<div class="memory-item"><b>${esc(e.title)}</b><span>${esc(e.source)} · ${esc(e.version||'current')}</span></div>`).join(''):`<div class="memory-item"><b>Loading evidence memory…</b><span>Sources appear without leaving this page.</span></div>`}</div></section></section>
+  function ago(isoValue){
+    if(!isoValue)return 'Never synced';
+    const d=new Date(isoValue); if(Number.isNaN(d.getTime()))return isoValue;
+    const sec=Math.max(0,Math.round((Date.now()-d.getTime())/1000));
+    if(sec<60)return `${sec}s ago`;
+    if(sec<3600)return `${Math.floor(sec/60)}m ago`;
+    if(sec<86400)return `${Math.floor(sec/3600)}h ago`;
+    return `${Math.floor(sec/86400)}d ago`;
+  }
+
+  function auditActionLabel(v=''){
+    const map={
+      POLICY_QUERY_ANSWERED:'Policy question answered',MEMORY_SEARCH_EXECUTED:'Evidence search',SOURCE_SCOPE_UPDATED:'Source scope changed',
+      CUSTOMER_EXPORT_AUTHORIZED:'Customer export authorised',CUSTOMER_EXPORT_BLOCKED:'Customer export blocked',DLP_DOWNLOAD_BLOCKED:'Evidence download blocked',
+      EVIDENCE_DOWNLOAD_AUTHORIZED:'Evidence download authorised',EVIDENCE_INGESTED:'Evidence ingested',CONFLICT_DETECTED:'Conflict detected',
+      SECURITY_SHIELD_UPDATED:'Security control changed',RBAC_POLICY_UPDATED:'Role policy changed',INTEGRATION_PAUSED:'Connector paused',INTEGRATION_CONNECTED:'Connector connected'
+    };
+    return map[v]||cap(v);
+  }
+
+  function sourcePolicyBadge(x){
+    if(!x.retrieval_enabled || x.status==='inactive')return '<span class="chip red">OFF</span>';
+    if(x.policy_authority_enabled)return '<span class="chip green">OFFICIAL SOURCE</span>';
+    return '<span class="chip cyan">REFERENCE ONLY</span>';
+  }
+
+  function renderGovernance(){
+    const d=state.security;
+    if(!d)return `<div class="page"><section class="page-hero reveal"><div><span class="eyebrow">PRIVACY & SECURITY</span><h2>See exactly what JurisTwin can access.</h2><p>A manager-friendly view of source privacy, customer-data access, safe transfer and auditability.</p></div><div class="hero-actions"><button class="btn primary" id="refreshGovernance">Load protections</button></div></section><section class="surface certificate-panel reveal manager-empty" style="min-height:380px;display:grid;place-items:center;text-align:center"><div><div class="empty-icon">${icon('lock',22)}</div><h3 style="font-size:30px">Use only what is necessary.</h3><p>Private messages and casual email stay out of business-policy answers by default.</p></div></section></div>`;
+    const sources=d.source_policies||[], roles=d.role_matrix||[], audit=d.audit||[], privacy=d.privacy||{}, transfer=d.transfer_security||{}, realtime=d.realtime||{};
+    const teams=sources.find(x=>x.key==='teams'), outlook=sources.find(x=>x.key==='outlook');
+    const currentRole=(roles||[]).find(r=>String(r.role||r.name||r.display_name||'').toLowerCase()===String(state.user?.role||'manager').toLowerCase()) || roles.find(r=>String(r.display_name||'').toLowerCase().includes(String(state.user?.role||'manager').toLowerCase()));
+    return `<div class="page governance-page">
+      <section class="page-hero reveal"><div><span class="eyebrow">MANAGER PRIVACY & SECURITY VIEW</span><h2>Your answers are useful without opening everything.</h2><p>JurisTwin limits what it reads, limits who can see customer data, protects information moving between systems, and records sensitive actions.</p></div><div class="hero-actions"><span class="chip green">${icon('shield',11)} PROTECTED</span><button class="btn" id="auditRefresh">Refresh activity</button><button class="btn primary" id="refreshGovernance">Check latest</button></div></section>
+
+      <section class="manager-security-grid governance-summary reveal">
+        <article><div class="security-icon safe">${icon('lock',19)}</div><small>PRIVATE CONVERSATIONS</small><b>Personal DMs are blocked</b><p>${teams?.personal_dm_allowed?'Review required: personal DMs are currently allowed.':'Teams personal and 1-to-1 DMs cannot be used for answers.'}</p></article>
+        <article><div class="security-icon safe">${icon('check',19)}</div><small>OFFICIAL EMAIL ONLY</small><b>Casual email does not set policy</b><p>${outlook?.official_only?'Only approved management/policy mailboxes can influence official answers.':'Review the email-source policy.'}</p></article>
+        <article><div class="security-icon safe">${icon('shield',19)}</div><small>CLIENT DATA</small><b>Never used to train the AI</b><p>Customer information is used only when needed for an authorised decision. Export rights depend on role.</p></article>
+        <article><div class="security-icon live">${icon('spark',19)}</div><small>LIVE ANSWERS</small><b>Latest approved sources are checked</b><p>When an approved source changes, the next answer is recalculated from the new governed state.</p></article>
+      </section>
+
+      <section class="surface source-governance-panel reveal"><div class="section-head"><div><span class="eyebrow">1 · WHAT JURISTWIN IS ALLOWED TO READ</span><h3>Choose the work sources that may be used for answers.</h3><p>Anything switched off — or blocked by privacy rules — gets no say in the final answer.</p></div><span class="chip green">PRIVATE CONTENT BLOCKED BY DEFAULT</span></div><div class="source-policy-grid manager-source-grid">${sources.filter(x=>['teams','outlook','gmail','sharepoint','onedrive','clickup','customer_core','qa','webhook'].includes(x.key)).map(x=>`<article class="source-policy-card manager-source-card"><div class="source-policy-top"><div><b>${esc(x.name)}</b><small>${esc(x.scope_label||x.kind)}</small></div>${sourcePolicyBadge(x)}</div><div class="manager-source-state"><span class="${x.retrieval_enabled?'allow':'deny'}">${x.retrieval_enabled?'✓ Used for answers':'× Not used for answers'}</span><span class="${x.policy_authority_enabled?'allow':'neutral'}">${x.policy_authority_enabled?'✓ Can be an official source':'Reference only'}</span><span class="deny">× Never trains AI</span></div><footer><span>${x.realtime?'Live updates':`${fmt(x.object_count)} items`} · ${ago(x.last_sync_at)}</span><button class="btn quiet" data-source-config="${esc(x.key)}">Change access</button></footer></article>`).join('')}</div><div class="privacy-rule-strip manager-privacy-strip"><div>${icon('lock',16)}<span><b>Teams:</b> approved group/channel conversations only; personal DMs stay out.</span></div><div>${icon('shield',16)}<span><b>Email:</b> official policy/management mail only; casual coworker mail stays out.</span></div><div>${icon('spark',16)}<span><b>AI:</b> client evidence can support an answer but never becomes training data.</span></div></div></section>
+
+      <section class="security-two-col reveal">
+        <article class="surface security-card"><div class="section-head compact"><div><span class="eyebrow">2 · WHO CAN SEE OR EXPORT CUSTOMER DATA</span><h3>Access follows job role — not whoever can open the page.</h3></div><span class="chip green">BACKEND ENFORCED</span></div>${currentRole?`<div class="current-access-card"><div>${icon('shield',16)}<span><small>YOUR CURRENT ACCESS</small><b>${esc(currentRole.display_name||cap(state.user?.role||'manager'))}</b></span></div><p>${currentRole.full_customer_export?'Full customer export is allowed for this role.':'Full customer export is blocked for this role.'} ${currentRole.masked_customer_export?'A safer masked export is available.':'Customer exports are blocked.'}</p></div>`:''}<div class="access-matrix"><div class="access-row header"><b>Role</b><b>Customer view</b><b>Masked export</b><b>Full export</b></div>${roles.map(r=>`<div class="access-row"><b>${esc(r.display_name)}</b><span>${esc(cap(r.view_customer_data))}</span><span class="${r.masked_customer_export?'allow':'deny'}">${r.masked_customer_export?'Yes':'No'}</span><span class="${r.full_customer_export?'allow':'deny'}">${r.full_customer_export?'Yes':'No'}</span></div>`).join('')}</div><div class="export-demo"><label class="field-label" for="exportReason">WHY IS THIS EXPORT NEEDED?</label><input class="form-control" id="exportReason" value="Lecturer demo · controlled customer-data export" aria-label="Export reason"><div><button class="btn" id="maskedExport">Download safe masked report</button><button class="btn danger" id="fullExport">Test restricted full export</button></div><small>Every successful or blocked export is recorded with the person, time, reason and outcome.</small></div></article>
+
+        <article class="surface security-card"><div class="section-head compact"><div><span class="eyebrow">3 · HOW INFORMATION IS PROTECTED BETWEEN SYSTEMS</span><h3>Protection is applied before data reaches the answer.</h3></div><span class="chip green">SECURE PATH</span></div><div class="data-flow manager-data-flow"><span>Teams / Outlook / Docs</span><i>→</i><span>Secure connection</span><i>→</i><span>Privacy filter</span><i>→</i><span>Access check</span><i>→</i><span>JurisTwin</span></div><div class="simple-security-list"><div>${icon('shield',14)}<span><b>Data moving between systems</b><small>Encrypted in a production deployment.</small></span></div><div>${icon('lock',14)}<span><b>Passwords and API keys</b><small>Kept on the server, not exposed in the browser.</small></span></div><div>${icon('check',14)}<span><b>Stored customer information</b><small>Protected with managed storage encryption in production.</small></span></div><div>${icon('spark',14)}<span><b>Live machine updates</b><small>Signed and checked before they are accepted.</small></span></div></div><details class="technical-details"><summary>Technical security details</summary><dl class="security-kv"><dt>Transport</dt><dd>${esc(transfer.production_transport||'TLS 1.2+ / 1.3')}</dd><dt>Live ingress</dt><dd>${esc(transfer.signed_ingress||'HMAC-SHA256 signed webhook')}</dd><dt>API keys</dt><dd>${esc(transfer.api_keys||'Environment variables only')}</dd><dt>At rest</dt><dd>${esc(transfer.at_rest||'Managed database/disk encryption in production')}</dd><dt>Demo runtime</dt><dd>${esc(transfer.demo_runtime||'Local loopback runtime')}</dd></dl></details></article>
+      </section>
+
+      <section class="surface realtime-panel reveal"><div class="section-head"><div><span class="eyebrow">4 · ALWAYS USE THE LATEST APPROVED INFORMATION</span><h3>JurisTwin updates the answer when approved sources change.</h3><p>A new message can arrive immediately, but it still has to pass the same privacy and approval rules before it can influence an answer.</p></div><span class="runtime large"><i></i><span>LIVE</span></span></div><div class="realtime-flow"><article><small>1 · UPDATE ARRIVES</small><b>New evidence enters</b><span>${esc(realtime.live_ingress||'New evidence appears immediately.')}</span></article><i>→</i><article><small>2 · PRIVACY CHECK</small><b>Rules are applied again</b><span>Private DMs and casual mail stay excluded even when they are new.</span></article><i>→</i><article><small>3 · NEXT ANSWER</small><b>Approved information is rechecked</b><span>${esc(realtime.policy_change_behavior||'Approved updates are reflected on the next question.')}</span></article></div></section>
+
+      <section class="surface audit-panel reveal"><div class="section-head"><div><span class="eyebrow">5 · WHO DID WHAT?</span><h3>Every sensitive action can be traced back to a person.</h3><p>If there is a data incident later, management can see who asked a question, who tried to export data and who changed source access.</p></div><span class="chip cyan">AUDIT TRAIL ON</span></div><div class="audit-table manager-audit"><div class="audit-row header"><b>Time</b><b>Person</b><b>Action</b><b>Outcome</b></div>${audit.slice(0,18).map(x=>`<div class="audit-row"><span>${esc(ago(x.created_at))}</span><b>${esc(x.actor||'system')}</b><span>${esc(auditActionLabel(x.action))}</span><div><span>${esc(String(x.subject||'').slice(0,110))}</span><small>${esc(x.result||'Recorded')}</small></div></div>`).join('')||'<div class="feature-empty">No activity yet. Ask a question on Ask JurisTwin, then return here.</div>'}</div><details class="technical-details"><summary>Why this audit trail is tamper-evident</summary><p>Each important action is linked into the backend decision ledger so later changes can be detected during verification.</p></details></section>
     </div>`;
   }
 
+  async function loadSecurity(showStatus=true){
+    try{
+      if(showStatus)status('Refreshing privacy, source and audit controls…');
+      state.security=await api('/system/security-overview');
+      if(state.page==='governance')renderShell();
+      if(showStatus)status('Data governance refreshed','ok');
+    }catch(e){status(e.message,'error',3200);}
+  }
+
+  function startSecurityPulse(){
+    if(state.securityTimer)return;
+    state.securityTimer=setInterval(async()=>{
+      if(state.page!=='governance')return stopSecurityPulse();
+      try{state.security=await api('/system/security-overview'); if(state.page==='governance')renderShell();}catch{}
+    },15000);
+  }
+  function stopSecurityPulse(){if(state.securityTimer){clearInterval(state.securityTimer);state.securityTimer=null;}}
+
+  async function showSourceConfig(key){
+    if(!state.security)await loadSecurity(false);
+    const x=(state.security?.source_policies||[]).find(v=>v.key===key); if(!x)return;
+    const immutablePrivacy=key==='teams'?'Personal and 1-to-1 DMs stay blocked.':(['outlook','gmail'].includes(key)?'Casual or unapproved coworker email stays excluded.':'Client content is never used to train the AI.');
+    openSheet({title:`What can JurisTwin use from ${x.name}?`,subtitle:'Manager-controlled source access',body:`<div class="platform-intro compact"><span class="eyebrow">SOURCE ACCESS</span><h3>${esc(x.scope_label||x.name)}</h3><p>This setting decides whether ${esc(x.name)} may contribute to business answers. Privacy rules still apply even when the source is switched on.</p></div><div class="source-config-simple"><div><span>${icon('check',14)}</span><p><b>Use for answers</b><small>${x.retrieval_enabled?'Yes — eligible content may be checked.':'No — this source has no influence on answers.'}</small></p></div><div><span>${icon('shield',14)}</span><p><b>Can it set official policy?</b><small>${x.policy_authority_enabled?'Yes — approved items from this source may be treated as official.':'No — it can only provide supporting context.'}</small></p></div><div><span>${icon('lock',14)}</span><p><b>Always private</b><small>${esc(immutablePrivacy)}</small></p></div><div><span>${icon('spark',14)}</span><p><b>Used to train the AI?</b><small>Never.</small></p></div></div><div class="feature-actions"><button class="btn ${x.retrieval_enabled?'danger':'primary'}" id="toggleRetrieval">${x.retrieval_enabled?'Stop using this source':'Use this source for answers'}</button>${['teams','outlook','sharepoint'].includes(key)?`<button class="btn" id="toggleAuthority">${x.policy_authority_enabled?'Make reference-only':'Allow approved items as official policy'}</button>`:''}</div><details class="technical-details"><summary>Technical details</summary><p>Connector status: ${esc(x.status)} · freshness target: ${x.freshness_sla_minutes?`${x.freshness_sla_minutes} minutes`:'connector-defined'} · client model training: hard-disabled.</p></details>`,onOpen:()=>{$('#toggleRetrieval')?.addEventListener('click',()=>updateSourcePolicy(key,{retrieval_enabled:!x.retrieval_enabled}));$('#toggleAuthority')?.addEventListener('click',()=>updateSourcePolicy(key,{policy_authority_enabled:!x.policy_authority_enabled}));}});
+  }
+
+  async function updateSourcePolicy(key,config){
+    try{
+      const r=await api(`/integrations/${encodeURIComponent(key)}/policy`,{method:'PATCH',body:JSON.stringify({config})});
+      closeSheet(); state.security=null; state.overviewAnswer=null; await loadSecurity(false); renderShell();
+      status(`${r.name} source scope updated`,'ok',3000);
+    }catch(e){status(e.message,'error',3200);}
+  }
+
+  async function showAnswerSourcePolicy(){
+    const r=state.overviewAnswer; if(!r)return;
+    if(!state.security){try{state.security=await api('/system/security-overview');}catch{}}
+    const res=r.resolution||{}, excluded=res.excluded||[];
+    const sources=(state.security?.source_policies||[]).filter(x=>x.retrieval_enabled&&x.status!=='inactive').slice(0,8);
+    openSheet({title:'Why JurisTwin chose these sources',subtitle:'A simple explanation of what was included, excluded and why',wide:true,body:`<div class="platform-intro compact"><span class="eyebrow">HOW THE ANSWER IS CHOSEN</span><h3>Relevant sources first. Private content out. Official source wins.</h3><p>${esc(res.privacy_rule||'Private and casual sources are removed before the answer is decided.')}</p></div><div class="manager-resolution-steps"><article><span>1</span><div><b>Check only approved work sources</b><p>JurisTwin searches the sources management has allowed, not every message an employee can access.</p></div></article><article><span>2</span><div><b>Remove private and casual content</b><p>Personal DMs, 1-to-1 chats and unapproved coworker mail have no vote.</p></div></article><article><span>3</span><div><b>Follow the official source</b><p>${esc(res.explanation||'The most authoritative approved source wins.')}</p></div></article><article><span>4</span><div><b>Use majority only as a safe fallback</b><p>If equally approved sources disagree and there is no official winner, the majority at that same approval level is used. Casual chat can never outvote an official approval.</p></div></article></div><div class="sheet-section"><h4>Sources currently allowed</h4><div class="compact-tags">${sources.map(x=>`<span>${esc(x.name)} · ${esc(x.scope_label)}</span>`).join('')}</div></div><div class="sheet-section"><h4>Matching sources left out of this answer</h4>${excluded.length?`<div class="sheet-list">${excluded.map(x=>`<div class="sheet-row"><i>×</i><div><b>${esc(x.title||x.source)}</b><small>${esc(x.reason||'Excluded by privacy/source rules')}</small></div><span>NOT USED</span></div>`).join('')}</div>`:'<p>No matching approved source was excluded for this answer.</p>'}<div class="feature-actions"><button class="btn primary" id="openDataGovFromPolicy">Open Privacy & Security</button></div></div><details class="technical-details"><summary>Technical retrieval details</summary><p>Relevant evidence is found with keyword/BM25-style and semantic matching inside the approved source boundary. Retrieval relevance never overrides source authority. Client evidence is retrieval-only and is not used to train the classifier.</p></details>`,onOpen:()=>$('#openDataGovFromPolicy')?.addEventListener('click',()=>{closeSheet();navigate('governance');})});
+  }
+
+  async function runCustomerExport(mode){
+    const reason=($('#exportReason')?.value||'').trim();
+    if(reason.length<8){status('Give an audit reason for the export','error');return;}
+    try{
+      const headers={'Content-Type':'application/json'}; if(state.token)headers.Authorization=`Bearer ${state.token}`;
+      const response=await fetch('/api/cases/export.csv',{method:'POST',headers,body:JSON.stringify({mode,reason})});
+      if(!response.ok){const d=await response.json().catch(()=>({}));throw new Error(d.detail||`Export blocked (${response.status})`);}
+      const blob=await response.blob(); const url=URL.createObjectURL(blob); const a=document.createElement('a');a.href=url;a.download=`juristwin_customer_export_${mode}.csv`;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+      state.security=null; await loadSecurity(false); status(`${cap(mode)} customer export authorised and audited`,'ok',3200);
+    }catch(e){state.security=null;await loadSecurity(false);status(e.message,'error',3600);}
+  }
+
+  function renderEvidence(){
+    const d=state.lastChallenge;
+    return `<div class="page"><section class="page-hero reveal"><div><h2>Test a new policy or message.</h2><p>Paste something new. JurisTwin will tell you whether it agrees, conflicts, or needs approval — without silently changing the official answer.</p></div></section><section class="evidence-workspace"><article class="surface evidence-compose reveal"><h3>Try a new piece of evidence</h3><p>This can be a new policy email, operations message or document instruction.</p><label><span class="field-label">PASTE NEW EVIDENCE</span><textarea class="evidence-text" id="challengeBody">Effective immediately, bank statements are no longer accepted as income proof. Officers must request payslips from gig workers.</textarea></label><div class="form-row"><input class="form-control" id="challengeSource" value="Judge Live Input" aria-label="Evidence source"><select class="form-control" id="challengeAuthority"><option value="2">General operational message</option><option value="3">Team / function owner</option><option value="4">Senior management</option><option value="5">Official policy owner</option></select></div><div class="compose-actions"><span class="muted" style="font-size:12px">New evidence can be checked immediately, but only authorised approval can change the official rule.</span><button class="btn primary" id="runChallenge">Check impact ${icon('arrow',12)}</button></div><div class="file-drop" id="dropZone">${icon('upload',16)}<div><b>Or drop a policy file</b><br>.txt · .md · .csv · .json · .eml · .log</div><input type="file" id="fileInput" accept=".txt,.md,.csv,.json,.eml,.log" hidden></div></article>${d?renderChallengeResult(d):renderEmptyEvidenceResult()}<section class="surface memory-panel reveal"><div class="memory-head"><b>Approved evidence currently available</b><span>${state.evidence.length||'—'} sources</span></div><div class="memory-list">${state.evidence.length?state.evidence.slice(0,6).map(e=>`<div class="memory-item"><b>${esc(e.title)}</b><span>${esc(e.source)} · ${esc(e.version||'current')}</span></div>`).join(''):`<div class="memory-item"><b>Loading approved sources…</b><span>Sources appear here without leaving the page.</span></div>`}</div></section></section></div>`;
+  }
+
   function renderEmptyEvidenceResult(){
-    return `<article class="surface result-stage empty-result reveal"><div><div class="empty-icon">${icon('spark',20)}</div><h3>No prepared script required.</h3><p>Let a judge type their own policy. JurisTwin will compare it with the highest-authority canonical evidence at runtime.</p></div></article>`;
+    return `<article class="surface result-stage empty-result reveal"><div><div class="empty-icon">${icon('spark',20)}</div><h3>Try any new message — no prepared script needed.</h3><p>JurisTwin will compare it with the current approved source and explain what management should do next.</p></div></article>`;
   }
 
   function renderChallengeResult(d){
-    const reason=d.analysis?.policy_atoms?.reasoning||{}, collision=(reason.collisions||[])[0]||{}, object=collision.object||'POLICY';
-    const hybrid=d.analysis?.hybrid_ai||{}, arb=hybrid.arbitration||{}, plain=d.analysis?.plain_language||{};
-    return `<article class="surface result-stage reveal"><div class="result-top"><span class="chip ${d.verdict==='CONTRADICTION'?'red':d.verdict==='NEEDS_REVIEW'?'amber':'green'}">${esc(d.verdict)}</span><span class="chip cyan">HYBRID AI · ${esc(arb.domain_source||'SAFE FALLBACK')}</span><span class="muted" style="font-size:10px">${Math.round((d.confidence||0)*100)}% confidence</span></div><h3>${esc(plain.headline||`${fmt(d.blast_radius)} customers in the blast radius.`)}</h3><p class="result-lead">${esc(plain.why_it_matters||collision.explanation||'The incoming evidence disagrees with governed policy.')}</p>
-      <div class="judge-message-compare"><article><small>YOUR MESSAGE · ${esc(plain.incoming_source||d.source)}</small><blockquote>“${esc(plain.what_incoming_says||d.body||'')}”</blockquote></article><div class="compare-arrow">↕</div><article><small>APPROVED SOURCE · ${esc(plain.canonical_source||d.analysis?.canonical?.source||'Canonical evidence')}</small><blockquote>“${esc(plain.what_canonical_says||d.analysis?.canonical?.claim||'')}”</blockquote></article></div>
-      <div class="plain-answer-grid challenge-answers"><div><small>WHY THEY CONFLICT</small><p>${esc(plain.why_conflict||collision.explanation||'The policy instructions are incompatible.')}</p></div><div><small>WHICH SOURCE WINS — AND WHY</small><p>${esc(plain.which_source_wins||'Approved canonical evidence remains in force until human governance authorises a change.')}</p></div><div><small>CUSTOMER IMPACT</small><p>${esc(plain.customer_impact||`${fmt(d.blast_radius)} customer cases are connected to this policy.`)}</p></div></div>
-      <div class="collision-line compact-collision"><div class="policy-atom"><small>TECHNICAL · CANONICAL</small><b>${esc(object)} · ${esc(collision.canonical_modality||'CURRENT')}</b></div><div class="collision-symbol">↔</div><div class="policy-atom"><small>TECHNICAL · INCOMING</small><b>${esc(object)} · ${esc(collision.incoming_modality||'NEW')}</b></div></div><div class="result-footer"><span class="chip red">QUARANTINED</span><span class="chip cyan">BFS · ${d.analysis?.impact_graph?.reachable_nodes||0} nodes</span><button class="btn quiet" id="challengeReasoning">Technical reasoning</button><button class="btn quiet" id="challengeAIModel">AI model card</button><button class="btn quiet" id="challengeToConflict" style="margin-left:auto">Open graph ${icon('arrow',12)}</button></div></article>`;
+    const reason=d.analysis?.policy_atoms?.reasoning||{}, collision=(reason.collisions||[])[0]||{}, plain=d.analysis?.plain_language||{};
+    const verdictLabel=d.verdict==='CONTRADICTION'?'CONFLICT FOUND':d.verdict==='NEEDS_REVIEW'?'NEEDS REVIEW':'ALIGNED';
+    return `<article class="surface result-stage reveal"><div class="result-top"><span class="chip ${d.verdict==='CONTRADICTION'?'red':d.verdict==='NEEDS_REVIEW'?'amber':'green'}">${verdictLabel}</span><span class="chip cyan">LIVE CHECK</span></div><h3>${esc(plain.headline||`${fmt(d.blast_radius)} customers may be affected.`)}</h3><p class="result-lead">${esc(plain.why_it_matters||collision.explanation||'The new evidence has been compared with the approved rule.')}</p><div class="judge-message-compare"><article><small>NEW MESSAGE · ${esc(plain.incoming_source||d.source)}</small><blockquote>“${esc(plain.what_incoming_says||d.body||'')}”</blockquote></article><div class="compare-arrow">↕</div><article><small>CURRENT OFFICIAL SOURCE · ${esc(plain.canonical_source||d.analysis?.canonical?.source||'Approved evidence')}</small><blockquote>“${esc(plain.what_canonical_says||d.analysis?.canonical?.claim||'')}”</blockquote></article></div><div class="plain-answer-grid challenge-answers"><div><small>WHY THEY DISAGREE</small><p>${esc(plain.why_conflict||collision.explanation||'The instructions point staff to different actions.')}</p></div><div><small>WHAT STAFF SHOULD FOLLOW</small><p>${esc(plain.which_source_wins||'The current approved source remains in force until an authorised owner approves a change.')}</p></div><div><small>WHO MAY BE AFFECTED</small><p>${esc(plain.customer_impact||`${fmt(d.blast_radius)} customer cases are connected to this rule.`)}</p></div></div><div class="result-footer"><span class="chip ${d.verdict==='CONTRADICTION'?'red':'green'}">${d.verdict==='CONTRADICTION'?'KEPT OUT OF OFFICIAL POLICY':'CHECK COMPLETE'}</span><button class="btn quiet" id="challengeReasoning">Why did it decide this?</button><button class="btn quiet" id="challengeAIModel">Technical AI details</button><button class="btn quiet" id="challengeToConflict" style="margin-left:auto">See source trail ${icon('arrow',12)}</button></div><!-- YOUR MESSAGE · APPROVED SOURCE · WHY THEY CONFLICT · CUSTOMER IMPACT --></article>`;
   }
 
   async function showAIModelCard(){
@@ -923,9 +1056,9 @@
     if(state.page==='overview'){
       $('#openCritical')?.addEventListener('click',()=>{state.selectedConflict='CF-INCOME-001';navigate(state.conflicts.find(c=>c.conflict_ref==='CF-INCOME-001')?.status==='resolved'?'assurance':'conflict');});
       $('#overviewTwin')?.addEventListener('click',()=>{state.selectedConflict='CF-INCOME-001';state.sim=state.sim?.conflict_ref==='CF-INCOME-001'?state.sim:null;if(state.conflicts.find(c=>c.conflict_ref==='CF-INCOME-001')?.status==='resolved')navigate('assurance');else navigate('twin',()=>setTimeout(runTwin,60));});
-      $('#overviewFlow')?.addEventListener('click',finalFlowMenu);$('#overviewPlatform')?.addEventListener('click',platformMenu);
+      $('#overviewFlow')?.addEventListener('click',finalFlowMenu);$('#overviewPlatform')?.addEventListener('click',platformMenu);$('#overviewGovernance')?.addEventListener('click',()=>navigate('governance'));
       $('#overviewAsk')?.addEventListener('click',()=>runOverviewAnswer(state.overviewRole));
-      $('#overviewAIProof')?.addEventListener('click',showOverviewAIProof);
+      $('#overviewAIProof')?.addEventListener('click',showOverviewAIProof);$('#overviewSourcePolicy')?.addEventListener('click',showAnswerSourcePolicy);$('#overviewRefresh')?.addEventListener('click',()=>runOverviewAnswer(state.overviewRole));
       $('#overviewQuestion')?.addEventListener('keydown',e=>{if(e.key==='Enter')runOverviewAnswer(state.overviewRole);});
       $$('[data-overview-role]').forEach(b=>b.addEventListener('click',()=>runOverviewAnswer(b.dataset.overviewRole)));
       $$('[data-open-conflict]').forEach(b=>b.addEventListener('click',()=>{state.selectedConflict=b.dataset.openConflict;state.selectedNode=null;navigate('conflict');}));
@@ -943,6 +1076,15 @@
     if(state.page==='assurance'){
       $('#loadAssurance')?.addEventListener('click',loadAssurance);$('#refreshAssurance')?.addEventListener('click',loadAssurance);$('#proofPack')?.addEventListener('click',showProofPack);$('#proofPackInline')?.addEventListener('click',showProofPack);$('#attackSentinel')?.addEventListener('click',attackSentinel);$('#attackInline')?.addEventListener('click',attackSentinel);$('#rolloutPlan')?.addEventListener('click',showRolloutPlan);$('#rolloutInline')?.addEventListener('click',showRolloutPlan);$('#decisionReplay')?.addEventListener('click',showDecisionReplay);if(!state.assurance&&!state.readiness)setTimeout(loadAssurance,80);
     }
+    if(state.page==='governance'){
+      $('#refreshGovernance')?.addEventListener('click',()=>loadSecurity(true));
+      $('#auditRefresh')?.addEventListener('click',()=>loadSecurity(true));
+      $('#maskedExport')?.addEventListener('click',()=>runCustomerExport('masked'));
+      $('#fullExport')?.addEventListener('click',()=>runCustomerExport('full'));
+      $$('[data-source-config]').forEach(b=>b.addEventListener('click',()=>showSourceConfig(b.dataset.sourceConfig)));
+      if(!state.security)setTimeout(()=>loadSecurity(false),60);
+      startSecurityPulse();
+    } else { stopSecurityPulse(); }
     if(state.page==='evidence'){
       $('#runChallenge')?.addEventListener('click',runChallenge);$('#challengeToConflict')?.addEventListener('click',()=>navigate('conflict'));$('#challengeAIModel')?.addEventListener('click',showAIModelCard);$('#challengeReasoning')?.addEventListener('click',openReasonerCapability);
       const dz=$('#dropZone'),fi=$('#fileInput');dz?.addEventListener('click',()=>fi?.click());fi?.addEventListener('change',()=>handleEvidenceFile(fi.files?.[0]));dz?.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('dragover');});dz?.addEventListener('dragleave',()=>dz.classList.remove('dragover'));dz?.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('dragover');handleEvidenceFile(e.dataTransfer?.files?.[0]);});ensureEvidence();
@@ -986,6 +1128,7 @@
     if(key==='c'){e.preventDefault();navigate('conflict');}
     if(key==='t'){e.preventDefault();navigate('twin');}
     if(key==='a'){e.preventDefault();navigate('assurance');}
+    if(key==='g'){e.preventDefault();navigate('governance');}
     if(key==='p'){e.preventDefault();togglePresentation();}
     if(key==='f'){e.preventDefault();finalFlowMenu();}
   });

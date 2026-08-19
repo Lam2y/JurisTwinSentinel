@@ -3,7 +3,7 @@ from sqlalchemy import text, select, func
 from sqlalchemy.orm import Session
 from ..db.database import get_db
 from ..core.security import current_user, require_roles
-from ..db.models import User, RolePolicy, SecurityShield, Integration, CustomerCase, Conflict, Evidence, LiveChallenge
+from ..db.models import User, RolePolicy, SecurityShield, Integration, CustomerCase, Conflict, Evidence, LiveChallenge, LedgerEntry
 from ..schemas import RolePolicyUpdate, ShieldUpdate
 from ..services.common import loads, dumps, iso
 from ..services.ledger import verify_chain, append_entry
@@ -121,7 +121,7 @@ def readiness(db:Session=Depends(get_db),user:User=Depends(current_user)):
 @router.get("/config")
 def config(db:Session=Depends(get_db),user:User=Depends(current_user)):
     roles=db.execute(select(RolePolicy).order_by(RolePolicy.id)).scalars().all();shields=db.execute(select(SecurityShield).order_by(SecurityShield.id)).scalars().all()
-    return {"rbac":[role_ser(r) for r in roles],"shields":[shield_ser(s) for s in shields],"retention":"7-Year Ledger Retention","mode":"JurisTwin Sentinel v5.7 Track-2 MaxScore Hybrid Decision Assurance Platform","current_role":user.role}
+    return {"rbac":[role_ser(r) for r in roles],"shields":[shield_ser(s) for s in shields],"retention":"7-Year Ledger Retention","mode":"JurisTwin Sentinel v5.8 Source-Governed Decision Assurance Platform","current_role":user.role}
 
 @router.patch("/roles/{role}")
 def update_role(role:str,body:RolePolicyUpdate,db:Session=Depends(get_db),user:User=Depends(require_roles("manager","compliance_manager"))):
@@ -144,3 +144,69 @@ def update_shield(key:str,body:ShieldUpdate,db:Session=Depends(get_db),user:User
     s.updated_by=user.email
     append_entry(db,"SECURITY_SHIELD_UPDATED",user.email,{"shield":key,"changes":changes})
     db.commit();db.refresh(s);return shield_ser(s)
+
+
+@router.get("/security-overview")
+def security_overview(db:Session=Depends(get_db),user:User=Depends(current_user)):
+    roles=db.execute(select(RolePolicy).order_by(RolePolicy.id)).scalars().all()
+    shields={s.key:s for s in db.execute(select(SecurityShield)).scalars().all()}
+    integrations=db.execute(select(Integration).order_by(Integration.id)).scalars().all()
+    export_cfg=loads(shields.get("customer_export").value_json,{}) if shields.get("customer_export") else {}
+    role_matrix=[]
+    for r in roles:
+        role_matrix.append({
+            "role":r.role,"display_name":r.display_name,"max_sensitivity":r.max_sensitivity,
+            "view_customer_data":"full" if r.role in {"manager","compliance_manager","product_owner"} else ("redacted" if r.role=="intern" else "assigned_only"),
+            "masked_customer_export":r.role in set(export_cfg.get("masked_roles",["manager","compliance_manager"])),
+            "full_customer_export":r.role in set(export_cfg.get("full_roles",["compliance_manager"])),
+            "ledger_export":bool(r.can_export_ledger),
+        })
+    source_policies=[]
+    for i in integrations:
+        d=loads(i.details_json,{})
+        source_policies.append({
+            "key":i.key,"name":i.name,"kind":i.kind,"status":i.status,"object_count":i.object_count,
+            "last_sync_at":iso(i.last_sync_at),"realtime":bool(d.get("realtime")),
+            "retrieval_enabled":bool(d.get("retrieval_enabled",True)),
+            "policy_authority_enabled":bool(d.get("policy_authority_enabled",False)),
+            "scope_label":d.get("scope_label") or "Configured source scope",
+            "personal_dm_allowed":bool(d.get("personal_dm_allowed",False)),
+            "official_only":bool(d.get("official_only",False)),
+            "client_training_allowed":False,
+            "freshness_sla_minutes":d.get("freshness_sla_minutes"),
+            "allowed_channels":d.get("allowed_channels",[]),
+            "allowed_sender_roles":d.get("allowed_sender_roles",[]),
+        })
+    recent=db.execute(select(LedgerEntry).order_by(LedgerEntry.id.desc()).limit(30)).scalars().all()
+    audit=[]
+    for e in recent:
+        payload=loads(e.payload_json,{})
+        audit.append({
+            "txid":e.txid,"action":e.action,"actor":e.actor,"created_at":iso(e.created_at),
+            "subject":payload.get("question_excerpt") or payload.get("evidence_ref") or payload.get("integration") or payload.get("conflict_ref") or payload.get("mode") or payload.get("role") or "Governed system action",
+            "result":payload.get("result_status") or payload.get("status") or ("BLOCKED" if "BLOCKED" in e.action else "RECORDED"),
+            "payload":payload,
+        })
+    return {
+        "privacy":{
+            "principle":"Minimum necessary evidence: source scope first, RBAC second, DLP on export.",
+            "teams":"Approved group/channel conversations only; personal/1:1 DMs are blocked from indexing by default.",
+            "email":"Only explicitly approved official management/policy mailboxes may influence policy resolution; casual coworker mail is excluded.",
+            "customer_data":"Customer records may prove operational impact but never define policy and never train the model.",
+            "model_training":"Client evidence is not used to retrain the local classifier or any external model. Administrators control retrieval/indexing scope instead.",
+        },
+        "transfer_security":{
+            "demo_runtime":"Loopback/local HTTP for finals resilience; no claim of TLS termination inside the local browser demo.",
+            "production_transport":"TLS 1.2+ / TLS 1.3 at the API gateway or reverse proxy; vendor connectors use OAuth/service credentials where available.",
+            "signed_ingress":"HMAC-SHA256 signed webhook with replay/idempotency protection is implemented for machine-to-machine events.",
+            "api_keys":"Secrets are server-side environment variables; never sent to the browser or stored in source-control defaults.",
+            "at_rest":"Production deployment should use encrypted managed PostgreSQL/disk encryption and enterprise KMS; the finals local fixture does not pretend to provide managed-database TDE.",
+        },
+        "realtime":{
+            "answer_recompute":"Every governed question re-runs retrieval and source-scope resolution against current database state.",
+            "live_ingress":"Signed webhook events are visible immediately but quarantined until governance if they attempt to change policy.",
+            "policy_change_behavior":"Approved source/Decision Contract changes are reflected on the next question without rebuilding the frontend.",
+        },
+        "role_matrix":role_matrix,"source_policies":source_policies,"audit":audit,
+        "current_user":{"email":user.email,"role":user.role},
+    }
