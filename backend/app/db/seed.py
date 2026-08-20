@@ -40,7 +40,7 @@ def ensure_governance_defaults(db: Session):
             row.name=name; row.description=desc; row.enabled=True; row.value_json=dumps(value)
 
     policies = {
-        "teams": {"retrieval_enabled":True,"policy_authority_enabled":True,"scope_label":"Approved group/channel chats only","channel_scope":"group_and_channels_only","personal_dm_allowed":False,"allowed_channels":["Operations Policy","Compliance","Product Governance"],"client_training_allowed":False,"freshness_sla_minutes":5},
+        "teams": {"retrieval_enabled":True,"policy_authority_enabled":False,"scope_label":"Approved group/channel chats only","channel_scope":"group_and_channels_only","personal_dm_allowed":False,"allowed_channels":["Operations Policy","Compliance","Product Governance"],"client_training_allowed":False,"freshness_sla_minutes":5},
         "outlook": {"retrieval_enabled":True,"policy_authority_enabled":True,"scope_label":"Official management/policy mailboxes only","official_only":True,"allowed_sender_roles":["Product Owner","Compliance Manager","Risk Committee"],"client_training_allowed":False,"freshness_sla_minutes":5},
         "gmail": {"retrieval_enabled":False,"policy_authority_enabled":False,"scope_label":"Official management mail only when explicitly enabled","official_only":True,"allowed_sender_roles":["Executive Management","Compliance Manager"],"client_training_allowed":False,"freshness_sla_minutes":10},
         "sharepoint": {"retrieval_enabled":True,"policy_authority_enabled":True,"scope_label":"Approved policy/SOP libraries","allowed_libraries":["Approved Policies","Controlled SOPs"],"client_training_allowed":False,"freshness_sla_minutes":15},
@@ -85,8 +85,21 @@ def seed_database(db: Session):
             db.add(User(email=email, name=name, role=role, password_hash=hash_password(settings.DEMO_PASSWORD), assigned_case_refs=dumps(assigned)))
         db.flush()
 
-    # If operational state already exists, startup is idempotent.
+    # If operational state already exists, keep it only when the seeded demo invariants still
+    # reconcile. This prevents an older/stale DB from producing a false Governance Gate BLOCK
+    # such as "0 operational cases reconcile to conflict blast radius" during a live demo.
     if db.execute(select(CustomerCase).limit(1)).scalar_one_or_none():
+        expected={FLAGSHIP_CONFLICT:27,"CF-RESTRUCTURE-002":11,"CF-NOTIFY-003":6}
+        mismatched=False
+        for ref,count in expected.items():
+            conflict=db.execute(select(Conflict).where(Conflict.conflict_ref==ref)).scalar_one_or_none()
+            if conflict:
+                actual=len(db.execute(select(CustomerCase).where(CustomerCase.conflict_ref==ref)).scalars().all())
+                if actual!=int(conflict.affected_customers or count):
+                    mismatched=True; break
+        if mismatched:
+            reset_database(db)
+            return
         ensure_governance_defaults(db)
         db.commit()
         return
@@ -119,7 +132,7 @@ def seed_database(db: Session):
     now = utcnow()
     integrations = [
         ("outlook", "Outlook Extractor", "mail", "connected", 12410, now-timedelta(minutes=3), {"metric":"mail objects", "errors":0, "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":True, "scope_label":"Official management/policy mailboxes only", "official_only":True, "allowed_sender_roles":["Product Owner","Compliance Manager","Risk Committee"], "client_training_allowed":False, "freshness_sla_minutes":5}),
-        ("teams", "MS Teams Listener", "chat", "connected", 45201, now-timedelta(minutes=1), {"metric":"chat lines", "errors":0, "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":True, "scope_label":"Approved group/channel chats only", "channel_scope":"group_and_channels_only", "personal_dm_allowed":False, "allowed_channels":["Operations Policy","Compliance","Product Governance"], "client_training_allowed":False, "freshness_sla_minutes":5}),
+        ("teams", "MS Teams Listener", "chat", "connected", 45201, now-timedelta(minutes=1), {"metric":"chat lines", "errors":0, "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":False, "scope_label":"Approved group/channel chats only", "channel_scope":"group_and_channels_only", "personal_dm_allowed":False, "allowed_channels":["Operations Policy","Compliance","Product Governance"], "client_training_allowed":False, "freshness_sla_minutes":5}),
         ("gmail", "Gmail Connector", "mail", "inactive", 0, None, {"metric":"objects", "errors":0, "note":"Paused · official management mail only when enabled", "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":False, "policy_authority_enabled":False, "scope_label":"Official management mail only when explicitly enabled", "official_only":True, "allowed_sender_roles":["Executive Management","Compliance Manager"], "client_training_allowed":False, "freshness_sla_minutes":10}),
         ("sharepoint", "SharePoint Indexer", "documents", "connected", 1420, now-timedelta(minutes=12), {"metric":"files indexed", "errors":1, "note":"1 sync warning", "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":True, "scope_label":"Approved policy/SOP libraries", "allowed_libraries":["Approved Policies","Controlled SOPs"], "client_training_allowed":False, "freshness_sla_minutes":15}),
         ("onedrive", "OneDrive Loader", "documents", "connected", 893, now-timedelta(hours=1), {"metric":"files indexed", "errors":0, "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":False, "policy_authority_enabled":False, "scope_label":"Personal drives excluded by default", "client_training_allowed":False, "freshness_sla_minutes":30}),

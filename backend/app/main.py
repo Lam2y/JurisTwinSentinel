@@ -31,7 +31,7 @@ async def lifespan(app: FastAPI):
         db.close()
     yield
 
-app = FastAPI(title="JurisTwin Sentinel API", version="5.7.0", description="JurisTwin Sentinel source-governed decision assurance, privacy-scoped enterprise retrieval, live evidence challenge, impact intelligence and auditable decision system", lifespan=lifespan)
+app = FastAPI(title="JurisTwin Sentinel API", version="6.0.0", description="JurisTwin Sentinel source-governed decision assurance, privacy-scoped enterprise retrieval, live evidence challenge, impact intelligence and auditable decision system", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=settings.CORS_ORIGINS, allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 logger = logging.getLogger("juristwin")

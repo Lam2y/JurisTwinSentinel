@@ -79,6 +79,7 @@ def serialize_evidence(db:Session,e:Evidence,user:User,score:float|None=None,ret
 def _matches(e, filters):
     f=filters or {}; meta=loads(e.metadata_json,{})
     if f.get("source") and f["source"]!="All" and f["source"].lower() not in (e.source or "").lower(): return False
+    if f.get("rule_key") and f["rule_key"]!="All" and f["rule_key"]!=(e.rule_key or ""): return False
     if f.get("customer") and f["customer"] not in {"Any","All"} and f["customer"].lower() not in str(meta.get("customer") or "").lower(): return False
     if f.get("project") and f["project"] not in {"Any","All"} and f["project"].lower()!=str(meta.get("project") or "").lower(): return False
     if f.get("sensitivity") and f["sensitivity"]!="All" and f["sensitivity"].lower()!=(e.sensitivity or "").lower(): return False
@@ -263,6 +264,7 @@ def governed_answer(db: Session, user: User, question: str) -> dict:
         .order_by(DecisionContract.id.desc())
     ).scalars().first()
 
+    retrieval_matches=search_memory(db,user,question,limit=8,filters={"rule_key":rule_key})
     resolution=resolve_by_authority_then_majority(db,rule_key)
     evidence=resolution.get('winner')
     source_mix = _source_mix(db, user, conflict, rule_key, limit=4)
@@ -362,13 +364,16 @@ def governed_answer(db: Session, user: User, question: str) -> dict:
         'conflict_ref':conflict.conflict_ref if conflict else None,'authority':authority,'version':version,'source':source,
         'model':{'engine':model.get('engine'),'domain_confidence':round(confidence,4),'abstained':False,'publication_authority':0},
         'citations':sources_used,'sources_used':sources_used,'primary_source':primary_source,
-        'source_mix':source_mix,'synthesis':synthesis,
+        'retrieval_matches':retrieval_matches,'source_mix':source_mix,'synthesis':synthesis,
         'resolution':{
             'mode':resolution_mode,'explanation':resolution_explanation,'authority_level':resolution.get('authority_level',6 if contract else None),
             'majority':majority,'eligible_count':resolution.get('eligible_count',len(sources_used)),
             'excluded_count':len(excluded),'excluded':excluded[:6],
+            'retrieval_match_count':len(retrieval_matches),
             'privacy_rule':'Personal Teams DMs and casual/unapproved mail are excluded before policy resolution.',
             'training_rule':'Client evidence is indexed for governed retrieval only; it is not used to train the local classifier or any external model.',
+            'retrieval_strategy':'Keyword/BM25 + semantic similarity inside the administrator-approved source scope.',
+            'winner_rule':'Active Decision Contract > approved authority > same-tier majority > human review.',
         },
         'freshness':{
             'evaluated_at':iso(now),'evidence_snapshot_at':iso(snapshot),'answer_recomputed':True,

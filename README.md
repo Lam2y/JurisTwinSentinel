@@ -1,4 +1,9 @@
-# JurisTwin Sentinel — Championship Adversarial MaxScore Edition v5.7
+# JurisTwin Sentinel — Manager-Friendly Decision Assurance Platform v6.1
+
+
+> **v6.1 Executive UX build:** keeps every v6.0 lecturer requirement and backend control, but removes dashboard overload. Main pages now use shorter copy, fewer visible proof items, concise status cards, shorter labels, and progressive disclosure for technical detail. Security remains obvious through simple states such as **DMs BLOCKED**, **Client AI Training OFF**, **Live Refresh ON**, and role-based export verdicts.
+
+> **v6.0 Lecturer-Complete build:** maps every lecturer recommendation to a working, manager-visible control. It adds the in-system **Management Controls** comparison page, functional approved Teams-group / official-sender / SharePoint-library scope enforcement, answer-first source lineage, authority-first + same-tier-majority conflict resolution, explicit privacy/export/transfer/audit controls, live freshness, and stale-demo-data self-healing for the Governance Gate. See `docs/LECTURER_REQUIREMENTS_V60.md`.
 
 > **v5.9 Manager-First UX build:** keeps all v5.8 privacy, source-governance, export and audit controls, but presents them in plain business language with a persistent security trust strip, simpler navigation, obvious role-based data protections and technical detail moved behind optional panels. See `docs/MANAGER_UX_V59.md`.
 
@@ -6,7 +11,7 @@
 
 JurisTwin Sentinel is a **hybrid-AI decision-integrity control plane** for regulated enterprises. It connects fragmented evidence, gives permission-safe plain-language answers, detects contradictory policy, traces downstream exposure, stress-tests response options, enforces human governance, propagates approved decisions and preserves replayable cryptographic proof.
 
-v5.7 is the finals build designed around the exact operating story:
+v6.0 is the lecturer-complete finals build designed around the exact operating story:
 
 > **CONNECT → EXPOSE → SIMULATE → RECOMMEND → APPROVE → PROTECT**
 
@@ -25,17 +30,19 @@ Demo login:
 
 The finals UI is served directly by FastAPI and requires **no Node/npm runtime or internet connection**.
 
-## Five judge-facing destinations
+## Manager-first destinations
 
-1. **Ask JurisTwin** — Track 2 plain-language governed Q&A, source mix, citations and one-click role redaction.
-2. **Conflict Map** — draggable evidence network with authority, versions and live relationships.
-3. **Digital Twin** — 1,500-scenario stress test, sensitivity, Pareto analysis and decision robustness.
-4. **Assurance** — readiness, governance gate, Proof Pack, Decision Replay and adversarial self-test.
-5. **Evidence Lab** — type or drop unseen policy evidence and let JurisTwin analyse it live.
+1. **Ask JurisTwin** — one governed answer first, with its main official source, supporting lineage, privacy exclusions and freshness.
+2. **Management Controls** — live Original → Now mapping of all lecturer-requested capabilities and links to test each control.
+3. **Why Sources Disagree** — manager-readable conflict explanation with the evidence graph available as optional proof.
+4. **Compare Solutions** — business-first A/B/C decision comparison backed by the Digital Twin.
+5. **Safe to Publish?** — enforced Governance Gate, readiness, replay and Audit Proof.
+6. **Test New Evidence** — live unseen-evidence challenge that cannot silently overwrite governed policy.
+7. **Privacy & Security** — source scope, export rights, protected transfer, freshness and who-did-what audit.
 
 Use **Final Flow** for the six-stage pitch story. Use **Platform** to expose the full technical stack without cluttering the main demonstration.
 
-## What changed in v5.7
+## Inherited finals hardening + v6.0 manager controls
 
 
 ### Adversarial finals hardening
@@ -158,7 +165,7 @@ backend\.venv\Scripts\python.exe -X utf8 backend\scripts\industry_preflight.py
 
 On Windows, the easiest option is simply `run_preflight.bat`. Never depend on a bare `python` PATH alias during finals.
 
-Expected v5.7 release baseline:
+Expected v6.0 release baseline:
 
 - **57/57 automated tests**
 - **32/32 championship preflight controls**

@@ -60,7 +60,7 @@ def main() -> int:
     finals = f"{base}/finals"
 
     print("=" * 56)
-    print("  JurisTwin Sentinel - Championship v5.7 MaxScore")
+    print("  JurisTwin Sentinel - Lecturer-Complete v6.0")
     print("=" * 56)
     print(f"Backend:   {base}")
     print(f"Finals UI: {finals}")

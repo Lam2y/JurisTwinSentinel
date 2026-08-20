@@ -49,6 +49,7 @@ def integration_policy(db: Session, key: str | None) -> dict:
         'official_only': bool(d.get('official_only', False)),
         'allowed_channels': d.get('allowed_channels', []),
         'allowed_sender_roles': d.get('allowed_sender_roles', []),
+        'allowed_libraries': d.get('allowed_libraries', []),
         'freshness_sla_minutes': d.get('freshness_sla_minutes'),
         'client_training_allowed': bool(d.get('client_training_allowed', False)),
         'status': row.status,
@@ -78,7 +79,14 @@ def evidence_scope(db: Session, evidence: Evidence) -> dict:
         elif channel_type and channel_type not in {'group_chat','channel','team_channel'}:
             retrieval=False; policy_authority=False; reasons.append('Only approved Teams group/channel conversations are indexed')
         else:
-            reasons.append('Teams group/channel scope allowed')
+            allowed_channels=[str(x).strip().lower() for x in policy.get('allowed_channels',[]) if str(x).strip()]
+            channel_name=str(meta.get('conversation_scope') or meta.get('channel_name') or meta.get('team_channel') or '').strip().lower()
+            if allowed_channels and channel_name and not any(a in channel_name or channel_name in a for a in allowed_channels):
+                retrieval=False; policy_authority=False; reasons.append('Teams group/channel is outside the administrator-approved channel list')
+            elif allowed_channels and not channel_name:
+                retrieval=False; policy_authority=False; reasons.append('Teams evidence has no approved group/channel identity')
+            else:
+                reasons.append('Teams group/channel scope allowed')
 
     if key in {'outlook','gmail'}:
         mail_class=str(meta.get('mail_classification') or '').lower()
@@ -86,10 +94,25 @@ def evidence_scope(db: Session, evidence: Evidence) -> dict:
         if policy.get('official_only') and not official:
             retrieval=False; policy_authority=False; reasons.append('Casual/unapproved mailbox traffic excluded')
         elif official:
-            reasons.append('Official/approved mailbox scope allowed')
+            allowed_roles=[str(x).strip().lower() for x in policy.get('allowed_sender_roles',[]) if str(x).strip()]
+            sender_role=str(meta.get('sender_role') or evidence.authority or '').strip().lower()
+            if allowed_roles and sender_role and sender_role not in allowed_roles:
+                retrieval=False; policy_authority=False; reasons.append('Official email sender role is outside the administrator-approved sender list')
+            elif allowed_roles and not sender_role:
+                retrieval=False; policy_authority=False; reasons.append('Official email has no approved sender-role identity')
+            else:
+                reasons.append('Official/approved mailbox scope allowed')
         if mail_class in {'customer_service','customer_message'}:
             # Customer communications can prove operational impact, never company policy authority.
             policy_authority=False; reasons.append('Customer communication is context-only, not policy authority')
+
+    if key=='sharepoint':
+        allowed_libraries=[str(x).strip().lower() for x in policy.get('allowed_libraries',[]) if str(x).strip()]
+        library=str(meta.get('library') or '').strip().lower()
+        if allowed_libraries and library not in allowed_libraries:
+            retrieval=False; policy_authority=False; reasons.append('Document is outside the administrator-approved SharePoint libraries')
+        elif allowed_libraries:
+            reasons.append('Approved SharePoint library scope allowed')
 
     if key=='customer_core':
         policy_authority=False

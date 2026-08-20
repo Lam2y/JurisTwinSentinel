@@ -43,7 +43,7 @@ def main():
         passed.append(ok('Deterministic reset',reset.status_code==200))
         health=c.get('/api/system/health',headers=h)
         hj=health.json()
-        passed.append(ok('Service health',health.status_code==200 and hj.get('version')=='5.7.0',hj.get('version','?')))
+        passed.append(ok('Service health',health.status_code==200 and hj.get('version')=='6.0.0',hj.get('version','?')))
         passed.append(ok('Security headers',health.headers.get('x-frame-options')=='DENY' and bool(health.headers.get('content-security-policy'))))
         from app.core.config import get_settings
         settings=get_settings()
@@ -59,7 +59,7 @@ def main():
         port_ok=choice.isdigit() and int(choice)!=busy
         passed.append(ok('Automatic port failover',port_ok,f"busy={busy} → selected={choice}"))
         finals=c.get('/finals')
-        frontend_ok=finals.status_code==200 and '/static/sentinel.css?v=5.7.0' in finals.text and '/static/sentinel.js?v=5.7.0' in finals.text
+        frontend_ok=finals.status_code==200 and '/static/sentinel.css?v=6.0.0' in finals.text and '/static/sentinel.js?v=6.0.0' in finals.text
         passed.append(ok('Pitch-aligned JurisTech frontend',frontend_ok,'responsive SPA assets served'))
         ready=c.get('/api/system/readiness',headers=h).json()
         passed.append(ok('Readiness proof',ready.get('status')=='READY' and ready.get('score')==100,f"{ready.get('score')}%"))
@@ -78,7 +78,7 @@ def main():
         intern_answer=c.post('/api/memory/answer',headers=h,json={'question':'Can gig workers use bank statements as income evidence?','preview_role':'intern'}).json()
         role_safe=intern_answer.get('status')=='RESTRICTED' and any(x.get('redacted') for x in intern_answer.get('source_mix',[]))
         passed.append(ok('Track 2 role-safe answer',role_safe,'same question → Intern redaction enforced server-side'))
-        js=c.get('/static/sentinel.js?v=5.7.0').text
+        js=c.get('/static/sentinel.js?v=6.0.0').text
         first_class='PLAIN-LANGUAGE ENTERPRISE MEMORY' in js and 'overviewQuestion' in js and 'Intern · redacted' in js
         passed.append(ok('Track 2 Q&A above the fold',first_class,'question + citations + one-click role preview'))
         integrations=c.get('/api/integrations',headers=h).json()

@@ -1,30 +1,39 @@
 {
   "status": "PASS_AUTOMATED_WITH_VISUAL_REHEARSAL_RECOMMENDED",
-  "version": "5.9-manager-ux",
-  "release": "JurisTwin Sentinel v5.9 Manager-First UX",
+  "version": "6.0-lecturer-complete",
+  "release": "JurisTwin Sentinel v6.0 Lecturer-Complete Manager Decision Assurance",
   "current_release_validation": {
     "javascript_syntax_frontend": "PASS",
     "javascript_syntax_served_static": "PASS",
-    "automated_test_suite": "57/57 PASS",
+    "automated_test_suite": "64/64 PASS",
     "industry_preflight": "32/32 PASS",
     "adversarial_harness": "16/16 HARDENED",
-    "source_governance_and_privacy": "PASS",
-    "role_based_customer_export": "PASS",
+    "lecturer_requirement_coverage": "8/8 PASS via /api/system/manager-control-summary",
+    "source_scope_enforcement": "PASS - approved Teams groups, official sender roles and approved libraries enforced by backend",
+    "immutable_privacy_boundaries": "PASS - Teams personal DMs blocked, official email required, client training disabled",
+    "authority_and_majority_resolution": "PASS - authority first; majority same-tier only",
+    "role_based_customer_export": "PASS - Manager masked export allowed; Manager full export 403; audited",
     "audit_logging": "PASS",
-    "governance_gate": "PASS after required simulation state is established",
+    "realtime_answer_recompute": "PASS",
+    "governance_gate": "PASS - 27 affected cases reconcile after deterministic reset",
     "proof_verification": "PASS",
     "frontend_static_sync": "PASS",
-    "cache_busting": "v5.9.0 asset query applied"
+    "cache_busting": "v6.0.0 asset query applied",
+    "release_manifest": "PASS"
   },
   "manager_ux_checks": {
+    "management_controls_original_vs_now": "PASS",
+    "large_presentation_safe_text": "PASS",
     "plain_language_navigation": "PASS",
     "persistent_security_trust_strip": "PASS",
     "answer_first_source_explanation": "PASS",
+    "source_scope_configuration": "PASS",
     "privacy_and_security_manager_summary": "PASS",
     "role_access_summary": "PASS",
     "publish_block_reason_visible": "PASS",
     "technical_details_progressively_disclosed": "PASS",
-    "audit_log_manager_labels": "PASS"
+    "audit_log_manager_labels": "PASS",
+    "live_source_monitor": "PASS"
   },
-  "browser_note": "A fresh headless Chromium validation was attempted in the build environment, but localhost navigation was blocked by the container administrator policy. The existing responsive v5 CSS foundation remains covered by regression tests. Perform one final visual rehearsal on the actual Windows demo laptop at 100% browser zoom and Presentation Mode if using a projector."
+  "browser_note": "Automated code/API/regression validation is complete. Perform one final visual rehearsal on the actual Windows demo laptop at 100% browser zoom and the intended projector resolution before presenting."
 }

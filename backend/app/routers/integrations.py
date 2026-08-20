@@ -90,8 +90,19 @@ def update_source_policy(key:str,body:IntegrationConfigRequest,db:Session=Depend
     for k,v in (body.config or {}).items():
         if k not in _POLICY_FIELDS:
             continue
-        # Client data training is intentionally not configurable from the UI; it stays disabled.
+        # Privacy boundaries are immutable from the manager UI. Administrators may narrow scope,
+        # but they cannot turn on personal DMs or casual email as policy evidence.
+        if key=="teams" and k in {"personal_dm_allowed","channel_scope"}:
+            continue
+        if key in {"outlook","gmail"} and k=="official_only":
+            continue
         d[k]=v; changes[k]=v
+    if key=="teams":
+        d["personal_dm_allowed"]=False
+        d["channel_scope"]="group_and_channels_only"
+        d["policy_authority_enabled"]=False  # group chat can inform an answer, never set official policy
+    if key in {"outlook","gmail"}:
+        d["official_only"]=True
     d["client_training_allowed"]=False
     i.details_json=dumps(d)
     append_entry(db,"SOURCE_SCOPE_UPDATED",user.email,{"integration":key,"changes":changes,"client_training_allowed":False})

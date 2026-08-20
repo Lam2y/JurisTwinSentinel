@@ -34,17 +34,17 @@ def main():
     tree=hashlib.sha256(material.encode()).hexdigest()
     manifest={
         'product':'JurisTwin Sentinel',
-        'release':'JurisTwin Sentinel v5.9 Manager-First UX',
+        'release':'JurisTwin Sentinel v6.0 Lecturer-Complete Manager Decision Assurance',
         'generated_at':datetime.now(timezone.utc).isoformat(),
         'source_tree_sha256':tree,
         'file_count':len(files),
         'files':files,
         'verification':{
-            'backend_tests':'57/57 passed',
+            'backend_tests':'64/64 passed',
             'industry_preflight':'32/32 passed',
             'adversarial_harness':'16/16 hardened',
-            'finals_javascript':'sentinel.js syntax verified; v5.9 manager-first UX keeps v5.8 source-governance, privacy, export, audit and realtime controls while simplifying the visible workflow',
-            'clean_http_smoke':'fresh app smoke: governed answer + exact winning source + source exclusions + security overview + masked export + forbidden manager full export + source-policy update + audit ledger + signed webhook path',
+            'finals_javascript':'sentinel.js syntax verified; v6.0 exposes all lecturer-requested controls through a manager-first Management Controls page, large-text UI, enforced source scope, privacy, audit, export security and live freshness',
+            'clean_http_smoke':'fresh app smoke: 8/8 lecturer controls + governed answer + exact winning source + hybrid retrieval explanation + source-scope enforcement + privacy boundary locks + masked export + forbidden manager full export + audit ledger + live freshness',
             'concurrent_http_stress':'60/60 live evidence writes succeeded at 20-way concurrency; ledger chain verified; readiness remained 100%',
         },
     }

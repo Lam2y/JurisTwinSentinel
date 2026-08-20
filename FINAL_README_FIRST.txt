@@ -1,22 +1,25 @@
-JURISTWIN SENTINEL v5.9 — MANAGER-FIRST UX BUILD
-=================================================
+JURISTWIN SENTINEL v6.0 — LECTURER-COMPLETE MANAGER BUILD
+==========================================================
 
-WHAT CHANGED
-This build keeps the v5.8 privacy/security controls but makes the product much easier for non-technical managers to understand.
+WHAT IS NEW
+The first page to show after Ask JurisTwin is now MANAGEMENT CONTROLS. It explicitly compares the original prototype with the finished system for every lecturer recommendation and links each requirement to a working feature.
 
-The six main pages are now:
-1. Ask JurisTwin
-2. Why Sources Disagree
-3. Compare Solutions
-4. Safe to Publish?
-5. Test New Evidence
-6. Privacy & Security
+THE 8 LECTURER CONTROLS NOW INSIDE THE SYSTEM
+1. One definite management answer + exact source.
+2. Configurable approved source scope (Teams groups/channels, official sender roles, SharePoint libraries).
+3. Approved authority first; majority only among the same highest authority tier.
+4. Personal DMs/casual mail excluded; client evidence never trains AI.
+5. Role-based customer view/export restrictions enforced on the backend.
+6. Protected transfer path, server-side secrets and HMAC-signed live ingress.
+7. Who-asked/changed/exported-what audit trail.
+8. Live freshness and per-request answer recomputation from current governed state.
 
-A security strip is visible throughout the workspace:
-- Private DMs blocked
-- Client data never trains AI
-- Access follows job role
-- Latest approved sources checked
+IMPORTANT PRIVACY BOUNDARIES
+- Teams personal/1-to-1 DMs are locked out.
+- Teams group/channel evidence is reference-only, not official policy authority.
+- Outlook/Gmail are official-only.
+- Customer Core can prove impact but cannot define policy.
+- Client evidence is never used to train the AI model.
 
 START
 1. First time only: setup_windows.bat
@@ -27,44 +30,18 @@ LOGIN
 operations@regulatedbank.com
 Finals2026!
 
-BEST MANAGER DEMO FLOW
-1. Ask JurisTwin
-   Ask: "Can gig workers use bank statements as income evidence?"
-   Show: Answer to Follow → Official Source → Privacy Check → Up to Date.
+BEST LECTURER DEMO
+Management Controls → Ask JurisTwin → Privacy & Security → masked/full export test → Audit Log → Test New Evidence → Why Sources Disagree → Compare Solutions → Safe to Publish? → Approve & Publish → Audit Proof.
 
-2. Privacy & Security
-   Show the four guarantees at the top.
-   Then show Teams personal DMs blocked, official email only, role-based customer export and the audit trail.
+CORE STORY
+"JurisTwin gives management one trusted answer from approved enterprise sources, protects private and client data, updates from current governed evidence, requires human publication authority and keeps every sensitive action traceable."
 
-3. Test New Evidence
-   Paste a new conflicting instruction.
-   Show: Conflict Found → Current Official Source → What Staff Should Follow → Who May Be Affected.
-
-4. Why Sources Disagree
-   Show the approved instruction versus the conflicting instruction.
-   Use the graph only as optional evidence/audit proof.
-
-5. Compare Solutions
-   Compare customer delay, complaint risk and process consistency.
-   Select Option C.
-
-6. Safe to Publish?
-   Show the approval checks. If a check fails, the UI now explains exactly why the publish button is locked.
-
-7. Approve & Publish
-   Publish only when every required check is ready.
-
-8. View Audit Proof
-   Verify the decision record. Technical cryptographic fingerprints are available only if asked.
-
-THE MANAGEMENT STORY
-"JurisTwin gives one answer from approved sources, protects private and customer data, shows managers what to do next, and keeps a traceable record of every sensitive decision."
+DETAILED ORIGINAL-vs-NOW MAP
+Read: docs\LECTURER_REQUIREMENTS_V60.md
+Quick stage guide: LECTURER_DEMO_GUIDE_V60.txt
 
 FINALS-DAY CHECK
 Double-click: run_preflight.bat
 
 EXPECTED
-57/57 automated tests PASS
-32/32 preflight checks PASS
-16/16 Attack Sentinel HARDENED
-Readiness READY 100%
+Run the shipped test/preflight scripts before presenting. The release manifest can be verified with tools\verify_release_manifest.py.
