@@ -11,7 +11,7 @@ if not exist "%VENV_PY%" (
 cd /d "%BACKEND%"
 set "PYTHONPATH=%CD%"
 echo ========================================================
-echo   JurisTwin Sentinel - Finals Preflight v5.7
+echo   JurisTwin Sentinel - Championship Finals Preflight v7.0
 echo ========================================================
 echo.
 echo [1/2] Running automated regression suite...

@@ -358,13 +358,27 @@ def governed_answer(db: Session, user: User, question: str) -> dict:
     for e in (resolution.get('support') or ([] if evidence is None else [evidence])):
         if e.created_at: latest_times.append(e.created_at if e.created_at.tzinfo else e.created_at.replace(tzinfo=timezone.utc))
     snapshot=max(latest_times) if latest_times else now
+    runtime_impact={
+        'affected_cases': int(conflict.affected_customers or 0) if conflict else 0,
+        'systems_affected': int(conflict.systems_affected or 0) if conflict else 0,
+        'conflict_status': conflict.status if conflict else None,
+        'conflict_ref': conflict.conflict_ref if conflict else None,
+    }
+    runtime_trace={
+        'sources_scoped': int(synthesis.get('sources_considered') or 0),
+        'sources_visible': int(synthesis.get('visible_sources') or 0),
+        'resolution_mode': resolution_mode,
+        'authority_level': resolution.get('authority_level', 6 if contract else None),
+        'affected_cases': runtime_impact['affected_cases'],
+        'recomputed_at': iso(now),
+    }
     return {
         'status':status,'management_status':management_status,'answer':answer,'warning':warning,
         'question':question,'role':user.role,'rule_key':rule_key,'decision_ref':decision_ref,
         'conflict_ref':conflict.conflict_ref if conflict else None,'authority':authority,'version':version,'source':source,
         'model':{'engine':model.get('engine'),'domain_confidence':round(confidence,4),'abstained':False,'publication_authority':0},
         'citations':sources_used,'sources_used':sources_used,'primary_source':primary_source,
-        'retrieval_matches':retrieval_matches,'source_mix':source_mix,'synthesis':synthesis,
+        'retrieval_matches':retrieval_matches,'source_mix':source_mix,'synthesis':synthesis,'impact':runtime_impact,'runtime_trace':runtime_trace,
         'resolution':{
             'mode':resolution_mode,'explanation':resolution_explanation,'authority_level':resolution.get('authority_level',6 if contract else None),
             'majority':majority,'eligible_count':resolution.get('eligible_count',len(sources_used)),

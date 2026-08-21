@@ -61,6 +61,8 @@ def main():
         finals=c.get('/finals')
         frontend_ok=finals.status_code==200 and '/static/sentinel.css?v=6.0.0' in finals.text and '/static/sentinel.js?v=6.0.0' in finals.text
         passed.append(ok('Pitch-aligned JurisTech frontend',frontend_ok,'responsive SPA assets served'))
+        finals_v7='/static/sentinel.css?v=7.0.0' in finals.text and '/static/sentinel.js?v=7.0.0' in finals.text
+        passed.append(ok('Championship v7 finals assets',finals_v7,'first-minute proof + live controls + challenge mode'))
         ready=c.get('/api/system/readiness',headers=h).json()
         passed.append(ok('Readiness proof',ready.get('status')=='READY' and ready.get('score')==100,f"{ready.get('score')}%"))
         model=c.get('/api/live/ai-model',headers=h).json()
@@ -81,6 +83,14 @@ def main():
         js=c.get('/static/sentinel.js?v=6.0.0').text
         first_class='PLAIN-LANGUAGE ENTERPRISE MEMORY' in js and 'overviewQuestion' in js and 'Intern · redacted' in js
         passed.append(ok('Track 2 Q&A above the fold',first_class,'question + citations + one-click role preview'))
+        v7_story=all(x in js for x in ('CONFLICT DETECTED','Preview same question as Intern','JUDGE CHALLENGE MODE','AI PUBLICATION AUTHORITY','LIVE BACKEND RESULT · HTTP'))
+        passed.append(ok('Judge-visible championship story',v7_story,'conflict + role proof + human gate + live challenge + backend security result'))
+        # Prove a manager control changes the next answer's evidence pool at runtime without changing the governing truth.
+        boundary_off=c.patch('/api/integrations/sharepoint/policy',headers=h,json={'config':{'retrieval_enabled':False}})
+        boundary_answer=c.post('/api/memory/answer',headers=h,json={'question':'Can gig workers use bank statements as income evidence?','preview_role':'manager'}).json()
+        boundary_ok=boundary_off.status_code==200 and boundary_answer.get('primary_source',{}).get('source')=='Outlook Approval' and all(str(x.get('source','')).lower()!='fsd' for x in boundary_answer.get('source_mix',[]))
+        passed.append(ok('Live evidence-boundary mutation',boundary_ok,'SharePoint/FSD removed; official Outlook answer remains governed'))
+        c.patch('/api/integrations/sharepoint/policy',headers=h,json={'config':{'retrieval_enabled':True}})
         integrations=c.get('/api/integrations',headers=h).json()
         vector=next((x for x in integrations if x.get('key')=='vector'),{})
         retrieval_truth=vector.get('name')=='Local Semantic Retrieval Index' and vector.get('details',{}).get('engine')=='BM25 + cosine' and vector.get('details',{}).get('pilot_target')=='ChromaDB'
@@ -122,12 +132,17 @@ def main():
         launcher=(BACKEND_DIR/'scripts'/'finals_launcher.py').read_text(encoding='utf-8')
         launch_ok='[STARTING' in launcher and '[READY]' in launcher and 'Port 8000 is busy' in launcher and '75' in launcher
         passed.append(ok('Cold-start operator feedback',launch_ok,'heartbeat + health wait + automatic port failover'))
+        auto_prepare='prepare_finals_state' in launcher and '[DEMO READY]' in launcher and '/api/demo/reset' in launcher and '/api/system/readiness' in launcher
+        passed.append(ok('Automatic finals-state guard',auto_prepare,'launch resets scenario, confirms 100% readiness and warms local AI'))
         challenge=c.post('/api/live/challenge',headers=h,json={
             'source':'CI Unseen Evidence','title':'Unseen policy probe',
             'body':'Effective immediately, bank statements are no longer accepted. Officers must request payslips from gig workers.',
             'authority':'External CI probe','authority_level':2,'sensitivity':'internal'
         }).json()
         passed.append(ok('Unseen evidence reasoning',challenge.get('verdict')=='CONTRADICTION',challenge.get('challenge_ref','')))
+        stages=challenge.get('analysis',{}).get('stages',[])
+        stage_ok=len(stages)>=5 and all('latency_ms' in x for x in stages[:5])
+        passed.append(ok('Judge-visible runtime pipeline',stage_ok,f"{len(stages)} measured stages with live latency"))
         passed.append(ok('Explainable blast radius',challenge.get('blast_radius')==27,'27 cases'))
         pack=c.get('/api/assurance/proof-pack',headers=h).json()
         passed.append(ok('Proof Pack digest',len(pack.get('proof',{}).get('bundle_digest',''))==64,pack.get('status','')))

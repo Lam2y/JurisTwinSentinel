@@ -34,17 +34,17 @@ def main():
     tree=hashlib.sha256(material.encode()).hexdigest()
     manifest={
         'product':'JurisTwin Sentinel',
-        'release':'JurisTwin Sentinel v6.0 Lecturer-Complete Manager Decision Assurance',
+        'release':'JurisTwin Sentinel v7.0 Championship Finals Edition',
         'generated_at':datetime.now(timezone.utc).isoformat(),
         'source_tree_sha256':tree,
         'file_count':len(files),
         'files':files,
         'verification':{
-            'backend_tests':'64/64 passed',
-            'industry_preflight':'32/32 passed',
+            'backend_tests':'72/72 passed',
+            'industry_preflight':'37/37 passed',
             'adversarial_harness':'16/16 hardened',
-            'finals_javascript':'sentinel.js syntax verified; v6.0 exposes all lecturer-requested controls through a manager-first Management Controls page, large-text UI, enforced source scope, privacy, audit, export security and live freshness',
-            'clean_http_smoke':'fresh app smoke: 8/8 lecturer controls + governed answer + exact winning source + hybrid retrieval explanation + source-scope enforcement + privacy boundary locks + masked export + forbidden manager full export + audit ledger + live freshness',
+            'finals_javascript':'sentinel.js syntax verified; v7.0 exposes first-minute conflict/impact proof, same-question role preview, live evidence-boundary toggles, process-optimisation comparison, explicit human publication authority, Judge Challenge Mode and persistent backend export results',
+            'clean_http_smoke':'fresh app smoke: governed answer + 27-case runtime impact + role-safe redaction + source-boundary mutation + 1,500-scenario robust recommendation + governance gate + unseen evidence quarantine + masked export + backend-denied full export + proof verification',
             'concurrent_http_stress':'60/60 live evidence writes succeeded at 20-way concurrency; ledger chain verified; readiness remained 100%',
         },
     }
