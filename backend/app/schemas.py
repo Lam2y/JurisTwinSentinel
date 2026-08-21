@@ -1,104 +1,66 @@
-from typing import Any
+from typing import Literal
 from pydantic import BaseModel, Field
 
+
 class LoginRequest(BaseModel):
-    email: str
-    password: str
+    email: str = Field(min_length=3, max_length=180)
+    password: str = Field(min_length=6, max_length=180)
 
-class MemorySearchRequest(BaseModel):
-    query: str = ""
-    limit: int = Field(default=10, ge=1, le=50)
-    filters: dict[str, Any] = {}
-    preview_role: str | None = None
 
-class MemoryAnswerRequest(BaseModel):
-    question: str = Field(min_length=5, max_length=500)
-    preview_role: str | None = None
+class AskRequest(BaseModel):
+    question: str = Field(min_length=3, max_length=1200)
 
-class MemoryIngestRequest(BaseModel):
-    source: str
-    title: str
-    body: str
-    rule_key: str | None = None
-    claim: str | None = None
-    authority: str | None = None
-    authority_level: int = 1
-    version: str | None = None
-    sensitivity: str = "internal"
-    case_ref: str | None = None
-    approved: bool = False
-    metadata: dict[str, Any] = {}
 
+class FeedbackRequest(BaseModel):
+    interaction_ref: str = Field(min_length=4, max_length=48)
+    helpful: bool
+    comment: str | None = Field(default=None, max_length=1000)
+
+
+class PublishResolutionRequest(BaseModel):
+    answer: str = Field(min_length=3, max_length=5000)
+    source_refs: list[str] = Field(default_factory=list, max_length=20)
+    uncertainty_note: str | None = Field(default=None, max_length=2000)
+    match_threshold: float = Field(default=0.62, ge=0.45, le=0.95)
+
+
+class EvidenceIngestRequest(BaseModel):
+    source: str = Field(min_length=2, max_length=100)
+    title: str = Field(min_length=3, max_length=220)
+    body: str = Field(min_length=5, max_length=8000)
+    rule_key: Literal["income_document_rule", "loan_restructure_rule", "notification_deadline"] | None = None
+    claim: str | None = Field(default=None, max_length=180)
+    authority: str = Field(default="Submitted evidence", min_length=2, max_length=120)
+    authority_level: int = Field(default=2, ge=1, le=5)
+    version: str | None = Field(default=None, max_length=40)
+    sensitivity: Literal["public", "internal", "confidential"] = "internal"
+    source_scope: Literal["group_channel", "shared_repository", "formal_approval", "private_message"] = "shared_repository"
+
+
+class PatternStateRequest(BaseModel):
+    active: bool
+    reason: str | None = Field(default=None, max_length=500)
+
+
+class ShieldUpdateRequest(BaseModel):
+    enabled: bool
+
+
+class TwinRunRequest(BaseModel):
+    delay: float = Field(default=0.40, ge=0.0, le=1.0)
+    complaint: float = Field(default=0.35, ge=0.0, le=1.0)
+    alignment: float = Field(default=0.25, ge=0.0, le=1.0)
 
 
 class CustomerExportRequest(BaseModel):
-    mode: str = Field(default="masked", pattern="^(masked|full)$")
-    reason: str = Field(min_length=8, max_length=300)
-
-class SimulationRequest(BaseModel):
-    weights: dict[str, float] | None = None
-
-class SubmitApprovalRequest(BaseModel):
-    selected_option: str | None = None
-    comments: str | None = None
-
-class ApprovalDecisionRequest(BaseModel):
-    comments: str | None = None
-
-class SearchRequest(BaseModel):
-    query: str
-    limit: int = Field(default=10, ge=1, le=50)
-
-class RolePolicyUpdate(BaseModel):
-    enabled: bool | None = None
-    max_sensitivity: int | None = Field(default=None, ge=0, le=3)
-    can_override: bool | None = None
-    can_modify_twin: bool | None = None
-    can_export_ledger: bool | None = None
-    can_review_bodyguard: bool | None = None
-
-class ShieldUpdate(BaseModel):
-    enabled: bool | None = None
-    value: dict[str, Any] | None = None
-
-class IntegrationConfigRequest(BaseModel):
-    config: dict[str, Any] = {}
-
-class BodyguardActionRequest(BaseModel):
-    comments: str | None = None
-
-class LiveChallengeRequest(BaseModel):
-    source: str = Field(default="Judge Live Input", min_length=2, max_length=80)
-    title: str = Field(default="Unseen policy evidence", min_length=3, max_length=180)
-    body: str = Field(min_length=8, max_length=5000)
-    rule_key: str | None = Field(default=None, max_length=80)
-    authority: str = Field(default="Live external evidence", min_length=2, max_length=120)
-    authority_level: int = Field(default=2, ge=1, le=5)
-    sensitivity: str = Field(default="internal", pattern="^(public|internal|confidential|restricted)$")
+    passphrase: str = Field(min_length=10, max_length=200)
+    include_feedback: bool = True
 
 
-class EvidenceDropRequest(BaseModel):
-    filename: str = Field(min_length=3, max_length=180)
-    content: str = Field(min_length=8, max_length=150000)
-    mime_type: str = Field(default="text/plain", max_length=120)
-    authority: str = Field(default="Judge-supplied file", min_length=2, max_length=120)
-    authority_level: int = Field(default=2, ge=1, le=5)
-    sensitivity: str = Field(default="internal", pattern="^(public|internal|confidential|restricted)$")
-
-
-class SignedWebhookRequest(BaseModel):
-    event_id: str = Field(min_length=4, max_length=100)
-    source: str = Field(min_length=2, max_length=80)
-    title: str = Field(min_length=3, max_length=180)
-    body: str = Field(min_length=8, max_length=5000)
-    authority: str = Field(default="External connector", min_length=2, max_length=120)
-    authority_level: int = Field(default=2, ge=1, le=5)
-    sensitivity: str = Field(default="internal", pattern="^(public|internal|confidential|restricted)$")
-
-
-class ProofVerifyRequest(BaseModel):
-    # ``bundle_digest`` is the field emitted by the proof-pack response. ``digest`` remains accepted
-    # for backward compatibility with the offline verifier and earlier clients.
-    digest: str | None = Field(default=None, min_length=64, max_length=64, pattern="^[0-9a-fA-F]{64}$")
-    bundle_digest: str | None = Field(default=None, min_length=64, max_length=64, pattern="^[0-9a-fA-F]{64}$")
-    signature: str = Field(min_length=64, max_length=64, pattern="^[0-9a-fA-F]{64}$")
+class SecureTransferPacket(BaseModel):
+    transfer_ref: str = Field(min_length=4, max_length=80)
+    source_system: str = Field(min_length=2, max_length=120)
+    purpose: str = Field(min_length=3, max_length=240)
+    cipher: Literal["AES-256-GCM"] = "AES-256-GCM"
+    payload_sha256: str = Field(min_length=64, max_length=64, pattern=r"^[0-9a-fA-F]{64}$")
+    ciphertext_b64: str = Field(min_length=8, max_length=500000)

@@ -1,267 +1,77 @@
-from datetime import datetime, timezone, timedelta
-from sqlalchemy import delete, select
+from datetime import timedelta
+from sqlalchemy import select
 from sqlalchemy.orm import Session
-from .models import *
 from ..core.config import get_settings
 from ..core.security import hash_password
-from ..services.common import dumps, loads, utcnow
+from ..db.models import Evidence, EvidenceOrigin, RolePolicy, SecurityShield, User
+from ..services.common import utcnow
 from ..services.ledger import append_entry
-
-DEMO_CASE = "JT-2026-084"
-FLAGSHIP_CONFLICT = "CF-INCOME-001"
-
-
-def _merge_integration_policy(row, updates: dict):
-    current = loads(row.details_json, {})
-    changed = False
-    for k, v in updates.items():
-        if current.get(k) != v:
-            current[k] = v
-            changed = True
-    if changed:
-        row.details_json = dumps(current)
-    return changed
-
-
-def ensure_governance_defaults(db: Session):
-    """Backfill v5.8 privacy/source controls without requiring judges to delete an old DB."""
-    shield_defaults = [
-        ("source_governance", "Source Scope Governance", "Only approved channels/mailboxes can enter governed retrieval; client data never trains the model", True, {"majority_fallback":"same_authority_tier_only","client_training":"disabled","default_deny_unknown_sources":True}),
-        ("customer_export", "Customer Export Control", "Restrict customer-data exports by role, masking mode and explicit audit reason", True, {"masked_roles":["manager","compliance_manager"],"full_roles":["compliance_manager"],"reason_required":True,"intern_officer_export":"forbidden"}),
-        ("transport_security", "Secure Data Transfer", "Connector traffic is authenticated; production deployment terminates TLS and secrets remain server-side", True, {"production_tls":"TLS 1.2+ / 1.3","webhook_auth":"HMAC-SHA256","api_keys":"environment-only","frontend_secrets":False}),
-        ("query_audit", "Query & Access Audit", "Trace who queried governed memory, downloaded evidence, changed source scope or exported customer data", True, {"retention_years":7,"question_capture":"policy-safe excerpt","actor_required":True}),
-        ("realtime_freshness", "Real-Time Freshness Guard", "Re-evaluate every answer against the latest allowed evidence snapshot", True, {"answer_recompute":"every request","signed_ingress":True,"stale_source_warning_minutes":30}),
-    ]
-    for key,name,desc,enabled,value in shield_defaults:
-        row=db.execute(select(SecurityShield).where(SecurityShield.key==key)).scalar_one_or_none()
-        if not row:
-            db.add(SecurityShield(key=key,name=name,description=desc,enabled=enabled,value_json=dumps(value)))
-        else:
-            row.name=name; row.description=desc; row.enabled=True; row.value_json=dumps(value)
-
-    policies = {
-        "teams": {"retrieval_enabled":True,"policy_authority_enabled":False,"scope_label":"Approved group/channel chats only","channel_scope":"group_and_channels_only","personal_dm_allowed":False,"allowed_channels":["Operations Policy","Compliance","Product Governance"],"client_training_allowed":False,"freshness_sla_minutes":5},
-        "outlook": {"retrieval_enabled":True,"policy_authority_enabled":True,"scope_label":"Official management/policy mailboxes only","official_only":True,"allowed_sender_roles":["Product Owner","Compliance Manager","Risk Committee"],"client_training_allowed":False,"freshness_sla_minutes":5},
-        "gmail": {"retrieval_enabled":False,"policy_authority_enabled":False,"scope_label":"Official management mail only when explicitly enabled","official_only":True,"allowed_sender_roles":["Executive Management","Compliance Manager"],"client_training_allowed":False,"freshness_sla_minutes":10},
-        "sharepoint": {"retrieval_enabled":True,"policy_authority_enabled":True,"scope_label":"Approved policy/SOP libraries","allowed_libraries":["Approved Policies","Controlled SOPs"],"client_training_allowed":False,"freshness_sla_minutes":15},
-        "onedrive": {"retrieval_enabled":False,"policy_authority_enabled":False,"scope_label":"Personal drives excluded by default","client_training_allowed":False,"freshness_sla_minutes":30},
-        "clickup": {"retrieval_enabled":True,"policy_authority_enabled":False,"scope_label":"Approved project spaces · context only","client_training_allowed":False,"freshness_sla_minutes":15},
-        "customer_core": {"retrieval_enabled":True,"policy_authority_enabled":False,"scope_label":"Operational impact only · customer records never define policy","client_training_allowed":False,"freshness_sla_minutes":1},
-        "qa": {"retrieval_enabled":True,"policy_authority_enabled":False,"scope_label":"QA evidence · context only unless formally approved","client_training_allowed":False,"freshness_sla_minutes":15},
-        "postgres": {"retrieval_enabled":True,"policy_authority_enabled":True,"scope_label":"Governed decision contracts and audit state","client_training_allowed":False,"freshness_sla_minutes":1},
-        "vector": {"retrieval_enabled":True,"policy_authority_enabled":False,"scope_label":"Index only; never an authority source","client_training_allowed":False,"freshness_sla_minutes":1},
-        "webhook": {"retrieval_enabled":True,"policy_authority_enabled":False,"scope_label":"Signed live ingress; quarantined until governance","client_training_allowed":False,"freshness_sla_minutes":1},
-    }
-    for key, updates in policies.items():
-        row=db.execute(select(Integration).where(Integration.key==key)).scalar_one_or_none()
-        if row:
-            _merge_integration_policy(row, updates)
-    db.flush()
-
-
-def reset_database(db: Session):
-    # Keep users so the JWT that invoked reset remains valid on PostgreSQL where sequences do not reset.
-    for model in [ConflictEvidence, LiveChallenge, LedgerEntry, SecurityAlert, DecisionVersion, DecisionContract, Approval, Simulation, CaseEvent, CustomerCase, Conflict, Evidence, Integration, SecurityShield, RolePolicy]:
-        db.execute(delete(model))
-    for u in db.execute(select(User)).scalars().all():
-        u.active = True
-    db.commit()
-    seed_database(db)
 
 
 def seed_database(db: Session):
-    # Seed users once; operational demo state can be reset independently.
     settings = get_settings()
-    if not db.execute(select(User).limit(1)).scalar_one_or_none():
-        users = [
-        ("operations@regulatedbank.com", "Michelle Tan", "manager", [DEMO_CASE]),
-        ("officer@regulatedbank.com", "Daniel Lee", "officer", [DEMO_CASE, "JT-2026-086"]),
-        ("intern@regulatedbank.com", "Aisha Lim", "intern", []),
-        ("compliance@regulatedbank.com", "Farah Wong", "compliance_manager", [DEMO_CASE]),
-        ("product@regulatedbank.com", "Product Owner", "product_owner", [DEMO_CASE]),
-        ("qa014@regulatedbank.com", "QA-014", "qa_analyst", [DEMO_CASE]),
+    if settings.DEMO_MODE and not db.execute(select(User).limit(1)).scalar_one_or_none():
+        db.add_all([
+            User(email="user@juristech.com", name="Regular User", role="regular_user", password_hash=hash_password(settings.DEMO_PASSWORD)),
+            User(email="superadmin@juristech.com", name="Superadmin", role="superadmin", password_hash=hash_password(settings.DEMO_PASSWORD)),
+        ])
+
+    if not db.execute(select(RolePolicy).limit(1)).scalar_one_or_none():
+        db.add_all([
+            RolePolicy(role="regular_user", display_name="Regular User", description="Ask JurisTwin and receive only governed answers with safe sources.", enabled=True, can_manage_governance=False, can_view_sensitive_evidence=False),
+            RolePolicy(role="superadmin", display_name="Superadmin", description="Resolve knowledge gaps, publish reusable decisions, manage controls and inspect evidence.", enabled=True, can_manage_governance=True, can_view_sensitive_evidence=True),
+        ])
+
+    if not db.execute(select(SecurityShield).limit(1)).scalar_one_or_none():
+        db.add_all([
+            SecurityShield(key="rbac", name="Role isolation", description="Regular users cannot call superadmin governance endpoints.", enabled=True),
+            SecurityShield(key="pii_masking", name="PII masking", description="Potential email, phone and long account-number fragments are masked before unresolved questions are persisted.", enabled=True),
+            SecurityShield(key="no_training", name="Client-data training isolation", description="Enterprise evidence is retrieval context only and is never added to the bundled ML training corpus.", enabled=True),
+            SecurityShield(key="audit_chain", name="Tamper-evident audit chain", description="Security-sensitive actions are server-keyed HMAC-SHA256 chained for tamper detection and verification.", enabled=True),
+            SecurityShield(key="abstention", name="Safe abstention", description="Low-confidence or insufficient-evidence questions become review items instead of hallucinated answers.", enabled=True),
+            SecurityShield(key="pattern_revalidation", name="Decision-memory revalidation", description="Reusable decisions re-check their cited evidence at answer time and stop if the source becomes stale or invalid.", enabled=True),
+            SecurityShield(key="feedback_escalation", name="User feedback escalation", description="A governed answer marked Needs review is routed back to the superadmin queue instead of being ignored.", enabled=True),
+            SecurityShield(key="group_chat_scope", name="Group-channel privacy scope", description="Chat ingestion is restricted to approved group channels; private messages and 1:1 conversations are excluded.", enabled=True),
+            SecurityShield(key="encrypted_export", name="Encrypted customer export", description="Customer interaction exports are PII-minimised, AES-256-GCM encrypted, superadmin-only and audit logged.", enabled=True),
+            SecurityShield(key="secure_transfer", name="Secure system transfer", description="System-to-system transfers require encrypted transport and server-side scoped credentials; API keys are never exposed to the browser.", enabled=True),
+        ])
+
+    if not db.execute(select(Evidence).limit(1)).scalar_one_or_none():
+        now = utcnow()
+        rows = [
+            # Income-document domain: authoritative current rule + stale contradictions + context.
+            Evidence(evidence_ref="EV-INCOME-PO-001", source="Outlook Approval", title="Gig-worker income evidence waiver", body="For gig workers, verified bank statements may be accepted instead of payslips under the active income-evidence waiver.", rule_key="income_document_rule", claim="bank_statement_accepted", authority="Product Owner", authority_level=5, version="v4.2", status="active", sensitivity="internal", approved=True, superseded=False, created_at=now-timedelta(days=6)),
+            Evidence(evidence_ref="EV-INCOME-FSD-003", source="FSD", title="Legacy income verification requirement", body="Income verification requires three months of payslips for every gig-worker application.", rule_key="income_document_rule", claim="payslips_required", authority="Functional Lead", authority_level=4, version="v3.0", status="outdated", sensitivity="confidential", approved=False, superseded=True, created_at=now-timedelta(days=120)),
+            Evidence(evidence_ref="EV-INCOME-TEAMS-008", source="Teams Operations Channel", title="Operations handling message", body="Continue requesting payslips for gig workers until the old guide is updated.", rule_key="income_document_rule", claim="payslips_required", authority="Operations Officer", authority_level=2, version="current chat", status="active", sensitivity="internal", approved=False, superseded=False, created_at=now-timedelta(days=3)),
+            Evidence(evidence_ref="EV-INCOME-QA-011", source="QA Repository", title="Income verification regression note", body="Several regression tests still expect payslip-only behaviour and must be aligned to the approved waiver.", rule_key="income_document_rule", claim="legacy_test_dependency", authority="QA Analyst", authority_level=2, version="suite-3", status="active", sensitivity="internal", approved=False, superseded=False, created_at=now-timedelta(days=4)),
+            # Loan restructure domain.
+            Evidence(evidence_ref="EV-LOAN-RISK-011", source="Risk Committee Policy", title="Restructuring threshold v5.1", body="Loan restructuring may be approved only when the risk score is 60 or below and the affordability review passes.", rule_key="loan_restructure_rule", claim="risk_threshold_60", authority="Risk Committee", authority_level=5, version="v5.1", status="active", sensitivity="internal", approved=True, superseded=False, created_at=now-timedelta(days=10)),
+            Evidence(evidence_ref="EV-LOAN-LEGACY-004", source="Legacy Desk Guide", title="Old restructuring threshold", body="Restructuring approval is allowed for risk scores up to 70.", rule_key="loan_restructure_rule", claim="risk_threshold_70", authority="Credit Operations", authority_level=2, version="v4.3", status="outdated", sensitivity="internal", approved=False, superseded=True, created_at=now-timedelta(days=210)),
+            Evidence(evidence_ref="EV-LOAN-QA-014", source="QA Repository", title="Restructuring regression pack", body="The latest regression pack validates affordability and risk-threshold edge cases against policy v5.1.", rule_key="loan_restructure_rule", claim="qa_current", authority="QA Analyst", authority_level=3, version="v5.1", status="active", sensitivity="internal", approved=False, superseded=False, created_at=now-timedelta(days=7)),
+            # Notification domain.
+            Evidence(evidence_ref="EV-NOTIFY-COMP-021", source="Compliance Approval", title="Customer notification SLA", body="Adverse decision notifications must be sent within three business days.", rule_key="notification_deadline", claim="business_days_3", authority="Compliance Manager", authority_level=5, version="v2.1", status="active", sensitivity="internal", approved=True, superseded=False, created_at=now-timedelta(days=8)),
+            Evidence(evidence_ref="EV-NOTIFY-LEGACY-019", source="Legacy Procedure", title="Old customer notification timer", body="Customer notifications must be sent within three calendar days.", rule_key="notification_deadline", claim="calendar_days_3", authority="Operations", authority_level=2, version="v1.7", status="superseded", sensitivity="internal", approved=False, superseded=True, created_at=now-timedelta(days=200)),
+            Evidence(evidence_ref="EV-NOTIFY-OPS-022", source="Teams Operations Channel", title="Manual follow-up instruction", body="Some operations instructions still use calendar-day language for customer follow-up.", rule_key="notification_deadline", claim="legacy_instruction", authority="Operations Officer", authority_level=2, version="current chat", status="active", sensitivity="internal", approved=False, superseded=False, created_at=now-timedelta(days=2)),
         ]
-        for email, name, role, assigned in users:
-            db.add(User(email=email, name=name, role=role, password_hash=hash_password(settings.DEMO_PASSWORD), assigned_case_refs=dumps(assigned)))
+        db.add_all(rows)
         db.flush()
+        append_entry(db, "SYSTEM_SEEDED", "system", {"evidence_count": len(rows), "primary_roles": ["regular_user", "superadmin"]})
 
-    # If operational state already exists, keep it only when the seeded demo invariants still
-    # reconcile. This prevents an older/stale DB from producing a false Governance Gate BLOCK
-    # such as "0 operational cases reconcile to conflict blast radius" during a live demo.
-    if db.execute(select(CustomerCase).limit(1)).scalar_one_or_none():
-        expected={FLAGSHIP_CONFLICT:27,"CF-RESTRUCTURE-002":11,"CF-NOTIFY-003":6}
-        mismatched=False
-        for ref,count in expected.items():
-            conflict=db.execute(select(Conflict).where(Conflict.conflict_ref==ref)).scalar_one_or_none()
-            if conflict:
-                actual=len(db.execute(select(CustomerCase).where(CustomerCase.conflict_ref==ref)).scalars().all())
-                if actual!=int(conflict.affected_customers or count):
-                    mismatched=True; break
-        if mismatched:
-            reset_database(db)
-            return
-        ensure_governance_defaults(db)
-        db.commit()
-        return
+    # Privacy scope metadata: collaboration chat is collected from approved group channels only.
+    if not db.execute(select(EvidenceOrigin).limit(1)).scalar_one_or_none():
+        origin_rows = [
+            ("EV-INCOME-PO-001", "Outlook", "formal_approval", "Explicit business approval used as governed policy evidence."),
+            ("EV-INCOME-FSD-003", "Document Repository", "shared_repository", "Relevant governed/legacy specification needed for contradiction analysis."),
+            ("EV-INCOME-TEAMS-008", "Microsoft Teams", "group_channel", "Approved Operations group channel; private messages are not collected."),
+            ("EV-INCOME-QA-011", "QA Repository", "shared_repository", "Relevant shared QA artefact used to assess downstream process drift."),
+            ("EV-LOAN-RISK-011", "Risk Repository", "formal_approval", "Approved risk policy with decision authority."),
+            ("EV-LOAN-LEGACY-004", "Document Repository", "shared_repository", "Legacy rule retained only to diagnose contradiction/version drift."),
+            ("EV-LOAN-QA-014", "QA Repository", "shared_repository", "Shared regression evidence relevant to the active threshold."),
+            ("EV-NOTIFY-COMP-021", "Compliance Repository", "formal_approval", "Approved compliance SLA."),
+            ("EV-NOTIFY-LEGACY-019", "Document Repository", "shared_repository", "Legacy procedure retained only for contradiction analysis."),
+            ("EV-NOTIFY-OPS-022", "Microsoft Teams", "group_channel", "Approved Operations group channel; private messages are not collected."),
+        ]
+        db.add_all([EvidenceOrigin(evidence_ref=ref, connector=connector, source_scope=scope, collection_reason=reason, private_message_excluded=True) for ref, connector, scope, reason in origin_rows])
 
-    role_policies = [
-        ("manager", "Manager", "Full decryption authority & override permissions", True, 3, True, True, True, True),
-        ("officer", "Officer", "Assigned customer twin record actions", True, 2, False, False, False, False),
-        ("intern", "Intern", "Restricted case viewer, total PII redaction", True, 1, False, False, False, False),
-        ("compliance_manager", "Compliance Auditor", "Read-only ledger access plus governance controls", True, 3, True, False, True, True),
-        ("product_owner", "Product Owner", "Digital Twin weight modifications and sandbox simulations", True, 3, True, True, True, True),
-        ("qa_analyst", "QA Analyst", "Waiver verification triggers & draft document reviews", True, 2, False, False, False, True),
-    ]
-    for role, display, desc, enabled, sensitivity, override, twin, export, review in role_policies:
-        db.add(RolePolicy(role=role, display_name=display, description=desc, enabled=enabled, max_sensitivity=sensitivity, can_override=override, can_modify_twin=twin, can_export_ledger=export, can_review_bodyguard=review))
 
-    shields = [
-        ("data_masking", "Data Sensitivity Masking", "Shield PII across lower authority tiers", True, {"mode":"role-aware"}),
-        ("dlp", "Active DLP Protection", "Prevent unapproved downloads of restricted evidence", True, {"restricted_downloads":"blocked"}),
-        ("ledger_retention", "7-Year Ledger Retention", "Lock audited records into non-mutable DB state", True, {"years":7}),
-        ("ooh_guard", "OOH Modification Guard", "Flag approved decision modifications during OOH hours", True, {"start":"19:00","end":"07:00"}),
-        ("source_governance", "Source Scope Governance", "Only approved channels/mailboxes can enter governed retrieval; client data never trains the model", True, {"majority_fallback":"same_authority_tier_only","client_training":"disabled","default_deny_unknown_sources":True}),
-        ("customer_export", "Customer Export Control", "Restrict customer-data exports by role, masking mode and explicit audit reason", True, {"masked_roles":["manager","compliance_manager"],"full_roles":["compliance_manager"],"reason_required":True,"intern_officer_export":"forbidden"}),
-        ("transport_security", "Secure Data Transfer", "Connector traffic is authenticated; production deployment terminates TLS and secrets remain server-side", True, {"production_tls":"TLS 1.2+ / 1.3","webhook_auth":"HMAC-SHA256","api_keys":"environment-only","frontend_secrets":False}),
-        ("query_audit", "Query & Access Audit", "Trace who queried governed memory, downloaded evidence, changed source scope or exported customer data", True, {"retention_years":7,"question_capture":"policy-safe excerpt","actor_required":True}),
-        ("realtime_freshness", "Real-Time Freshness Guard", "Re-evaluate every answer against the latest allowed evidence snapshot", True, {"answer_recompute":"every request","signed_ingress":True,"stale_source_warning_minutes":30}),
-    ]
-    for key, name, desc, enabled, value in shields:
-        db.add(SecurityShield(key=key, name=name, description=desc, enabled=enabled, value_json=dumps(value)))
-
-    now = utcnow()
-    integrations = [
-        ("outlook", "Outlook Extractor", "mail", "connected", 12410, now-timedelta(minutes=3), {"metric":"mail objects", "errors":0, "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":True, "scope_label":"Official management/policy mailboxes only", "official_only":True, "allowed_sender_roles":["Product Owner","Compliance Manager","Risk Committee"], "client_training_allowed":False, "freshness_sla_minutes":5}),
-        ("teams", "MS Teams Listener", "chat", "connected", 45201, now-timedelta(minutes=1), {"metric":"chat lines", "errors":0, "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":False, "scope_label":"Approved group/channel chats only", "channel_scope":"group_and_channels_only", "personal_dm_allowed":False, "allowed_channels":["Operations Policy","Compliance","Product Governance"], "client_training_allowed":False, "freshness_sla_minutes":5}),
-        ("gmail", "Gmail Connector", "mail", "inactive", 0, None, {"metric":"objects", "errors":0, "note":"Paused · official management mail only when enabled", "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":False, "policy_authority_enabled":False, "scope_label":"Official management mail only when explicitly enabled", "official_only":True, "allowed_sender_roles":["Executive Management","Compliance Manager"], "client_training_allowed":False, "freshness_sla_minutes":10}),
-        ("sharepoint", "SharePoint Indexer", "documents", "connected", 1420, now-timedelta(minutes=12), {"metric":"files indexed", "errors":1, "note":"1 sync warning", "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":True, "scope_label":"Approved policy/SOP libraries", "allowed_libraries":["Approved Policies","Controlled SOPs"], "client_training_allowed":False, "freshness_sla_minutes":15}),
-        ("onedrive", "OneDrive Loader", "documents", "connected", 893, now-timedelta(hours=1), {"metric":"files indexed", "errors":0, "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":False, "policy_authority_enabled":False, "scope_label":"Personal drives excluded by default", "client_training_allowed":False, "freshness_sla_minutes":30}),
-        ("clickup", "ClickUp Workspace", "tasks", "connected", 512, now-timedelta(minutes=6), {"metric":"tickets synced", "errors":2, "note":"2 error blocks", "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":False, "scope_label":"Approved project spaces · context only", "client_training_allowed":False, "freshness_sla_minutes":15}),
-        ("customer_core", "Customer Core API", "customer", "connected", 128, now, {"metric":"customer records", "errors":0, "note":"Operational impact only", "realtime":True, "retrieval_enabled":True, "policy_authority_enabled":False, "scope_label":"Operational impact only · customer records never define policy", "client_training_allowed":False, "freshness_sla_minutes":1}),
-        ("qa", "QA Repository", "qa", "connected", 38, now-timedelta(minutes=15), {"metric":"policies tracked", "errors":0, "adapter_mode":"deterministic_finals_adapter", "retrieval_enabled":True, "policy_authority_enabled":False, "scope_label":"QA evidence · context only unless formally approved", "client_training_allowed":False, "freshness_sla_minutes":15}),
-        ("postgres", "PostgreSQL DB", "database", "connected", 1426, now, {"metric":"records mirrored", "errors":0, "note":"Mirror transactional", "realtime":True, "retrieval_enabled":True, "policy_authority_enabled":True, "scope_label":"Governed decision contracts and audit state", "client_training_allowed":False, "freshness_sla_minutes":1}),
-        ("vector", "Local Semantic Retrieval Index", "semantic", "connected", 142400, now, {"metric":"indexed evidence terms", "errors":0, "engine":"BM25 + cosine", "pilot_target":"ChromaDB", "adapter_mode":"local_runtime", "note":"Finals runtime uses explainable local retrieval; ChromaDB is a pilot-target adapter.", "retrieval_enabled":True, "policy_authority_enabled":False, "scope_label":"Index only; never an authority source", "client_training_allowed":False, "freshness_sla_minutes":1}),
-        ("webhook", "Signed Webhook Gateway", "ingress", "connected", 0, now, {"metric":"authenticated live events", "errors":0, "adapter_mode":"live_http_ingress", "auth":"HMAC-SHA256", "replay_protection":True, "realtime":True, "note":"Genuine external HTTP ingress; use send_live_webhook.py from a second terminal.", "retrieval_enabled":True, "policy_authority_enabled":False, "scope_label":"Signed live ingress; quarantined until governance", "client_training_allowed":False, "freshness_sla_minutes":1}),
-    ]
-    for key, name, kind, status, count, last_sync, details in integrations:
-        db.add(Integration(key=key, name=name, kind=kind, status=status, object_count=count, last_sync_at=last_sync, details_json=dumps(details)))
-
-    # 128 active cases. All three seeded conflicts have real operational cohorts so a judge can
-    # click any conflict and drive it through simulation → governance → decision publication.
-    for i in range(128):
-        case_ref = DEMO_CASE if i == 0 else f"JT-2026-{85+i:03d}"
-        if i < 27:
-            conflict_ref, cohort = FLAGSHIP_CONFLICT, "gig-worker-income"
-            customer_type, application_type = "Gig worker", "Financial Assistance Application"
-            risk_status, blocker = "High", "Income document rule conflict"
-            pending = 4.2
-        elif i < 38:
-            conflict_ref, cohort = "CF-RESTRUCTURE-002", "loan-restructure"
-            customer_type, application_type = "Borrower", "Loan Restructuring Application"
-            risk_status, blocker = "Medium", "Restructuring approval threshold mismatch"
-            pending = 3.8
-        elif i < 44:
-            conflict_ref, cohort = "CF-NOTIFY-003", "customer-notification"
-            customer_type, application_type = "Retail customer", "Adverse Decision Notification"
-            risk_status, blocker = "Medium", "Notification SLA definition mismatch"
-            pending = 3.0
-        else:
-            conflict_ref, cohort = None, "baseline"
-            customer_type, application_type = "Retail customer", "Retail Banking Application"
-            risk_status, blocker = "Low", None
-            pending = round(0.3 + (i % 20)*0.1, 1)
-        customer = "Aina Rahman" if i == 0 else f"Customer {i+1:03d}"
-        db.add(CustomerCase(
-            case_ref=case_ref, customer_name=customer, customer_type=customer_type,
-            application_type=application_type, owner_email="officer@regulatedbank.com", status="active",
-            risk_status=risk_status, sentiment="Frustrated" if i == 0 else ("Concerned" if conflict_ref else "Neutral"),
-            pending_days=pending, conflict_ref=conflict_ref, current_blocker=blocker, protected=(i >= 34),
-            metadata_json=dumps({"cohort": cohort, "application_value": 250000 if i == 0 else 50000 + i*500}),
-        ))
-    db.flush()
-    flagship = db.execute(select(CustomerCase).where(CustomerCase.case_ref == DEMO_CASE)).scalar_one()
-    base = datetime(2026, 8, 6, 10, 30, tzinfo=timezone.utc)
-    events = [
-        ("FSD v3.0", "FSD v3.0", "Flagged missing payslips per standard ruleset.", base, "warning"),
-        ("Outlook", "Outlook Approval", "Product Owner approved: 'Bank statements may be accepted in place of payslips.'", base + timedelta(minutes=45), "success"),
-        ("Teams", "Teams Message", "Operations staff directed: 'Continue requesting payslips anyway to be safe.'", base + timedelta(minutes=72), "warning"),
-        ("Customer", "Customer Complaint", "'You keep asking for papers I don't have. Please resolve!'", base + timedelta(minutes=155), "critical"),
-    ]
-    for source, title, desc, t, severity in events:
-        db.add(CaseEvent(case_id=flagship.id, source=source, title=title, description=desc, event_time=t, severity=severity))
-
-    evidence_rows = [
-        ("EV-BANK-084", "Customer Document Vault", "Bank Statement", "Aina Rahman submitted three consecutive monthly bank statements with recurring salary-equivalent credits. Document verified against the active income-evidence waiver.", "income_document_rule", "verified_bank_statement", "Tier 2 Verification", 4, "v4.2", "active", "restricted", DEMO_CASE, True, False),
-        ("EV-OUTLOOK-001", "Outlook Approval", "PO_Waiver_Mail_Jul20", "Product Owner authorises alternative income evidence for gig workers. Bank statements may be accepted in place of payslips.", "income_document_rule", "bank_statement_accepted", "Product Owner", 5, "v4.0", "active", "confidential", DEMO_CASE, True, False),
-        ("EV-TEAMS-001", "Teams Message", "Teams_Chat_Log_OpsOps", "Continue requesting payslips anyway to be safe until the FSD is updated.", "income_document_rule", "payslips_required", "Operations Officer", 2, "current message", "active", "internal", DEMO_CASE, False, False),
-        ("EV-FSD-003", "FSD", "FSD_Requirements_v3_Doc", "Income verification requires three months of payslips.", "income_document_rule", "payslips_required", "Functional Lead", 4, "v3.0", "outdated", "confidential", DEMO_CASE, False, True),
-        ("EV-GUIDE-002", "Training Guide", "Operations Training Guide", "Request three months of payslips for all gig-worker income verification cases.", "income_document_rule", "payslips_required", "Operations Training", 2, "v2.8", "outdated", "internal", DEMO_CASE, False, False),
-        ("EV-CORE-084", "Customer Core System", "Customer Case JT-2026-084", "Application stalled because income document is marked missing even though bank statement is verified.", "income_document_rule", "operational_stall", "Customer Core", 3, "live", "active", "restricted", DEMO_CASE, False, False),
-        ("EV-COMPLAINT-084", "Gmail Connector", "Customer Complaint", "You keep asking for papers I don't have. Please resolve.", "income_document_rule", "customer_frustrated", "Customer", 1, "live", "active", "restricted", DEMO_CASE, False, False),
-        ("EV-QA-084", "QA Repository", "Internal QA Memo", "Eight QA tests still assert payslips-only behaviour.", "income_document_rule", "qa_outdated", "QA Analyst", 3, "v3-suite", "active", "confidential", DEMO_CASE, False, False),
-        ("EV-CONSENSUS-001", "Decision Ledger", "Consensus Ledger Protocol", "Consensus rules path mapped dynamically from Credit Policy v4.2 with complete approval lineage.", "consensus_protocol", "governed_path", "Compliance Manager", 6, "v4.2", "active", "confidential", None, True, False),
-        ("EV-RISK-011", "SharePoint Indexer", "Loan Restructuring SOP", "Risk Committee v5.1 permits delegated loan restructuring only when the risk score is 60 or below and affordability review passes.", "loan_restructure_rule", "risk_threshold_60", "Risk Committee", 5, "v5.1", "active", "restricted", "JT-2026-112", True, False),
-        ("EV-RISK-LEGACY", "SharePoint Indexer", "Legacy Restructuring Desk Guide", "Legacy desk guidance allows restructuring approval up to risk score 70.", "loan_restructure_rule", "risk_threshold_70", "Credit Operations", 2, "v4.3", "outdated", "internal", "JT-2026-112", False, False),
-        ("EV-NOTIFY-021", "Outlook Extractor", "Customer Notification SLA Approval", "Compliance approved a three business-day notification deadline for adverse decisions.", "notification_deadline", "business_days_3", "Compliance Manager", 5, "v2.1", "active", "confidential", "JT-2026-123", True, False),
-        ("EV-LEGACY-019", "SharePoint Indexer", "Legacy Notification Procedure", "Customer notifications must be sent within three calendar days.", "notification_deadline", "calendar_days_3", "Operations", 2, "v1.7", "superseded", "internal", "JT-2026-123", False, True),
-        ("EV-QA-RESTRUCTURE", "QA Repository", "Restructuring Regression Pack", "Regression pack tracks 14 approval edge cases against the latest restructuring policy.", "loan_restructure_rule", "qa_current", "QA Analyst", 3, "v5.1", "active", "internal", "JT-2026-112", False, False),
-        ("EV-TEAMS-NOTIFY", "MS Teams Listener", "Notification Ops Chat", "Operations team is still using calendar-day language in manual customer follow-up instructions.", "notification_deadline", "legacy_instruction", "Operations Officer", 2, "current", "active", "internal", "JT-2026-123", False, False),
-        ("EV-CORE-091", "Customer Core API", "Restructuring Case Mirror", "Customer case is waiting for a threshold decision from the risk engine.", "loan_restructure_rule", "operational_wait", "Customer Core", 3, "live", "active", "restricted", "JT-2026-112", False, False),
-    ]
-    evidences = {}
-    for row in evidence_rows:
-        project = "Sentinel" if row[4] == "income_document_rule" else ("Credit Operations" if row[4] == "loan_restructure_rule" else ("Compliance Operations" if row[4] == "notification_deadline" else "Governance Core"))
-        customer = "Aina Rahman" if row[11] == DEMO_CASE else ("System Audit" if not row[11] else row[11])
-        tier = 3 if row[7] >= 5 else (2 if row[7] >= 3 else 1)
-        meta={"project": project, "customer": customer, "decision_tier": tier, "client_training_allowed": False}
-        source_lower=row[1].lower()
-        if "teams" in source_lower:
-            meta.update({"channel_type":"group_chat", "conversation_scope":"Operations Policy group", "personal_dm":False, "governance_use":"context_only"})
-        elif "outlook" in source_lower:
-            meta.update({"mail_classification":"policy_approval", "official_sender":True, "sender_role":row[6]})
-        elif "gmail" in source_lower:
-            meta.update({"mail_classification":"customer_message", "official_sender":False, "sender_role":row[6], "governance_use":"context_only"})
-        elif "customer core" in source_lower or "document vault" in source_lower:
-            meta.update({"governance_use":"context_only", "data_class":"customer_operational"})
-        elif "qa repository" in source_lower:
-            meta.update({"governance_use":"context_only"})
-        elif "sharepoint" in source_lower or row[1]=="FSD":
-            meta.update({"library":"Approved Policies" if row[12] else "Controlled SOPs"})
-        e = Evidence(evidence_ref=row[0], source=row[1], title=row[2], body=row[3], rule_key=row[4], claim=row[5], authority=row[6], authority_level=row[7], version=row[8], status=row[9], sensitivity=row[10], case_ref=row[11], approved=row[12], superseded=row[13], metadata_json=dumps(meta))
-        db.add(e); db.flush(); evidences[e.evidence_ref] = e
-
-    conflicts = [
-        Conflict(conflict_ref=FLAGSHIP_CONFLICT, name="Income-document eligibility", rule_key="income_document_rule", severity="Critical", status="unresolved",
-                 root_cause="FSD v3.0 and training materials were not updated following the Product Owner's bank-statement waiver authorization. Operations continue using legacy criteria.",
-                 recommendation="Align the complete process: update FSD and training, notify officers, review affected applications, update QA tests and block duplicate requests.",
-                 confidence=0.942, affected_customers=27, systems_affected=5, approved_evidence_ref="EV-OUTLOOK-001"),
-        Conflict(conflict_ref="CF-RESTRUCTURE-002", name="Loan restructuring approval mismatch", rule_key="loan_restructure_rule", severity="High", status="unresolved",
-                 root_cause="Risk engine threshold and restructuring SOP were updated on different dates.", recommendation="Synchronise approval threshold and recalculate the 11 affected cases.", confidence=0.89, affected_customers=11, systems_affected=3),
-        Conflict(conflict_ref="CF-NOTIFY-003", name="Customer notification deadline", rule_key="notification_deadline", severity="Medium", status="unresolved",
-                 root_cause="Legacy SLA timer uses calendar days while new compliance policy uses business days.", recommendation="Publish one canonical SLA definition and update notification scheduler.", confidence=0.83, affected_customers=6, systems_affected=2),
-    ]
-    for c in conflicts: db.add(c)
-    db.flush()
-    conflict_map = {c.conflict_ref: c for c in db.execute(select(Conflict)).scalars().all()}
-    relation_sets = {
-        FLAGSHIP_CONFLICT: {
-            "EV-OUTLOOK-001": "approved", "EV-TEAMS-001": "informal", "EV-FSD-003": "conflict",
-            "EV-GUIDE-002": "conflict", "EV-CORE-084": "operational", "EV-COMPLAINT-084": "context", "EV-QA-084": "conflict",
-        },
-        "CF-RESTRUCTURE-002": {
-            "EV-RISK-011": "approved", "EV-RISK-LEGACY": "conflict", "EV-QA-RESTRUCTURE": "context", "EV-CORE-091": "operational",
-        },
-        "CF-NOTIFY-003": {
-            "EV-NOTIFY-021": "approved", "EV-LEGACY-019": "conflict", "EV-TEAMS-NOTIFY": "informal",
-        },
-    }
-    for conflict_ref, relations in relation_sets.items():
-        conflict = conflict_map[conflict_ref]
-        for ref, relation in relations.items():
-            db.add(ConflictEvidence(conflict_id=conflict.id, evidence_id=evidences[ref].id, relation=relation))
-
-    # Pre-seed a small immutable audit history (not the final decision contract).
-    append_entry(db, "EVIDENCE_INGESTED", "outlook-extractor", {"evidence_ref": "EV-OUTLOOK-001", "authority": "Product Owner"})
-    append_entry(db, "CONFLICT_DETECTED", "conflict-engine", {"conflict_ref": FLAGSHIP_CONFLICT, "affected_customers": 27})
-    ensure_governance_defaults(db)
     db.commit()

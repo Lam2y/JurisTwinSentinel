@@ -1,40 +1,18 @@
 services:
-  db:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: juristwin
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Run tools/bootstrap_env.py before Docker Compose}
-    volumes:
-      - juristwin_pg:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d juristwin"]
-      interval: 5s
-      timeout: 3s
-      retries: 15
-    restart: unless-stopped
-
-  api:
+  juristwin:
     build: ./backend
-    environment:
-      DATABASE_URL: postgresql+psycopg2://postgres:${POSTGRES_PASSWORD:?Run tools/bootstrap_env.py before Docker Compose}@db:5432/juristwin
-      SECRET_KEY: ${SECRET_KEY:?Run tools/bootstrap_env.py before Docker Compose}
-      WEBHOOK_SECRET: ${WEBHOOK_SECRET:?Run tools/bootstrap_env.py before Docker Compose}
-      PROOF_SIGNING_SECRET: ${PROOF_SIGNING_SECRET:?Run tools/bootstrap_env.py before Docker Compose}
-      DEMO_PASSWORD: ${DEMO_PASSWORD:-Finals2026!}
-      CORS_ORIGINS: ${CORS_ORIGINS:-http://127.0.0.1:8000,http://localhost:8000}
     ports:
       - "8000:8000"
-    depends_on:
-      db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/system/health', timeout=2).read()"]
-      interval: 15s
-      timeout: 3s
-      retries: 5
-      start_period: 10s
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8000
+      SECRET_KEY: ${SECRET_KEY:-replace-this-for-production}
+      DEMO_PASSWORD: ${DEMO_PASSWORD:-Finals2026!}
+      DATABASE_URL: sqlite:////data/juristwin.db
+      RESOLVED_GAP_RETENTION_DAYS: ${RESOLVED_GAP_RETENTION_DAYS:-30}
+      CORS_ORIGINS: http://127.0.0.1:8000,http://localhost:8000
+    volumes:
+      - juristwin-data:/data
     restart: unless-stopped
-
 volumes:
-  juristwin_pg:
+  juristwin-data:

@@ -149,7 +149,7 @@ def extract_policy_atoms(text: str, rule_key: str | None = None) -> list[dict]:
                 modality = "PERMITTED"
                 reasons = ["Bank-statement clause contains explicit permission."]
         if obj == "PAYSLIP":
-            if re.search(r"(?:must|mandatory|compulsory|only).{0,30}pay\s?slips?|pay\s?slips?.{0,30}(?:must|mandatory|compulsory|required)", low):
+            if re.search(r"(?:must|mandatory|compulsory|only|require(?:s|d)?).{0,45}pay\s?slips?|pay\s?slips?.{0,30}(?:must|mandatory|compulsory|required)", low):
                 modality = "REQUIRED"
                 reasons = ["Payslip clause contains mandatory language."]
             elif re.search(r"pay\s?slips?.{0,25}(?:may|can|accepted|acceptable|allowed)", low):

@@ -8,4 +8,5 @@ if [ ! -d .venv ]; then
 else
   . .venv/bin/activate
 fi
-python run.py
+python -m pytest -q
+echo "PREFLIGHT PASSED - all automated safety and workflow checks passed."

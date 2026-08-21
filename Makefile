@@ -1,24 +1,13 @@
-.PHONY: setup run test preflight docker-up docker-down verify
-
-setup:
-	python -m pip install -r backend/requirements.txt
-
+.PHONY: run test preflight reset
 run:
 	cd backend && python run.py
 
 test:
-	cd backend && pytest -q
+	cd backend && python -m pytest -q
 
 preflight:
-	cd backend && python scripts/industry_preflight.py
+	cd backend && python -m pytest -q
+	@echo JurisTwin Mastery preflight passed.
 
-verify:
-	python -m compileall -q backend/app backend/scripts
-	node --check backend/app/static/sentinel.js
-	cd backend && pytest -q
-
-docker-up:
-	docker compose up --build
-
-docker-down:
-	docker compose down
+reset:
+	@python reset_demo.py
